@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import homepagePic1 from '../assets/homepage-pic1.png';
+import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments } from 'react-icons/fa';
+import homepagePic1 from '../../assets/homepage-pic1.png';
 //import homepagePic2 from '../assets/homepage-pic2.png';
-import homepagePic3 from '../assets/homepage-pic3.png';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import homepagePic3 from '../../assets/homepage-pic3.png';
+import Navbar from '../../components/user/Navbar';
+import Footer from '../../components/user/Footer';
 
 const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -22,26 +23,32 @@ const HomePage = () => {
 
   const features = [
     {
+      icon: FaBuilding,
       title: "Society Selection",
       description: "Explore various societies and their guidelines to find your perfect match"
     },
     {
+      icon: FaCube,
       title: "2D to 3D Modelling",
       description: "Convert your 2D floor plans into impressive 3D models"
     },
     {
+      icon: FaClipboardCheck,
       title: "Building Guidelines",
       description: "Access detailed building codes and requirements for each society"
     },
     {
+      icon: FaShieldAlt,
       title: "Compliance Check",
       description: "Verify your design against society guidelines for approval"
     },
     {
+      icon: FaMapMarkerAlt,
       title: "Plot Selection",
       description: "Choose the perfect plot size and location for your dream project"
     },
     {
+      icon: FaComments,
       title: "Feedback System",
       description: "Provide your valuable feedback to help us improve"
     }
@@ -109,26 +116,42 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Platform Features Section with White Background */}
-        <div className="bg-white py-16 px-6">
+        {/* Platform Features Section */}
+        <div className="bg-white py-20 px-6">
           <div className="container mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#2F3D57]">Our Platform Features</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Everything you need to design, validate, and approve your architectural project in one place
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#2F3D57] leading-tight">
+                Platform Features
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Everything you need to design, validate, and approve your architectural project
               </p>
+              <div className="w-24 h-1 bg-[#ED7600] mx-auto mt-6 rounded-full"></div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <div 
-                  key={index} 
-                  className="bg-gray-50 p-8 rounded-lg border border-gray-200 hover:border-[#ED7600] transition-all shadow-sm hover:shadow-md"
-                >
-                  <h3 className="text-xl font-bold mb-3 text-[#ED7600]">{feature.title}</h3>
-                  <p className="text-gray-700">{feature.description}</p>
-                </div>
-              ))}
+              {features.map((feature, index) => {
+                const IconComponent = feature.icon;
+                return (
+                  <div 
+                    key={index} 
+                    className="bg-gray-50 p-8 rounded-2xl border border-gray-200 shadow-lg"
+                  >
+                    {/* Icon */}
+                    <div className="w-16 h-16 bg-[#ED7600] rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                      <IconComponent className="text-white text-2xl" />
+                    </div>
+                    
+                    {/* Content */}
+                    <h3 className="text-2xl font-bold mb-4 text-[#2F3D57]">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed text-lg">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

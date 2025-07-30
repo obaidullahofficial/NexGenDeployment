@@ -1,6 +1,6 @@
 // components/Approvals.jsx
-import React, { useState } from "react";
-import { FaCheck, FaTimes, FaSearch, FaEye } from "react-icons/fa";
+import React,{ useState } from "react";
+import { FaCheck, FaTimes, FaSearch, FaEye, FaEdit, FaDownload } from "react-icons/fa";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -68,6 +68,9 @@ const Approvals = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedApproval, setSelectedApproval] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [editedNotes, setEditedNotes] = useState("");
+  const [viewingDocument, setViewingDocument] = useState(null);
 
   // Chart data for approval status
   const approvalStats = {
@@ -98,7 +101,44 @@ const Approvals = () => {
 
   const handleViewDetails = (approval) => {
     setSelectedApproval(approval);
+    setEditedNotes(approval.details.notes);
+    setEditingNotes(false);
+    setViewingDocument(null);
     setShowModal(true);
+  };
+
+  const handleEditNotes = () => {
+    setEditingNotes(true);
+  };
+
+  const handleSaveNotes = () => {
+    setApprovals(approvals.map(a => 
+      a.id === selectedApproval.id 
+        ? { 
+            ...a, 
+            details: {
+              ...a.details,
+              notes: editedNotes
+            }
+          } 
+        : a
+    ));
+    setEditingNotes(false);
+    setSelectedApproval({
+      ...selectedApproval,
+      details: {
+        ...selectedApproval.details,
+        notes: editedNotes
+      }
+    });
+  };
+
+  const handleViewDocument = (doc) => {
+    setViewingDocument(doc);
+  };
+
+  const handleCloseDocument = () => {
+    setViewingDocument(null);
   };
 
   const filteredApprovals = approvals.filter(approval => {
@@ -161,16 +201,59 @@ const Approvals = () => {
               
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Submitted Documents</h3>
-                <ul className="list-disc pl-5 space-y-1">
+                <div className="space-y-2">
                   {selectedApproval.details.submittedDocuments.map((doc, index) => (
-                    <li key={index}>{doc}</li>
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <span>{doc}</span>
+                      <button
+                        onClick={() => handleViewDocument(doc)}
+                        className="text-[#2F3D57] hover:text-[#1E2A3B] flex items-center gap-1"
+                      >
+                        <FaEye size={14} /> View
+                      </button>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
               
               <div>
-                <h3 className="text-lg font-semibold mb-2">Notes</h3>
-                <p className="bg-gray-50 p-3 rounded-lg">{selectedApproval.details.notes}</p>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">Notes</h3>
+                  {!editingNotes && (
+                    <button
+                      onClick={handleEditNotes}
+                      className="text-[#2F3D57] hover:text-[#1E2A3B] flex items-center gap-1"
+                    >
+                      <FaEdit size={14} /> Edit
+                    </button>
+                  )}
+                </div>
+                {editingNotes ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={editedNotes}
+                      onChange={(e) => setEditedNotes(e.target.value)}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2F3D57] focus:border-transparent"
+                      rows="3"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => setEditingNotes(false)}
+                        className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveNotes}
+                        className="px-3 py-1 bg-[#2F3D57] text-white rounded-lg hover:bg-[#1E2A3B]"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="bg-gray-50 p-3 rounded-lg whitespace-pre-wrap">{selectedApproval.details.notes}</p>
+                )}
               </div>
               
               <div className="mt-6 flex justify-end">
@@ -181,6 +264,42 @@ const Approvals = () => {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Document Viewer Modal */}
+      {viewingDocument && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-xl font-semibold">{viewingDocument}</h3>
+              <button 
+                onClick={handleCloseDocument}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            <div className="flex-grow p-6 overflow-auto bg-gray-100 flex items-center justify-center">
+              {/* This would be replaced with actual document viewer component */}
+              <div className="bg-white p-8 rounded-lg shadow-inner border border-gray-200 text-center">
+                <div className="text-5xl mb-4">📄</div>
+                <h4 className="text-lg font-medium mb-2">{viewingDocument}</h4>
+                <p className="text-gray-600 mb-4">Document preview would appear here</p>
+                <button className="px-4 py-2 bg-[#2F3D57] text-white rounded-lg hover:bg-[#1E2A3B] flex items-center gap-2 mx-auto">
+                  <FaDownload /> Download Document
+                </button>
+              </div>
+            </div>
+            <div className="p-4 border-t flex justify-end">
+              <button
+                onClick={handleCloseDocument}
+                className="px-4 py-2 bg-[#2F3D57] text-white rounded-lg hover:bg-[#1E2A3B]"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

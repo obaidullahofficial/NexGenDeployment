@@ -1,9 +1,9 @@
 import { FiPhone } from 'react-icons/fi';
 import { HiOutlineDocumentText, HiOutlineTemplate } from 'react-icons/hi';
 import { MdOutlineArchitecture } from 'react-icons/md';
-import plotImage from '../assets/plot.png';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import plotImage from '../../assets/plot.png';
+import Navbar from '../../components/user/Navbar';
+import Footer from '../../components/user/Footer';
 
 const ExactPlotCard = () => {
   return (

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FaHome, FaBuilding, FaBook, FaMapMarkerAlt, FaCube, FaPhone, FaEnvelope, FaMapPin } from 'react-icons/fa';
 import { HiOutlineBuildingLibrary } from 'react-icons/hi2';
-import logo from '../assets/logo2.png';
+import logo from '../../assets/logo2.png';
 
 const Footer = () => {
   return (

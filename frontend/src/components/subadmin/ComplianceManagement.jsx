@@ -45,6 +45,17 @@ const ComplianceManagement = () => {
     requirements: ""
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  
+  // Room connections state
+  const [roomConnections, setRoomConnections] = useState([]);
+  const [showConnectionForm, setShowConnectionForm] = useState(false);
+  const [selectedRuleForConnection, setSelectedRuleForConnection] = useState(null);
+  const [newConnection, setNewConnection] = useState({
+    room1: "",
+    room1Number: "",
+    room2: "",
+    room2Number: ""
+  });
 
   const handleEdit = (id) => {
     setEditingId(id);
@@ -87,18 +98,80 @@ const ComplianceManagement = () => {
     setShowAddForm(false);
   };
 
+  // Room connection functions
+  const getRoomTypesFromRule = (rule) => {
+    const roomTypes = [];
+    if (rule.bedrooms > 0) roomTypes.push("bedroom");
+    if (rule.bathrooms > 0) roomTypes.push("bathroom");
+    if (rule.kitchen > 0) roomTypes.push("kitchen");
+    if (rule.garage > 0) roomTypes.push("garage");
+    return roomTypes;
+  };
+  
+  const getRoomNumbers = (roomType, rule) => {
+    if (!rule) return [];
+    let count = 0;
+    
+    switch(roomType) {
+      case "bedroom":
+        count = parseInt(rule.bedrooms) || 0;
+        break;
+      case "bathroom":
+        count = parseInt(rule.bathrooms) || 0;
+        break;
+      case "kitchen":
+        count = parseInt(rule.kitchen) || 0;
+        break;
+      case "garage":
+        count = parseInt(rule.garage) || 0;
+        break;
+      default:
+        count = 0;
+    }
+    
+    return Array.from({ length: count }, (_, i) => i + 1);
+  };
+
+  const handleConnectionChange = (field, value) => {
+    setNewConnection({ ...newConnection, [field]: value });
+  };
+
+  const handleAddConnection = () => {
+    const connectionId = roomConnections.length + 1;
+    const connection = {
+      id: connectionId,
+      ...newConnection,
+      ruleId: selectedRuleForConnection
+    };
+    setRoomConnections([...roomConnections, connection]);
+    setNewConnection({
+      room1: "",
+      room1Number: "",
+      room2: "",
+      room2Number: ""
+    });
+    setShowConnectionForm(false);
+    setSelectedRuleForConnection(null);
+  };
+
+  const handleDeleteConnection = (connectionId) => {
+    setRoomConnections(roomConnections.filter(conn => conn.id !== connectionId));
+  };
+
   return (
     <div className="p-6 min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e6e9f0] text-[#2F3D57]">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#2F3D57]">
           Compliance Rules Management
         </h1>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="px-4 py-2 bg-[#2F3D57] text-white rounded-lg hover:bg-[#1E2A3B] flex items-center gap-2"
-        >
-          <FaPlus /> Add New Rule
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="px-4 py-2 bg-[#2F3D57] text-white rounded-lg hover:bg-[#1E2A3B] flex items-center gap-2"
+          >
+            <FaPlus /> Add New Rule
+          </button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -182,7 +255,89 @@ const ComplianceManagement = () => {
         </div>
       )}
 
-      <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">
+      {showConnectionForm && selectedRuleForConnection && (
+        <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
+          <h2 className="text-xl font-semibold mb-4">
+            Add Room Connection for {rules.find(r => r.id === selectedRuleForConnection)?.plotSize} Plot
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">First Room Type</label>
+              <select
+                value={newConnection.room1}
+                onChange={(e) => handleConnectionChange("room1", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Room Type</option>
+                {getRoomTypesFromRule(rules.find(r => r.id === selectedRuleForConnection)).map(room => (
+                  <option key={room} value={room}>{room}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">First Room Number</label>
+              <select
+                value={newConnection.room1Number}
+                onChange={(e) => handleConnectionChange("room1Number", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                disabled={!newConnection.room1}
+              >
+                <option value="">Select Room Number</option>
+                {newConnection.room1 && getRoomNumbers(newConnection.room1, rules.find(r => r.id === selectedRuleForConnection)).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Second Room Type</label>
+              <select
+                value={newConnection.room2}
+                onChange={(e) => handleConnectionChange("room2", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select Room Type</option>
+                {getRoomTypesFromRule(rules.find(r => r.id === selectedRuleForConnection)).map(room => (
+                  <option key={room} value={room}>{room}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Second Room Number</label>
+              <select
+                value={newConnection.room2Number}
+                onChange={(e) => handleConnectionChange("room2Number", e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                disabled={!newConnection.room2}
+              >
+                <option value="">Select Room Number</option>
+                {newConnection.room2 && getRoomNumbers(newConnection.room2, rules.find(r => r.id === selectedRuleForConnection)).map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setShowConnectionForm(false);
+                setSelectedRuleForConnection(null);
+              }}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddConnection}
+              className="px-4 py-2 bg-[#ED7600] text-white rounded-lg hover:bg-[#D56900]"
+              disabled={!newConnection.room1 || !newConnection.room2 || !newConnection.room1Number || !newConnection.room2Number}
+            >
+              Add Connection
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">`
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-[#2F3D57] text-white">
@@ -193,6 +348,7 @@ const ComplianceManagement = () => {
                 <th className="px-6 py-4 text-left">Kitchen</th>
                 <th className="px-6 py-4 text-left">Garage</th>
                 <th className="px-6 py-4 text-left">Requirements</th>
+                <th className="px-6 py-4 text-left">Room Connections</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -275,6 +431,32 @@ const ComplianceManagement = () => {
                         rule.requirements
                       )}
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        {roomConnections
+                          .filter(connection => connection.ruleId === rule.id)
+                          .map(connection => (
+                            <div key={connection.id} className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs">
+                              <span>
+                                <span className="font-medium">{connection.room1} {connection.room1Number}</span>
+                                <span className="mx-1 text-gray-400">↔</span>
+                                <span className="font-medium">{connection.room2} {connection.room2Number}</span>
+                              </span>
+                              <button
+                                onClick={() => handleDeleteConnection(connection.id)}
+                                className="text-red-600 hover:text-red-800 ml-2"
+                                title="Delete Connection"
+                              >
+                                <FaTrash size={10} />
+                              </button>
+                            </div>
+                          ))
+                        }
+                        {roomConnections.filter(connection => connection.ruleId === rule.id).length === 0 && (
+                          <span className="text-gray-400 text-xs">No connections</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         {editingId === rule.id ? (
@@ -282,12 +464,14 @@ const ComplianceManagement = () => {
                             <button
                               onClick={() => handleSave(rule.id)}
                               className="p-2 text-green-600 hover:text-green-800"
+                              title="Save"
                             >
                               <FaSave />
                             </button>
                             <button
                               onClick={handleCancel}
                               className="p-2 text-gray-600 hover:text-gray-800"
+                              title="Cancel"
                             >
                               <FaTimes />
                             </button>
@@ -295,14 +479,26 @@ const ComplianceManagement = () => {
                         ) : (
                           <>
                             <button
+                              onClick={() => {
+                                setSelectedRuleForConnection(rule.id);
+                                setShowConnectionForm(true);
+                              }}
+                              className="p-2 text-orange-600 hover:text-orange-800"
+                              title="Add Room Connection"
+                            >
+                              <FaPlus />
+                            </button>
+                            <button
                               onClick={() => handleEdit(rule.id)}
                               className="p-2 text-blue-600 hover:text-blue-800"
+                              title="Edit Rule"
                             >
                               <FaEdit />
                             </button>
                             <button
                               onClick={() => handleDelete(rule.id)}
                               className="p-2 text-red-600 hover:text-red-800"
+                              title="Delete Rule"
                             >
                               <FaTrash />
                             </button>
@@ -314,7 +510,7 @@ const ComplianceManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                     No compliance rules found
                   </td>
                 </tr>

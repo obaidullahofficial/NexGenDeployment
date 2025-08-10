@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { MdOutlineArrowBack, MdClose } from 'react-icons/md';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
@@ -48,7 +48,7 @@ const SaveProjectModal = ({ isOpen, onClose, onSave, projectName, setProjectName
 const GenerateFloorPlan = () => {
   const { societyId, plotId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
+//  const navigate = useNavigate();
 
   const { plotDimensions } = location.state || { plotDimensions: { x: 30, y: 60 } };
   

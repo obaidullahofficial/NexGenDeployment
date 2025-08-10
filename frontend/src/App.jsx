@@ -16,6 +16,9 @@ import HomePage from './pages/user/HomePage';
 import PlotDetail from './pages/user/PlotDetail';
 import SocietiesPage from './pages/user/SocietiesPage';
 import RegistrationForm from './pages/RegistrationForm/RegistrationForm';
+import UserProfileLayout from './layouts/UserProfileLayout';
+import SocietyPlots from "./pages/user/SocietyPlots";
+import GenerateFloorPlan from './pages/user/GenerateFloorPlan';
 
 // Admin imports
 import Sidebar from "./components/admin/sidebar";
@@ -30,6 +33,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/userprofile" element={<UserProfileLayout />} />
         {/* Auth Route */}
         <Route path="/login" element={<Login />} />
         <Route path="/registration-form" element={<RegistrationForm />} />
@@ -37,8 +41,10 @@ function App() {
         {/* User Routes */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="plot-detail" element={<PlotDetail />} />
+          <Route path="/societies/:societyId/plots/:plotId" element={<PlotDetail />} />
           <Route path="society" element={<SocietiesPage />} />
+          <Route path="societies/:societyId/plots" element={<SocietyPlots />} />
+          <Route path="generate-floor-plan/:societyId/:plotId" element={<GenerateFloorPlan />} />
         </Route>
 
         {/* Subadmin Routes */}

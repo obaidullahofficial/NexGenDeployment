@@ -94,7 +94,11 @@ const Login = () => {
             localStorage.setItem('token', result.access_token);
             alert('Login successful!');
             setLoginError('');
-            navigate('/userprofile'); // Redirect to user profile
+            if (result.is_admin) {
+                navigate('/admin-dashboard'); // Redirect to admin dashboard
+            } else {
+                navigate('/userprofile'); // Redirect to user profile
+            }
         } else {
             setLoginError(result.error || 'Login failed');
         }

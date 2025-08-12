@@ -1,8 +1,22 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from controllers.user_controller import UserController
+from models.registration_form import registration_form_collection
+from utils.db import get_db
 
 user_bp = Blueprint('user', __name__)
+
+@user_bp.route('/register-society', methods=['POST'])
+def register_society():
+    data = request.json
+    required_fields = ['name', 'type', 'regNo', 'established', 'authority', 'contact', 'website', 'plots']
+    if not all(field in data and data[field] for field in required_fields):
+        return jsonify({"error": "All fields are required"}), 400
+
+    db = get_db()
+    reg_forms = registration_form_collection(db)
+    reg_id = reg_forms.insert_one(data).inserted_id
+    return jsonify({"message": "Society registration submitted", "registration_id": str(reg_id)}), 201
 
 @user_bp.route('/signup', methods=['POST'])
 def signup():
@@ -35,4 +49,5 @@ def login():
         return jsonify({"error": "Invalid credentials"}), 401
 
     access_token = create_access_token(identity={'email': email, 'role': user['role']})
-    return jsonify({"access_token": access_token}), 200
+    is_admin = user.get('role') == 'admin'
+    return jsonify({"access_token": access_token, "is_admin": is_admin}), 200

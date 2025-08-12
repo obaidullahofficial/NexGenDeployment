@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
 import Logo from '../../assets/Logo.png';
 import { useNavigate } from 'react-router-dom';
+import { signupUser, loginUser } from '../../services/apiService';
 
 const Login = () => {
     const [isLoginMode, setIsLoginMode] = useState(false);
     const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [signupError, setSignupError] = useState('');
+    const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+    const [loginError, setLoginError] = useState('');
     const [showSignupType, setShowSignupType] = useState(false);
     const navigate = useNavigate();
 
+    // Handle input for signup and login
     const handleSignupInput = (e) => {
         setSignupForm({ ...signupForm, [e.target.name]: e.target.value });
     };
+    const handleLoginInput = (e) => {
+        setLoginForm({ ...loginForm, [e.target.name]: e.target.value });
+    };
 
+    // Signup validation
     const validateSignup = () => {
         const { name, email, password, confirmPassword } = signupForm;
         if (!name || !email || !password || !confirmPassword) {
@@ -43,22 +51,63 @@ const Login = () => {
         return true;
     };
 
-    const handleSignupSubmit = (e) => {
+    // Signup submit
+    const handleSignupSubmit = async (e) => {
         e.preventDefault();
         if (validateSignup()) {
             setShowSignupType(true);
         }
     };
 
-    const handleSignupType = (type) => {
+    // Handle signup type (user or society)
+    const handleSignupType = async (type) => {
         setShowSignupType(false);
         if (type === 'society') {
             navigate('/registration-form');
         } else {
-            alert('Signup successful as user!');
-            setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
-            setIsLoginMode(true);
+            // Call backend API for user signup
+            const result = await signupUser({
+                username: signupForm.name,
+                email: signupForm.email,
+                password: signupForm.password,
+                role: 'user'
+            });
+            if (result.user_id) {
+                alert('Signup successful as user! Please login.');
+                setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+                setSignupError('');
+                setIsLoginMode(true); // Switch to login mode
+            } else {
+                setSignupError(result.error || 'Signup failed');
+            }
         }
+    };
+
+    // Login submit
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault();
+        const result = await loginUser({
+            email: loginForm.email,
+            password: loginForm.password
+        });
+        if (result.access_token) {
+            localStorage.setItem('token', result.access_token);
+            alert('Login successful!');
+            setLoginError('');
+            navigate('/userprofile'); // Redirect to user profile
+        } else {
+            setLoginError(result.error || 'Login failed');
+        }
+    };
+
+    // Clear errors and forms on mode switch
+    const handleModeSwitch = (e) => {
+        e.preventDefault();
+        setIsLoginMode(!isLoginMode);
+        setSignupError('');
+        setLoginError('');
+        setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+        setLoginForm({ email: '', password: '' });
     };
 
     return (
@@ -100,17 +149,36 @@ const Login = () => {
                 </div>
 
                 {/* Form Section */}
-                <form className='space-y-4' onSubmit={isLoginMode ? undefined : handleSignupSubmit}>
+                <form className='space-y-4' onSubmit={isLoginMode ? handleLoginSubmit : handleSignupSubmit}>
                     {!isLoginMode && (
                         <input type="text" name="name" value={signupForm.name} onChange={handleSignupInput} placeholder="Name" required className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400' />
                     )}
-                    <input type="email" name="email" value={signupForm.email} onChange={handleSignupInput} placeholder="Email Address" required className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400'/>
-                    <input type="password" name="password" value={signupForm.password} onChange={handleSignupInput} placeholder="Password" required className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400'/>
+                    <input
+                        type="email"
+                        name="email"
+                        value={isLoginMode ? loginForm.email : signupForm.email}
+                        onChange={isLoginMode ? handleLoginInput : handleSignupInput}
+                        placeholder="Email Address"
+                        required
+                        className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400'
+                    />
+                    <input
+                        type="password"
+                        name="password"
+                        value={isLoginMode ? loginForm.password : signupForm.password}
+                        onChange={isLoginMode ? handleLoginInput : handleSignupInput}
+                        placeholder="Password"
+                        required
+                        className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400'
+                    />
                     {!isLoginMode && (
                         <input type="password" name="confirmPassword" value={signupForm.confirmPassword} onChange={handleSignupInput} placeholder="Confirm Password" required className='w-full p-3 border-b-2 border-gray-300 outline-none focus:border-[#ED7600] placeholder-gray-400'/>
                     )}
                     {signupError && !isLoginMode && (
                         <div className="text-red-600 text-sm font-semibold text-center">{signupError}</div>
+                    )}
+                    {loginError && isLoginMode && (
+                        <div className="text-red-600 text-sm font-semibold text-center">{loginError}</div>
                     )}
                     {isLoginMode && (
                         <div className='text-right'>
@@ -124,7 +192,7 @@ const Login = () => {
                     <p className='text-center text-gray-600'>
                         {isLoginMode ? "Don't have an account?" : "Already have an account?"}
                         <button 
-                            onClick={(e)=> { e.preventDefault(); setIsLoginMode(!isLoginMode) }} 
+                            onClick={handleModeSwitch}
                             className='ml-1 font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#2F3D57] to-[#ED7600] hover:underline'
                         >
                             {isLoginMode ? "Sign up now" : "Login"}

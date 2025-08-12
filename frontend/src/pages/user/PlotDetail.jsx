@@ -20,7 +20,8 @@ const PlotDetail = () => {
     status: 'Available',
     type: 'Residential Plot',
     area: '10 Marla',
-    dimensions: '50 ft x 90 ft',
+    dimension_x: 50, // in ft
+    dimension_y: 90, // in ft
     location: 'Bahria Town, Islamabad',
     description: [
       'Located in Bahria Enclave Sector P',
@@ -118,7 +119,9 @@ const PlotDetail = () => {
                 </div>
                 <div>
                   <p className="uppercase text-xs font-medium">Dimensions</p>
-                  <p className="font-semibold text-base text-[#2F3D57]">{plotData.dimensions}</p>
+                  <p className="font-semibold text-base text-[#2F3D57]">
+                    {plotData.dimension_x} ft x {plotData.dimension_y} ft
+                  </p>
                 </div>
                 <div>
                   <p className="uppercase text-xs font-medium">Location</p>

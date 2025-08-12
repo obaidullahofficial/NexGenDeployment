@@ -8,12 +8,13 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
     status: "Available",
     type: "Residential",
     area: "",
-    dimensions: "",
+    dimension_x: "",
+    dimension_y: "",
     location: "",
     description: [""],
     contactName: "",
     contactPhone: "",
-    contactAvailability: "9:00 AM - 7:00 PM",
+  // contactAvailability removed
     amenities: {
       gatedCommunity: false,
       security: false,
@@ -100,24 +101,21 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
                 >
                   <option value="Available">Available</option>
                   <option value="Sold">Sold</option>
-                  <option value="Reserved">Reserved</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
+                <input
+                  type="text"
                   name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                >
-                  <option value="Residential">Residential</option>
-                  <option value="Commercial">Commercial</option>
-                </select>
+                  value="Residential"
+                  readOnly
+                  className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700 cursor-not-allowed"
+                />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Area</label>
                 <input
@@ -130,11 +128,22 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dimension X (ft)</label>
                 <input
-                  type="text"
-                  name="dimensions"
-                  value={form.dimensions}
+                  type="number"
+                  name="dimension_x"
+                  value={form.dimension_x}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dimension Y (ft)</label>
+                <input
+                  type="number"
+                  name="dimension_y"
+                  value={form.dimension_y}
                   onChange={handleChange}
                   className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
                   required
@@ -215,16 +224,7 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Availability</label>
-              <input
-                type="text"
-                name="contactAvailability"
-                value={form.contactAvailability}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-              />
-            </div>
+            {/* Contact Availability removed */}
           </div>
         </div>
 

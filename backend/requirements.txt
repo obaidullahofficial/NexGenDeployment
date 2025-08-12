@@ -1,0 +1,26 @@
+cd backend
+pip install flask flask-cors pymongo
+pip install flask-jwt-extended
+
+{
+  "username": "admin",
+  "email": "admin@example.com",
+  "password": "Admin#123",
+  "role": "admin"
+}
+
+
+  "username": "testuser",
+  "email": "testuser@example.com",
+  "password": "password123",
+  "role": "user"
+
+ "username": "testuser2",
+  "email": "abc@gmail.com",
+  "password": "12345Aa#",
+  "role": "user"
+
+   "username": "testuser3",
+  "email": "abcd@gmail.com",
+  "password": "12345Aa#",
+  "role": "user"

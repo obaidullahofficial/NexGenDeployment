@@ -38,7 +38,7 @@ const Sidebar = () => {
     },
      {
       name: "Advertisement Management",
-      path: "/AdvertisementManagement",
+      path: "/advertisement-management",
       icon: <MessageSquare size={18} />,
     },
     {

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JWT Test</title>
+</head>
+<body>
+    <h1>JWT Configuration Test</h1>
+    <button onclick="testJWT()">Test JWT Config</button>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="results"></div>
+
+    <script>
+        async function testJWT() {
+            try {
+                const response = await fetch('http://localhost:5000/api/jwt-test');
+                const result = await response.json();
+                document.getElementById('results').innerHTML = '<h3>JWT Test Result:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<h3>JWT Test Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+
+        async function testLogin() {
+            try {
+                // Replace with actual society user credentials
+                const loginData = {
+                    email: 'test@society.com',
+                    password: 'password123'
+                };
+
+                const response = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const result = await response.json();
+                
+                if (result.access_token) {
+                    // Decode token
+                    const payload = JSON.parse(atob(result.access_token.split('.')[1]));
+                    const currentTime = Date.now() / 1000;
+                    
+                    document.getElementById('results').innerHTML = 
+                        '<h3>Login Test Result:</h3>' +
+                        '<p><strong>Login Status:</strong> ' + (result.success ? 'SUCCESS' : 'FAILED') + '</p>' +
+                        '<p><strong>Token Created:</strong> ' + new Date().toISOString() + '</p>' +
+                        '<p><strong>Token Expires:</strong> ' + new Date(payload.exp * 1000).toISOString() + '</p>' +
+                        '<p><strong>Minutes Until Expiry:</strong> ' + Math.round((payload.exp - currentTime) / 60) + '</p>' +
+                        '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('results').innerHTML = '<h3>Login Failed:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<h3>Login Test Error:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

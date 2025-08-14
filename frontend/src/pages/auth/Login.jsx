@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Logo from '../../assets/Logo.png';
 import { useNavigate } from 'react-router-dom';
-import { signupUser, loginUser } from '../../services/apiService';
+import { signupUser, loginUser, checkEmail } from '../../services/apiService';
+import PopupModal from '../../components/common/PopupModal';
 
 const Login = () => {
     const [isLoginMode, setIsLoginMode] = useState(false);
@@ -10,6 +11,15 @@ const Login = () => {
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [loginError, setLoginError] = useState('');
     const [showSignupType, setShowSignupType] = useState(false);
+    
+    // Popup modal state
+    const [popup, setPopup] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
+    
     const navigate = useNavigate();
 
     // Handle input for signup and login
@@ -62,8 +72,28 @@ const Login = () => {
     // Handle signup type (user or society)
     const handleSignupType = async (type) => {
         setShowSignupType(false);
+        
         if (type === 'society') {
-            navigate('/registration-form');
+            // First check if email already exists
+            try {
+                const emailCheck = await checkEmail(signupForm.email);
+                
+                if (emailCheck.exists) {
+                    setSignupError('Email already exists. Please use a different email address.');
+                    return;
+                }
+                
+                // Email is available, proceed to registration form
+                navigate('/registration-form', {
+                    state: {
+                        userEmail: signupForm.email,
+                        userName: signupForm.name,
+                        userPassword: signupForm.password
+                    }
+                });
+            } catch (error) {
+                setSignupError('Failed to verify email. Please try again.',error);
+            }
         } else {
             // Call backend API for user signup
             const result = await signupUser({
@@ -83,24 +113,125 @@ const Login = () => {
         }
     };
 
+    // Show popup modal
+    const showPopup = (title, message, type = 'info') => {
+        setPopup({
+            isOpen: true,
+            title,
+            message,
+            type
+        });
+    };
+
+    // Close popup modal
+    const closePopup = () => {
+        setPopup({
+            isOpen: false,
+            title: '',
+            message: '',
+            type: 'info'
+        });
+    };
+
     // Login submit
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
-        const result = await loginUser({
-            email: loginForm.email,
-            password: loginForm.password
-        });
-        if (result.access_token) {
-            localStorage.setItem('token', result.access_token);
-            alert('Login successful!');
-            setLoginError('');
-            if (result.is_admin) {
-                navigate('/admin-dashboard'); // Redirect to admin dashboard
-            } else {
-                navigate('/userprofile'); // Redirect to user profile
+        setLoginError(''); // Clear previous errors
+        
+        try {
+            const result = await loginUser({
+                email: loginForm.email,
+                password: loginForm.password
+            });
+            
+            if (result.success && result.access_token) {
+                // Successful login
+                console.log('[LOGIN] Storing token:', {
+                    tokenLength: result.access_token.length,
+                    tokenStart: result.access_token.substring(0, 50) + '...'
+                });
+                
+                localStorage.setItem('token', result.access_token);
+                
+                // Immediately verify the stored token
+                const storedToken = localStorage.getItem('token');
+                console.log('[LOGIN] Token stored successfully:', {
+                    stored: !!storedToken,
+                    same: storedToken === result.access_token
+                });
+                
+                // Decode and check the token
+                try {
+                    const payload = JSON.parse(atob(result.access_token.split('.')[1]));
+                    const currentTime = Date.now() / 1000;
+                    console.log('[LOGIN] Token details:', {
+                        issuedAt: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'Unknown',
+                        expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'Never',
+                        timeUntilExpiry: payload.exp ? Math.round((payload.exp - currentTime) / 60) + ' minutes' : 'Never',
+                        currentTime: new Date(currentTime * 1000).toISOString()
+                    });
+                } catch (decodeError) {
+                    console.error('[LOGIN] Error decoding token:', decodeError);
+                }
+                
+                showPopup(
+                    'Login Successful!',
+                    'Welcome back! Redirecting to your dashboard...',
+                    'success'
+                );
+                
+                // Redirect after showing success message
+                setTimeout(() => {
+                    closePopup();
+                    if (result.is_admin) {
+                        navigate('/dashboard');
+                    } else if (result.role === 'society') {
+                        // Always check profile completeness for society users
+                        console.log('Society user login - profile complete:', result.profile_complete);
+                        
+                        if (result.profile_complete === false || 
+                            result.profile_exists === false || 
+                            (result.missing_fields && result.missing_fields.length > 0)) {
+                            // Profile is incomplete - redirect to profile setup
+                            console.log('Redirecting to profile setup due to incomplete profile');
+                            navigate('/society-profile-setup');
+                        } else {
+                            // Profile is complete - go to dashboard
+                            console.log('Profile is complete - redirecting to dashboard');
+                            navigate('/subadmin');
+                        }
+                    } else {
+                        navigate('/userprofile');
+                    }
+                }, 2000);
+                
+            } else if (result.error) {
+                // Handle specific error types for society users
+                if (result.error === 'registration_pending') {
+                    showPopup(
+                        'Registration Pending',
+                        'Your society registration request is still being processed. Please wait for admin approval before you can log in.',
+                        'warning'
+                    );
+                } else if (result.error === 'registration_rejected') {
+                    showPopup(
+                        'Registration Rejected',
+                        'Your society registration request has been rejected. Please contact the administrator for more information.',
+                        'error'
+                    );
+                } else if (result.error === 'registration_invalid') {
+                    showPopup(
+                        'Invalid Registration',
+                        'There is an issue with your registration status. Please contact the administrator for assistance.',
+                        'error'
+                    );
+                } else {
+                    // Generic error
+                    setLoginError(result.error || 'Login failed. Please check your credentials.');
+                }
             }
-        } else {
-            setLoginError(result.error || 'Login failed');
+        } catch (error) {
+            setLoginError('An error occurred. Please try again.',error);
         }
     };
 
@@ -229,6 +360,15 @@ const Login = () => {
                     </div>
                 )}
             </div>
+            
+            {/* Popup Modal */}
+            <PopupModal 
+                isOpen={popup.isOpen}
+                onClose={closePopup}
+                title={popup.title}
+                message={popup.message}
+                type={popup.type}
+            />
         </div>
     );
 };

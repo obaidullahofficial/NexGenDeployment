@@ -1,5 +1,6 @@
 class RegistrationForm:
-    def __init__(self, name, type, regNo, established, authority, contact, website, plots, status="pending"):
+    def __init__(self, name, type, regNo, established, authority, contact, website, plots, 
+                 status="pending", user_email=None, user_id=None):
         self.name = name
         self.type = type
         self.regNo = regNo
@@ -8,7 +9,9 @@ class RegistrationForm:
         self.contact = contact
         self.website = website
         self.plots = plots
-        self.status = status  # new variable added
+        self.status = status
+        self.user_email = user_email  # Email of the user who owns this society
+        self.user_id = user_id  # ID of the user who owns this society
 
     def to_dict(self):
         return {
@@ -20,7 +23,9 @@ class RegistrationForm:
             "contact": self.contact,
             "website": self.website,
             "plots": self.plots,
-            "status": self.status  # include in dict
+            "status": self.status,
+            "user_email": self.user_email,
+            "user_id": self.user_id
         }
 
 

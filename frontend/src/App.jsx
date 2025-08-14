@@ -4,10 +4,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 // Subadmin imports
 import SubadminDashboard from './pages/subadmin/SubAdminDashboard';
 import SocietyProfile from './pages/subadmin/SocietyProfile';
+import SocietyProfileSetup from './pages/subadmin/SocietyProfileSetup';
+import SocietyProfileEdit from './pages/subadmin/SocietyProfileEdit';
 import PlotManager from './pages/subadmin/PlotManager';
 import Approvals from './pages/subadmin/Approvals';
 import ComplianceManagement from './pages/subadmin/ComplianceManagement';
 import FloorPlanGenerator from './pages/subadmin/FloorPlanGenerator';
+import ProtectedSubAdminRoute from './components/common/ProtectedSubAdminRoute';
 
 // User imports 
 import Login from './pages/auth/Login';
@@ -38,6 +41,12 @@ function App() {
         {/* Auth Route */}
         <Route path="/login" element={<Login />} />
         <Route path="/registration-form" element={<RegistrationForm />} />
+        
+        {/* Society Profile Setup Route - Standalone */}
+        <Route path="/society-profile-setup" element={<SocietyProfileSetup />} />
+        
+        {/* Society Profile Edit Route - Standalone but requires authentication */}
+        <Route path="/society-profile-edit" element={<SocietyProfileEdit />} />
 
         {/* User Routes */}
         <Route path="/" element={<UserLayout />}>
@@ -48,8 +57,12 @@ function App() {
           <Route path="generate-floor-plan/:societyId/:plotId" element={<GenerateFloorPlan />} />
         </Route>
 
-        {/* Subadmin Routes */}
-        <Route path="/subadmin" element={<SubadminDashboard />}>
+        {/* Subadmin Routes - Protected */}
+        <Route path="/subadmin" element={
+          <ProtectedSubAdminRoute>
+            <SubadminDashboard />
+          </ProtectedSubAdminRoute>
+        }>
           <Route index element={<PlotManager />} />
           <Route path="plotManagement" element={<PlotManager />} />
           <Route path="floorPlan" element={<FloorPlanGenerator/>} /> 
@@ -73,7 +86,7 @@ function App() {
                     <Route path="/review-management" element={<ReviewManagement />} />
                     <Route path="/advertisement-management" element={<AdvertisementManagement />} />
                     <Route path="/reports" element={<ReportManagement />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    {/* <Route path="*" element={<Navigate to="/dashboard" replace />} /> */}
                   </Routes>
                 </Layout>
               </div>

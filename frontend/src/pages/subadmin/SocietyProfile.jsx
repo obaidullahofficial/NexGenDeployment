@@ -1,127 +1,290 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, Typography, Button, Paper, Alert, Avatar } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { getSocietyProfile, checkProfileCompleteness } from '../../services/apiService';
+import PopupModal from '../../components/common/PopupModal';
 
 const SocietyProfile = () => {
-  const [profile, setProfile] = useState({
-    name: '',
-    description: '',
-    location: '',
-    available: '',
-    priceRange: '',
-  });
-  const [logo, setLogo] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
+  const navigate = useNavigate();
+  
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Popup modal state
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
 
-  const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
+  // Load profile data on component mount
+  useEffect(() => {
+    loadProfileData();
+  }, []);
 
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'image/png') {
-      setLogo(file);
-      setLogoPreview(URL.createObjectURL(file));
-    } else {
-      setError('Logo must be a PNG file.');
-      setLogo(null);
-      setLogoPreview(null);
+  const loadProfileData = async () => {
+    try {
+      setLoading(true);
+      
+      // Check if profile is complete first
+      const completenessResult = await checkProfileCompleteness();
+      
+      if (!completenessResult.is_complete) {
+        showPopup(
+          'Profile Incomplete',
+          'Your society profile is not complete. Please complete your profile first.',
+          'warning'
+        );
+        
+        setTimeout(() => {
+          navigate('/society-profile-setup');
+        }, 3000);
+        return;
+      }
+      
+      // Get profile data
+      const result = await getSocietyProfile();
+      
+      if (result.success && result.profile) {
+        setProfile(result.profile);
+      } else {
+        setError('Failed to load profile data');
+        showPopup(
+          'Error',
+          'Failed to load your profile. Please try again.',
+          'error'
+        );
+      }
+    } catch (error) {
+      setError('Error loading profile: ' + error.message);
+      showPopup(
+        'Error',
+        'An error occurred while loading your profile.',
+        'error'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const allFilled = Object.values(profile).every((v) => v) && logo;
-
-  const handleEdit = (e) => {
-    e.preventDefault();
-    if (!allFilled) {
-      setError('Please fill all fields and upload a PNG logo.');
-      return;
-    }
-    setError('');
-    // Edit logic here (e.g., send to backend)
-    alert('Profile edited!');
+  // Show popup modal
+  const showPopup = (title, message, type = 'info') => {
+    setPopup({
+      isOpen: true,
+      title,
+      message,
+      type
+    });
   };
+
+  // Close popup modal
+  const closePopup = () => {
+    setPopup({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'info'
+    });
+  };
+
+  const handleEditProfile = () => {
+    // Navigate to dedicated edit page
+    console.log('[SOCIETY PROFILE] Navigating to edit page');
+    navigate('/society-profile-edit');
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Typography variant="h6" color="textSecondary">Loading profile...</Typography>
+      </Box>
+    );
+  }
+
+  if (error && !profile) {
+    return (
+      <Box sx={{ minHeight: '100vh', background: '#f5f5f5', p: 3 }}>
+        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/society-profile-setup')}
+            sx={{
+              background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
+              color: 'white',
+            }}
+          >
+            Set up Profile
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', minHeight: '80vh', background: '#fff', marginTop: '60px' }}>
-  <form onSubmit={handleEdit} style={{ background: '#fff', borderRadius: '20px', padding: '40px', width: '700px', color: '#222', boxShadow: '0 8px 32px rgba(44,62,80,0.12)', border: '1px solid #e3e8ee' }}>
-        <h2
-          style={{
-            marginBottom: '24px',
-            textAlign: 'center',
-            fontWeight: 700,
-            color: '#2d3a4a',
-            letterSpacing: '1px',
-            background: 'linear-gradient(90deg,#2d3a4a 60%,#4a6fa5 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 2px 12px rgba(44,62,80,0.10)',
-            fontSize: '2.2rem',
-          }}
-        >Society Profile</h2>
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Society Logo (PNG only)</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <input
-              id="logo-upload"
-              type="file"
-              accept="image/png"
-              onChange={handleLogoChange}
-              style={{ display: 'none' }}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => document.getElementById('logo-upload').click()}
-              style={{
-                background: '#ff8800',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 24px',
-                fontWeight: 'bold',
-                fontSize: '15px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(255,136,0,0.10)',
-                letterSpacing: '0.5px',
-                transition: 'background 0.2s',
-              }}
-            >Update Logo</button>
-            {logo && <span style={{ color: '#2d3a4a', fontWeight: 500 }}>{logo.name}</span>}
-          </div>
-          {logoPreview && (
-            <div style={{ marginTop: '16px', marginBottom: '16px', textAlign: 'center' }}>
-              <img src={logoPreview} alt="Logo Preview" style={{ maxWidth: '100px', maxHeight: '100px', borderRadius: '12px', background: '#f8fafc', padding: '8px', border: '2px solid #ff8800' }} />
-            </div>
+    <Box sx={{ minHeight: '100vh', background: '#f5f5f5', p: 3 }}>
+      <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+        <Paper elevation={3} sx={{ p: 4, mb: 3 }}>
+          <Typography variant="h4" sx={{ color: '#2F3D57', fontWeight: 700, mb: 3, textAlign: 'center' }}>
+            Society Profile
+          </Typography>
+          
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          
+          {profile ? (
+            <Grid container spacing={4}>
+              {/* Logo Section */}
+              <Grid item xs={12} md={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2 }}>
+                    Society Logo
+                  </Typography>
+                  {profile.society_logo ? (
+                    <Avatar
+                      src={profile.society_logo}
+                      alt="Society Logo"
+                      sx={{ 
+                        width: 150, 
+                        height: 150, 
+                        mx: 'auto',
+                        mb: 2,
+                        border: '3px solid #ED7600',
+                        boxShadow: '0 4px 12px rgba(237, 118, 0, 0.3)'
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      sx={{ 
+                        width: 150, 
+                        height: 150, 
+                        mx: 'auto',
+                        mb: 2,
+                        bgcolor: '#f5f5f5',
+                        color: '#666',
+                        fontSize: '48px',
+                        border: '2px dashed #ddd'
+                      }}
+                    >
+                      🏢
+                    </Avatar>
+                  )}
+                </Box>
+              </Grid>
+              
+              {/* Profile Details */}
+              <Grid item xs={12} md={8}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Society Name
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '18px', mb: 2 }}>
+                      {profile.name || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Location
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.location || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Available Plots
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.available_plots || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Price Range
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.price_range || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Email
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.user_email || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Description
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px', lineHeight: 1.6 }}>
+                      {profile.description || 'No description provided'}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+              
+              {/* Action Buttons */}
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    onClick={handleEditProfile}
+                    sx={{
+                      background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
+                      color: 'white',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 3,
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
+                      }
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="textSecondary" sx={{ mb: 2 }}>
+                No profile data found
+              </Typography>
+              <Button 
+                variant="contained" 
+                onClick={() => navigate('/society-profile-setup')}
+                sx={{
+                  background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
+                  color: 'white',
+                }}
+              >
+                Set up Profile
+              </Button>
+            </Box>
           )}
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Society Name</label>
-          <input type="text" name="name" value={profile.name} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #ff8800', background: '#f8fafc', marginTop: '4px', fontSize: '16px', transition: 'border 0.2s' }} required />
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Description</label>
-          <textarea name="description" value={profile.description} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #ff8800', background: '#f8fafc', marginTop: '4px', fontSize: '16px', resize: 'vertical', transition: 'border 0.2s' }} required rows={3} />
-        </div>
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Location</label>
-            <input type="text" name="location" value={profile.location} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #ff8800', background: '#f8fafc', marginTop: '4px', fontSize: '16px', transition: 'border 0.2s' }} required />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Available Plots</label>
-            <input type="number" name="available" value={profile.available} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #ff8800', background: '#f8fafc', marginTop: '4px', fontSize: '16px', transition: 'border 0.2s' }} required min={1} />
-          </div>
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ fontWeight: 600, color: '#2d3a4a', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Price Range</label>
-          <input type="text" name="priceRange" value={profile.priceRange} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px solid #ff8800', background: '#f8fafc', marginTop: '4px', fontSize: '16px', transition: 'border 0.2s' }} required placeholder="e.g. 25L - 1.2Cr" />
-        </div>
-        {error && <div style={{ color: '#ff8800', marginBottom: '20px', textAlign: 'center', fontWeight: 600 }}>{error}</div>}
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', marginTop: '24px' }}>
-          <button type="submit" disabled={!allFilled} style={{ background: allFilled ? '#ff8800' : '#ffd6a0', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 32px', fontWeight: 'bold', fontSize: '16px', cursor: allFilled ? 'pointer' : 'not-allowed', boxShadow: '0 2px 8px rgba(255,136,0,0.10)', letterSpacing: '0.5px', transition: 'background 0.2s' }}>Edit Profile</button>
-        </div>
-      </form>
-    </div>
+        </Paper>
+      </Box>
+      
+      {/* Popup Modal */}
+      <PopupModal 
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+      />
+    </Box>
   );
 };
 

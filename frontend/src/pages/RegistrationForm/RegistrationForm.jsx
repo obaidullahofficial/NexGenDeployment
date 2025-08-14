@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Grid, TextField, Button, MenuItem, Typography, Alert } from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
+import PopupModal from '../../components/common/PopupModal';
 
 const authorityOptions = ["LDA", "CDA", "Bahria Group"];
 const typeOptions = ["Private", "Public"];
 
 const RegistrationForm = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const userData = location.state || {};
+  
   const [form, setForm] = useState({
     name: "",
     type: "",
@@ -18,9 +24,45 @@ const RegistrationForm = () => {
 
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  
+  // Popup modal state
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  });
+  
+  // Check if user data was passed
+  useEffect(() => {
+    if (!userData.userEmail) {
+      // If no user data, redirect to login
+      navigate('/login');
+    }
+  }, [userData, navigate]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Show popup modal
+  const showPopup = (title, message, type = 'info') => {
+    setPopup({
+      isOpen: true,
+      title,
+      message,
+      type
+    });
+  };
+
+  // Close popup modal
+  const closePopup = () => {
+    setPopup({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'info'
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -29,31 +71,49 @@ const RegistrationForm = () => {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/register-society", {
+      // Prepare data for society signup (includes both user and society info)
+      const societyData = {
+        // User information
+        userName: userData.userName,
+        userEmail: userData.userEmail,
+        userPassword: userData.userPassword,
+        // Society information
+        ...form
+      };
+
+      const res = await fetch("http://localhost:5000/api/signup-society", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: JSON.stringify(societyData)
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        setMessage(data.msg || "Society registered successfully!");
-        setForm({
-          name: "",
-          type: "",
-          regNo: "",
-          established: "",
-          authority: "",
-          contact: "",
-          website: "",
-          plots: ""
-        });
+        showPopup(
+          'Registration Successful!',
+          'Your society registration has been submitted successfully! Your account has been created and is pending admin approval. You can now try to login.',
+          'success'
+        );
+        
+        // Redirect to login after showing success message
+        setTimeout(() => {
+          closePopup();
+          navigate('/login');
+        }, 4000);
       } else {
-        setError(data.msg || "Failed to register society.");
+        showPopup(
+          'Registration Failed',
+          data.error || 'Failed to register society. Please try again.',
+          'error'
+        );
       }
     } catch (error) {
-      setError("Error connecting to server.",error);
+      showPopup(
+        'Connection Error',
+        'Error connecting to server. Please check your internet connection and try again.',
+        error
+      );
     }
   };
 
@@ -67,6 +127,11 @@ const RegistrationForm = () => {
           <Typography sx={{ color: "#ED7600", fontWeight: 500, mt: 1 }}>
             Add your society details below
           </Typography>
+          {userData.userEmail && (
+            <Typography sx={{ color: "#666", fontWeight: 400, mt: 1, fontSize: 14 }}>
+              Registering for: {userData.userEmail}
+            </Typography>
+          )}
         </Box>
 
         <Box sx={{ p: 3 }}>
@@ -141,6 +206,15 @@ const RegistrationForm = () => {
           </form>
         </Box>
       </Box>
+      
+      {/* Popup Modal */}
+      <PopupModal 
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+      />
     </Box>
   );
 };

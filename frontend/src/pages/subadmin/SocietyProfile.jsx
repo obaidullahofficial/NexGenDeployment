@@ -3,6 +3,7 @@ import { Box, Grid, Typography, Button, Paper, Alert, Avatar } from '@mui/materi
 import { useNavigate } from 'react-router-dom';
 import { getSocietyProfile, checkProfileCompleteness } from '../../services/apiService';
 import PopupModal from '../../components/common/PopupModal';
+import SocietyProfileEditModal from '../../components/subadmin/SocietyProfileEditModal';
 
 const SocietyProfile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const SocietyProfile = () => {
     message: '',
     type: 'info'
   });
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Load profile data on component mount
   useEffect(() => {
@@ -90,9 +94,15 @@ const SocietyProfile = () => {
   };
 
   const handleEditProfile = () => {
-    // Navigate to dedicated edit page
-    console.log('[SOCIETY PROFILE] Navigating to edit page');
-    navigate('/society-profile-edit');
+    // Show edit modal instead of navigating
+    console.log('[SOCIETY PROFILE] Opening edit profile modal');
+    setShowEditModal(true);
+  };
+  
+  // Handle successful profile update
+  const handleProfileUpdateSuccess = () => {
+    console.log('[SOCIETY PROFILE] Profile updated successfully, reloading data');
+    loadProfileData(); // Reload the profile data to show updates
   };
 
   if (loading) {
@@ -283,6 +293,13 @@ const SocietyProfile = () => {
         title={popup.title}
         message={popup.message}
         type={popup.type}
+      />
+      
+      {/* Society Profile Edit Modal */}
+      <SocietyProfileEditModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={handleProfileUpdateSuccess}
       />
     </Box>
   );

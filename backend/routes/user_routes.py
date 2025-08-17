@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from controllers.user_controller import UserController
 from models.registration_form import registration_form_collection
 from models.user import user_collection
@@ -123,12 +123,27 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
+    print(f"[LOGIN] Attempting login for email: {email}")
+
     if not all([email, password]):
+        print("[LOGIN] Missing email or password")
         return jsonify({"error": "Email and password are required"}), 400
 
+    # Get user from database first to check if they exist
+    db = get_db()
+    users = user_collection(db)
+    user_exists = users.find_one({'email': email})
+    
+    if not user_exists:
+        print(f"[LOGIN] No user found with email: {email}")
+        return jsonify({"error": "User not found"}), 401
+
     user = UserController.verify_user(email, password)
+    print(f"[LOGIN] Verify user result: {user is not None}")
+    
     if not user:
-        return jsonify({"error": "Invalid credentials"}), 401
+        print(f"[LOGIN] Password verification failed for email: {email}")
+        return jsonify({"error": "Invalid password"}), 401
 
     # Check society registration status for society users
     if user['role'] == 'society':
@@ -272,3 +287,9 @@ def get_my_society():
     society['_id'] = str(society['_id'])
     
     return jsonify({"society": society}), 200
+
+@user_bp.route('/logout', methods=['POST'])
+def logout():
+    response = jsonify({'msg': 'Logout successful'})
+    unset_jwt_cookies(response)
+    return response, 200

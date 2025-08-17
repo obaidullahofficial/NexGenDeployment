@@ -243,181 +243,216 @@ const SocietyProfileEdit = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', background: '#f5f5f5', p: 3 }}>
-      <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
-        <Paper elevation={3} sx={{ p: 4, mb: 3 }}>
-          <Typography variant="h4" sx={{ color: '#2F3D57', fontWeight: 700, mb: 2, textAlign: 'center' }}>
-            Edit Society Profile
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#666', mb: 3, textAlign: 'center' }}>
-            Update your society information below
-          </Typography>
+    <Box sx={{ minHeight: '100vh', background: '#2F3D57', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+      <Box sx={{ maxWidth: 900, width: '100%' }}>
+        
+        {/* Single Card with Side-by-Side Layout */}
+        <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden' }}>
+          
+          {/* Header */}
+          <Box sx={{ p: 3, textAlign: 'center', background: '#f8f9fa' }}>
+            <Typography variant="h4" sx={{ color: '#2F3D57', fontWeight: 700, letterSpacing: 1 }}>
+              Edit Society Profile
+            </Typography>
+            <Typography sx={{ color: '#ED7600', fontWeight: 500, mt: 1 }}>
+              Update your society information below
+            </Typography>
+          </Box>
 
-          {message && <Alert severity="info" sx={{ mb: 2 }}>{message}</Alert>}
+          <Box sx={{ p: 4 }}>
+            {message && <Alert severity="info" sx={{ mb: 3 }}>{message}</Alert>}
 
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              
-              {/* Basic Information Section */}
-              <Grid item xs={12}>
-                <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2, borderBottom: '2px solid #ED7600', pb: 1 }}>
-                  Society Information
-                </Typography>
-              </Grid>
+            <form onSubmit={handleSubmit}>
+              <Grid container spacing={4}>
+                
+                {/* Left Side - Logo Upload Section */}
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ textAlign: 'center', pr: { md: 2 } }}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 3 }}>
+                      Society Logo
+                    </Typography>
+                    
+                    <Box sx={{ mb: 3 }}>
+                      <input
+                        accept="image/png,image/jpeg,image/jpg"
+                        style={{ display: 'none' }}
+                        id="logo-upload"
+                        type="file"
+                        onChange={handleLogoChange}
+                      />
+                      <label htmlFor="logo-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          fullWidth
+                          sx={{ 
+                            borderColor: '#ED7600',
+                            color: '#ED7600',
+                            borderRadius: 3,
+                            fontWeight: 600,
+                            py: 1.5,
+                            mb: 1,
+                            '&:hover': {
+                              borderColor: '#d65c00',
+                              backgroundColor: '#fff3e6'
+                            }
+                          }}
+                        >
+                          {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                        </Button>
+                      </label>
+                      
+                      <Typography variant="caption" color="textSecondary" display="block">
+                        PNG, JPG, or JPEG format (max 5MB)
+                      </Typography>
+                    </Box>
+                    
+                    {logoPreview && (
+                      <Box>
+                        <img
+                          src={logoPreview}
+                          alt="Logo Preview"
+                          style={{
+                            width: '100%',
+                            maxWidth: '200px',
+                            height: 'auto',
+                            maxHeight: '200px',
+                            border: '2px solid #ED7600',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 12px rgba(237, 118, 0, 0.3)',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        <Typography variant="caption" display="block" sx={{ mt: 1, color: '#666' }}>
+                          {logo ? 'New Logo Preview' : 'Current Logo'}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Society Name"
-                  value={profile.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  fullWidth
-                  required
-                  variant="outlined"
-                />
-              </Grid>
+                {/* Right Side - Form Fields */}
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ pl: { md: 2 }, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <Grid container spacing={3}>
+                      
+                      {/* First Row - Society Name and Location */}
+                      <Grid item xs={12} sm={6}>
+                        <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Society Name</Typography>
+                        <TextField
+                          value={profile.name}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
+                          fullWidth
+                          required
+                          InputProps={{ style: { borderRadius: 12 } }}
+                          placeholder="Enter your society name"
+                        />
+                      </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Location"
-                  value={profile.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  fullWidth
-                  required
-                  placeholder="e.g. Lahore, Karachi, Islamabad"
-                />
-              </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Location</Typography>
+                        <TextField
+                          value={profile.location}
+                          onChange={(e) => handleInputChange('location', e.target.value)}
+                          fullWidth
+                          required
+                          InputProps={{ style: { borderRadius: 12 } }}
+                          placeholder="e.g. Lahore, Karachi, Islamabad"
+                        />
+                      </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Available Plots"
-                  value={profile.available_plots}
-                  onChange={(e) => handleInputChange('available_plots', e.target.value)}
-                  fullWidth
-                  required
-                  placeholder="e.g. 5 Marla, 10 Marla, 1 Kanal"
-                />
-              </Grid>
+                      {/* Second Row - Available Plots and Price Range */}
+                      <Grid item xs={12} sm={6}>
+                        <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Available Plots</Typography>
+                        <TextField
+                          value={profile.available_plots}
+                          onChange={(e) => handleInputChange('available_plots', e.target.value)}
+                          fullWidth
+                          required
+                          InputProps={{ style: { borderRadius: 12 } }}
+                          placeholder="e.g. 5 Marla, 10 Marla, 1 Kanal"
+                        />
+                      </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Price Range"
-                  value={profile.price_range}
-                  onChange={(e) => handleInputChange('price_range', e.target.value)}
-                  fullWidth
-                  required
-                  placeholder="e.g. 50L - 1Cr"
-                />
-              </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Price Range</Typography>
+                        <TextField
+                          value={profile.price_range}
+                          onChange={(e) => handleInputChange('price_range', e.target.value)}
+                          fullWidth
+                          required
+                          InputProps={{ style: { borderRadius: 12 } }}
+                          placeholder="e.g. 50L - 1Cr"
+                        />
+                      </Grid>
 
-              <Grid item xs={12}>
-                <TextField
-                  label="Description"
-                  value={profile.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  fullWidth
-                  required
-                  multiline
-                  rows={4}
-                  placeholder="Describe your society, its features, and what makes it special..."
-                />
-              </Grid>
+                      {/* Third Row - Description (Full Width) */}
+                      <Grid item xs={12}>
+                        <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Description</Typography>
+                        <TextField
+                          value={profile.description}
+                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          fullWidth
+                          required
+                          multiline
+                          rows={3}
+                          InputProps={{ style: { borderRadius: 12 } }}
+                          placeholder="Describe your society, its features, and what makes it special..."
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
 
-              {/* Logo Upload Section */}
-              <Grid item xs={12}>
-                <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2, borderBottom: '2px solid #ED7600', pb: 1, mt: 2 }}>
-                  Society Logo
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box sx={{ mb: 2 }}>
-                  <input
-                    accept="image/png,image/jpeg,image/jpg"
-                    style={{ display: 'none' }}
-                    id="logo-upload"
-                    type="file"
-                    onChange={handleLogoChange}
-                  />
-                  <label htmlFor="logo-upload">
+                {/* Action Buttons - Full Width */}
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3, borderTop: '1px solid #eee', pt: 3 }}>
                     <Button
                       variant="outlined"
-                      component="span"
-                      sx={{ mr: 2 }}
-                    >
-                      {logoPreview ? 'Change Logo' : 'Upload Logo'} (PNG/JPG)
-                    </Button>
-                  </label>
-                  <Typography variant="caption" color="textSecondary">
-                    PNG, JPG, or JPEG format (max 5MB)
-                  </Typography>
-                </Box>
-                
-                {logoPreview && (
-                  <Box sx={{ mt: 2, textAlign: 'center' }}>
-                    <img
-                      src={logoPreview}
-                      alt="Logo Preview"
-                      style={{
-                        maxWidth: '200px',
-                        maxHeight: '200px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px'
+                      onClick={handleCancel}
+                      disabled={loading}
+                      sx={{
+                        color: '#2F3D57',
+                        borderColor: '#2F3D57',
+                        fontWeight: 600,
+                        fontSize: 16,
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: 3,
+                        '&:hover': {
+                          borderColor: '#1a2332',
+                          backgroundColor: '#f5f5f5'
+                        }
                       }}
-                    />
-                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                      {logo ? 'New Logo Preview' : 'Current Logo'}
-                    </Typography>
+                    >
+                      Cancel
+                    </Button>
+                    
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={loading}
+                      sx={{
+                        background: '#ED7600',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: 18,
+                        borderRadius: 3,
+                        py: 1.5,
+                        px: 6,
+                        boxShadow: 2,
+                        '&:hover': {
+                          background: '#d65c00',
+                        }
+                      }}
+                    >
+                      {loading ? 'Updating...' : 'Update Profile'}
+                    </Button>
                   </Box>
-                )}
+                </Grid>
               </Grid>
-
-              {/* Action Buttons */}
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
-                  <Button
-                    variant="outlined"
-                    onClick={handleCancel}
-                    disabled={loading}
-                    sx={{
-                      color: '#2F3D57',
-                      borderColor: '#2F3D57',
-                      fontWeight: 600,
-                      fontSize: 16,
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: 3,
-                      '&:hover': {
-                        borderColor: '#1a2332',
-                        backgroundColor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    sx={{
-                      background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: 16,
-                      px: 6,
-                      py: 1.5,
-                      borderRadius: 3,
-                      '&:hover': {
-                        background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
-                      }
-                    }}
-                  >
-                    {loading ? 'Updating Profile...' : 'Update Profile'}
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </form>
+            </form>
+          </Box>
         </Paper>
       </Box>
 

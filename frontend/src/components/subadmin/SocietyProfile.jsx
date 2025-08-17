@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Typography, Button, Paper, Alert, Avatar, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getSocietyProfile } from '../../services/apiService';
+import { FiMapPin, FiHome, FiDollarSign, FiEdit2, FiCheckCircle, FiAlertCircle, FiBuilding, FiClock } from 'react-icons/fi';
 
 const SocietyProfile = () => {
   const navigate = useNavigate();
@@ -64,185 +64,259 @@ const SocietyProfile = () => {
 
   if (loading) {
     return (
-      <Box sx={{ p: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Typography variant="h6" color="textSecondary">Loading profile...</Typography>
-      </Box>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md mx-auto">
+          <div className="animate-pulse flex space-x-4">
+            <div className="rounded-full bg-gray-300 h-16 w-16"></div>
+            <div className="flex-1 space-y-4 py-1">
+              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+              </div>
+            </div>
+          </div>
+          <div className="text-center mt-6 text-[#2F3D57] font-medium">Loading profile...</div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 4, minHeight: '100vh', background: '#f8f9fa' }}>
-      <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+      <div className="max-w-6xl mx-auto">
         
-        {message && <Alert severity="info" sx={{ mb: 3 }}>{message}</Alert>}
+        {/* Header Section */}
+        <div className="mb-8 animate-slideUp">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover-lift">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#2F3D57] mb-2">Society Profile</h1>
+                <p className="text-gray-600 text-sm sm:text-base">Manage your society information and settings</p>
+              </div>
+              <button
+                onClick={handleEditProfile}
+                className="bg-[#ED7600] hover:bg-[#d65c00] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover-glow w-full sm:w-auto justify-center"
+              >
+                <FiEdit2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                Edit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Message Alert */}
+        {message && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <FiAlertCircle className="w-5 h-5" />
+              {message}
+            </div>
+          </div>
+        )}
 
         {profile ? (
-          <Card elevation={3}>
-            <CardContent sx={{ p: 4 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4" sx={{ color: '#2F3D57', fontWeight: 700 }}>
-                  Society Profile
-                </Typography>
-                <Button
-                  variant="outlined"
-                  onClick={handleEditProfile}
-                  sx={{
-                    borderColor: '#ED7600',
-                    color: '#ED7600',
-                    '&:hover': {
-                      borderColor: '#d65c00',
-                      backgroundColor: 'rgba(237, 118, 0, 0.1)'
-                    }
-                  }}
-                >
-                  Edit Profile
-                </Button>
-              </Box>
-              
-              <Grid container spacing={4}>
-                {/* Logo Section */}
-                <Grid item xs={12} md={4}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2 }}>
-                      Society Logo
-                    </Typography>
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Left Column - Logo Section */}
+            <div className="lg:col-span-1 animate-slideUp" style={{animationDelay: '0.1s'}}>
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 hover-lift">
+                <div className="text-center">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#2F3D57] mb-4 sm:mb-6">Society Logo</h3>
+                  
+                  <div className="relative inline-block mb-4">
                     {profile.society_logo ? (
-                      <Avatar
-                        src={profile.society_logo}
-                        alt="Society Logo"
-                        sx={{ 
-                          width: 150, 
-                          height: 150, 
-                          mx: 'auto',
-                          mb: 2,
-                          border: '3px solid #ED7600',
-                          boxShadow: '0 4px 12px rgba(237, 118, 0, 0.3)'
-                        }}
-                      />
+                      <div className="relative">
+                        <img
+                          src={profile.society_logo}
+                          alt="Society Logo"
+                          className="w-40 h-40 rounded-full object-cover border-4 border-[#ED7600] shadow-xl"
+                        />
+                        <div className="absolute -bottom-2 -right-2 bg-green-500 p-2 rounded-full">
+                          <FiCheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
                     ) : (
-                      <Avatar
-                        sx={{ 
-                          width: 150, 
-                          height: 150, 
-                          mx: 'auto',
-                          mb: 2,
-                          bgcolor: '#f5f5f5',
-                          color: '#666',
-                          fontSize: '48px',
-                          border: '2px dashed #ddd'
-                        }}
-                      >
-                        🏢
-                      </Avatar>
+                      <div className="relative">
+                        <div className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                          <FiBuilding className="w-16 h-16 text-gray-400" />
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-yellow-500 p-2 rounded-full">
+                          <FiAlertCircle className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
                     )}
-                    
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" sx={{ 
-                        color: isProfileComplete() ? '#4caf50' : '#ff9800',
-                        fontWeight: 600
-                      }}>
-                        {isProfileComplete() ? '✅ Complete' : '⚠️ Incomplete'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                
-                {/* Profile Details */}
-                <Grid item xs={12} md={8}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                      <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
-                        Society Name
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#666', fontSize: '18px', mb: 2 }}>
-                        {profile.name || 'Not specified'}
-                      </Typography>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
-                        Location
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
-                        📍 {profile.location || 'Not specified'}
-                      </Typography>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
-                        Available Plots
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
-                        {profile.available_plots || 'Not specified'}
-                      </Typography>
-                    </Grid>
-                    
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
-                        Price Range
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
-                        💰 {profile.price_range || 'Not specified'}
-                      </Typography>
-                    </Grid>
-                    
-                    <Grid item xs={12}>
-                      <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
-                        Description
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: '#666', fontSize: '16px', lineHeight: 1.6 }}>
-                        {profile.description || 'No description provided'}
-                      </Typography>
-                    </Grid>
-                    
-                    {profile.updated_at && (
-                      <Grid item xs={12}>
-                        <Typography variant="caption" color="textSecondary">
-                          Last updated: {new Date(profile.updated_at).toLocaleDateString()}
-                        </Typography>
-                      </Grid>
+                  </div>
+                  
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                    isProfileComplete() 
+                      ? 'bg-green-100 text-green-800 border border-green-200' 
+                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                  }`}>
+                    {isProfileComplete() ? (
+                      <>
+                        <FiCheckCircle className="w-4 h-4" />
+                        Profile Complete
+                      </>
+                    ) : (
+                      <>
+                        <FiAlertCircle className="w-4 h-4" />
+                        Profile Incomplete
+                      </>
                     )}
-                  </Grid>
-                </Grid>
-              </Grid>
-              
-              {!isProfileComplete() && (
-                <Alert severity="warning" sx={{ mt: 4 }}>
-                  Your profile is incomplete. Please update all required fields and upload a logo to access all features.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right Column - Profile Details */}
+            <div className="lg:col-span-2 animate-slideUp" style={{animationDelay: '0.2s'}}>
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-8 hover-lift">
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+                  
+                  {/* Society Name */}
+                  <div className="md:col-span-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-[#ED7600]/10 rounded-lg hover:bg-[#ED7600]/20 transition-colors duration-200">
+                        <FiBuilding className="w-4 h-4 sm:w-5 sm:h-5 text-[#ED7600]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-[#2F3D57]">Society Name</h3>
+                        <span className="text-xs text-gray-500">From Registration (Cannot be changed)</span>
+                      </div>
+                      <div className="flex items-center gap-1 px-3 py-1 bg-blue-50 rounded-full border border-blue-200">
+                        <FiCheckCircle className="w-3 h-3 text-blue-600" />
+                        <span className="text-xs text-blue-700 font-medium">Verified</span>
+                      </div>
+                    </div>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800 ml-8 sm:ml-10">
+                      {profile.name || (
+                        <span className="text-gray-400 text-base sm:text-lg font-normal">Not specified</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500 ml-8 sm:ml-10 mt-1">
+                      💡 This name is locked from your approved registration and ensures security.
+                    </p>
+                  </div>
+                  
+                  {/* Location */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                        <FiMapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-semibold text-[#2F3D57]">Location</h3>
+                    </div>
+                    <p className="text-gray-700 ml-8 sm:ml-10 font-medium text-sm sm:text-base">
+                      {profile.location || (
+                        <span className="text-gray-400 font-normal">Not specified</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Available Plots */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-green-50 rounded-lg">
+                        <FiHome className="w-5 h-5 text-green-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-[#2F3D57]">Available Plots</h3>
+                    </div>
+                    <p className="text-gray-700 ml-10 font-medium">
+                      {profile.available_plots || (
+                        <span className="text-gray-400 font-normal">Not specified</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Price Range */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-purple-50 rounded-lg">
+                        <FiDollarSign className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-[#2F3D57]">Price Range</h3>
+                    </div>
+                    <p className="text-gray-700 ml-10 font-medium">
+                      {profile.price_range || (
+                        <span className="text-gray-400 font-normal">Not specified</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="md:col-span-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-indigo-50 rounded-lg">
+                        <FiEdit2 className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-[#2F3D57]">Description</h3>
+                    </div>
+                    <p className="text-gray-700 ml-10 leading-relaxed">
+                      {profile.description || (
+                        <span className="text-gray-400">No description provided</span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  {/* Last Updated */}
+                  {profile.updated_at && (
+                    <div className="md:col-span-2 pt-4 border-t border-gray-200">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <FiClock className="w-4 h-4" />
+                        Last updated: {new Date(profile.updated_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
-          <Card elevation={3}>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2 }}>
-                No Profile Found
-              </Typography>
-              <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-                Set up your society profile to get started with managing your properties.
-              </Typography>
-              <Button
-                variant="contained"
+        /* No Profile State */
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 sm:p-12 text-center animate-slideUp">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 hover:bg-gray-200 transition-colors duration-200">
+                <FiBuilding className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-[#2F3D57] mb-4">No Profile Found</h2>
+              <p className="text-gray-600 mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base">
+                Set up your society profile to get started with managing your properties and showcase your community to potential buyers.
+              </p>
+              <button
                 onClick={handleSetupProfile}
-                sx={{
-                  background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
-                  color: 'white',
-                  fontWeight: 600,
-                  px: 4,
-                  py: 1.5,
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
-                  }
-                }}
+                className="bg-gradient-to-r from-[#2F3D57] to-[#ED7600] hover:from-[#1a2332] hover:to-[#d65c00] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover-glow w-full sm:w-auto"
               >
                 Set Up Profile
-              </Button>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
         )}
-      </Box>
-    </Box>
+        
+        {/* Incomplete Profile Warning */}
+        {profile && !isProfileComplete() && (
+          <div className="mt-6 sm:mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4 sm:p-6 animate-slideUp hover-lift" style={{animationDelay: '0.3s'}}>
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="flex-shrink-0">
+                <FiAlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold text-yellow-800 mb-2">Profile Incomplete</h3>
+                <p className="text-yellow-700 mb-4 text-sm sm:text-base leading-relaxed">
+                  Your profile is missing some important information. Please update all required fields and upload a logo to access all features and make your society more attractive to potential buyers.
+                </p>
+                <button
+                  onClick={handleEditProfile}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
+                >
+                  <FiEdit2 className="w-4 h-4" />
+                  Complete Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

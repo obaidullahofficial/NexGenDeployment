@@ -25,12 +25,13 @@ const RegistrationForm = () => {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   
-  // Popup modal state
+  // Popup modal state with navigation callback
   const [popup, setPopup] = useState({
     isOpen: false,
     title: '',
     message: '',
-    type: 'info'
+    type: 'info',
+    onOk: null // Callback function to execute when user clicks OK
   });
   
   // Check if user data was passed
@@ -45,24 +46,32 @@ const RegistrationForm = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Show popup modal
-  const showPopup = (title, message, type = 'info') => {
+  // Show popup modal with optional callback
+  const showPopup = (title, message, type = 'info', onOk = null) => {
     setPopup({
       isOpen: true,
       title,
       message,
-      type
+      type,
+      onOk
     });
   };
 
-  // Close popup modal
+  // Close popup modal and execute callback if provided
   const closePopup = () => {
+    const currentOnOk = popup.onOk;
     setPopup({
       isOpen: false,
       title: '',
       message: '',
-      type: 'info'
+      type: 'info',
+      onOk: null
     });
+    
+    // Execute callback after closing popup
+    if (currentOnOk && typeof currentOnOk === 'function') {
+      currentOnOk();
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -90,17 +99,16 @@ const RegistrationForm = () => {
       const data = await res.json();
 
       if (res.ok) {
+        const handleRegistrationSuccess = () => {
+          navigate('/login');
+        };
+        
         showPopup(
           'Registration Successful!',
-          'Your society registration has been submitted successfully! Your account has been created and is pending admin approval. You can now try to login.',
-          'success'
+          'Your society registration has been submitted successfully! Your account has been created and is pending admin approval. Click OK to continue to login.',
+          'success',
+          handleRegistrationSuccess
         );
-        
-        // Redirect to login after showing success message
-        setTimeout(() => {
-          closePopup();
-          navigate('/login');
-        }, 4000);
       } else {
         showPopup(
           'Registration Failed',

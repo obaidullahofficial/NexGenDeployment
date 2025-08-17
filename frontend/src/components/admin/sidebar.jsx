@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../..//assets/Images/logo.png";
+import { AuthContext } from '../../context/AuthContext';
 
 // Lucide icons
 import {
@@ -13,7 +14,13 @@ import {
 
 const Sidebar = () => {
   const location = useLocation();
+  const { logout } = useContext(AuthContext);
   const [hoveredItem, setHoveredItem] = useState(null);
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
 
   const menuItems = [
     {
@@ -58,7 +65,6 @@ const Sidebar = () => {
           <p style={styles.architectTitle}>NextGenArchitect</p>
         </div>
       </div>
-
       <nav>
         {menuItems.map((item) => {
           const isActive =
@@ -91,6 +97,23 @@ const Sidebar = () => {
             </Link>
           );
         })}
+        {/* Logout Button at the bottom */}
+        <button
+          onClick={handleLogout}
+          style={{
+            ...styles.menuItem,
+            backgroundColor: '#b91c1c',
+            color: '#fff',
+            marginTop: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontWeight: 700,
+          }}
+        >
+          {/* You can use an icon here if you want */}
+          Logout
+        </button>
       </nav>
     </div>
   );

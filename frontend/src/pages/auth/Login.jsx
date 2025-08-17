@@ -12,12 +12,13 @@ const Login = () => {
     const [loginError, setLoginError] = useState('');
     const [showSignupType, setShowSignupType] = useState(false);
     
-    // Popup modal state
+    // Popup modal state with navigation callback
     const [popup, setPopup] = useState({
         isOpen: false,
         title: '',
         message: '',
-        type: 'info'
+        type: 'info',
+        onOk: null // Callback function to execute when user clicks OK
     });
     
     const navigate = useNavigate();
@@ -103,34 +104,50 @@ const Login = () => {
                 role: 'user'
             });
             if (result.user_id) {
-                alert('Signup successful as user! Please login.');
-                setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
-                setSignupError('');
-                setIsLoginMode(true); // Switch to login mode
+                const handleUserSignupSuccess = () => {
+                    setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+                    setSignupError('');
+                    setIsLoginMode(true); // Switch to login mode
+                };
+                
+                showPopup(
+                    'Signup Successful!',
+                    'Your account has been created successfully! Click OK to continue to login.',
+                    'success',
+                    handleUserSignupSuccess
+                );
             } else {
                 setSignupError(result.error || 'Signup failed');
             }
         }
     };
 
-    // Show popup modal
-    const showPopup = (title, message, type = 'info') => {
+    // Show popup modal with optional callback
+    const showPopup = (title, message, type = 'info', onOk = null) => {
         setPopup({
             isOpen: true,
             title,
             message,
-            type
+            type,
+            onOk
         });
     };
 
-    // Close popup modal
+    // Close popup modal and execute callback if provided
     const closePopup = () => {
+        const currentOnOk = popup.onOk;
         setPopup({
             isOpen: false,
             title: '',
             message: '',
-            type: 'info'
+            type: 'info',
+            onOk: null
         });
+        
+        // Execute callback after closing popup
+        if (currentOnOk && typeof currentOnOk === 'function') {
+            currentOnOk();
+        }
     };
 
     // Login submit
@@ -139,12 +156,24 @@ const Login = () => {
         setLoginError(''); // Clear previous errors
         
         try {
+            console.log('[LOGIN] Attempting login with:', { email: loginForm.email });
+            
             const result = await loginUser({
                 email: loginForm.email,
                 password: loginForm.password
             });
             
-            if (result.success && result.access_token) {
+            console.log('[LOGIN] Server response:', {
+                success: result.success,
+                hasToken: !!result.access_token,
+                role: result.role,
+                profileComplete: result.profile_complete,
+                error: result.error,
+                status: result.status
+            });
+            
+            // Check for successful login first
+            if (result.success === true && result.access_token) {
                 // Successful login
                 console.log('[LOGIN] Storing token:', {
                     tokenLength: result.access_token.length,
@@ -153,12 +182,24 @@ const Login = () => {
                 
                 localStorage.setItem('token', result.access_token);
                 
+                // Store user data for ProtectedSubAdminRoute
+                const userData = {
+                    email: loginForm.email,
+                    role: result.role,
+                    is_admin: result.is_admin,
+                    profile_complete: result.profile_complete,
+                    profile_exists: result.profile_exists,
+                    missing_fields: result.missing_fields
+                };
+                localStorage.setItem('user', JSON.stringify(userData));
+                
                 // Immediately verify the stored token
                 const storedToken = localStorage.getItem('token');
                 console.log('[LOGIN] Token stored successfully:', {
                     stored: !!storedToken,
                     same: storedToken === result.access_token
                 });
+                console.log('[LOGIN] User data stored:', userData);
                 
                 // Decode and check the token
                 try {
@@ -174,15 +215,8 @@ const Login = () => {
                     console.error('[LOGIN] Error decoding token:', decodeError);
                 }
                 
-                showPopup(
-                    'Login Successful!',
-                    'Welcome back! Redirecting to your dashboard...',
-                    'success'
-                );
-                
-                // Redirect after showing success message
-                setTimeout(() => {
-                    closePopup();
+                // Show success popup and wait for user to click OK before navigating
+                const handleLoginSuccess = () => {
                     if (result.is_admin) {
                         navigate('/dashboard');
                     } else if (result.role === 'society') {
@@ -203,31 +237,44 @@ const Login = () => {
                     } else {
                         navigate('/userprofile');
                     }
-                }, 2000);
+                };
                 
-            } else if (result.error) {
+                showPopup(
+                    'Login Successful!',
+                    'Welcome back! Click OK to continue to your dashboard.',
+                    'success',
+                    handleLoginSuccess
+                );
+                
+            } else {
+                console.log('[LOGIN] Login failed:', result);
+                
                 // Handle specific error types for society users
                 if (result.error === 'registration_pending') {
                     showPopup(
                         'Registration Pending',
-                        'Your society registration request is still being processed. Please wait for admin approval before you can log in.',
+                        'Your society registration request is still being processed. Please wait for admin approval before you can access your dashboard. You will get access to the portal once approved.',
                         'warning'
                     );
                 } else if (result.error === 'registration_rejected') {
                     showPopup(
                         'Registration Rejected',
-                        'Your society registration request has been rejected. Please contact the administrator for more information.',
+                        'Unfortunately, your society registration request has been rejected by the administrator. Please contact support at admin@nextgenarchitect.com for queries.',
                         'error'
                     );
                 } else if (result.error === 'registration_invalid') {
                     showPopup(
-                        'Invalid Registration',
-                        'There is an issue with your registration status. Please contact the administrator for assistance.',
+                        'Registration Status Issue', 
+                        'There appears to be an issue with your registration status in our system. Please contact the administrator at admin@nextgenarchitect.com for immediate assistance.',
                         'error'
                     );
+                } else if (result.error === 'Invalid password') {
+                    setLoginError('Invalid email or password. Please try again.');
+                } else if (result.error === 'User not found') {
+                    setLoginError('No account found with this email address.');
                 } else {
-                    // Generic error
-                    setLoginError(result.error || 'Login failed. Please check your credentials.');
+                    // Generic error - could be from status messages or other errors
+                    setLoginError(result.error || result.message || 'Login failed. Please check your credentials.');
                 }
             }
         } catch (error) {

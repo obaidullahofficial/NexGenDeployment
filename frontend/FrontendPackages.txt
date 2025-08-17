@@ -11,3 +11,5 @@ npm install react-datepicker
 
 npm install jspdf
 npm install html2canvas
+
+npm install react-toastify

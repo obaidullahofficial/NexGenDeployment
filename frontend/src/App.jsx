@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-// Subadmin imports
+// Subadmin imports 
 import SubadminDashboard from './pages/subadmin/SubAdminDashboard';
 import SocietyProfile from './pages/subadmin/SocietyProfile';
 import SocietyProfileSetup from './pages/subadmin/SocietyProfileSetup';
@@ -33,25 +33,35 @@ import ReviewManagement from "./pages/admin/ReviewManagement";
 import ReportManagement from "./pages/admin/ReportManagement";
 import AdvertisementManagement from "./pages/admin/AdvertisementManagement";
 
+// Wrapper for Admin Layout with Sidebar + Topbar
+const AdminLayout = ({ children }) => (
+  <div className="flex">
+    <Sidebar />
+    <div className="flex-1">
+      <Layout>{children}</Layout>
+    </div>
+  </div>
+);
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* User Profile */}
         <Route path="/userprofile" element={<UserProfileLayout />} />
-        {/* Auth Route */}
+
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/registration-form" element={<RegistrationForm />} />
-        
-        {/* Society Profile Setup Route - Standalone */}
+
+        {/* Society Profile Standalone */}
         <Route path="/society-profile-setup" element={<SocietyProfileSetup />} />
-        
-        {/* Society Profile Edit Route - Standalone but requires authentication */}
         <Route path="/society-profile-edit" element={<SocietyProfileEdit />} />
 
         {/* User Routes */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="/societies/:societyId/plots/:plotId" element={<PlotDetail />} />
+          <Route path="societies/:societyId/plots/:plotId" element={<PlotDetail />} />
           <Route path="society" element={<SocietiesPage />} />
           <Route path="societies/:societyId/plots" element={<SocietyPlots />} />
           <Route path="generate-floor-plan/:societyId/:plotId" element={<GenerateFloorPlan />} />
@@ -65,34 +75,22 @@ function App() {
         }>
           <Route index element={<PlotManager />} />
           <Route path="plotManagement" element={<PlotManager />} />
-          <Route path="floorPlan" element={<FloorPlanGenerator/>} /> 
+          <Route path="floorPlan" element={<FloorPlanGenerator />} /> 
           <Route path="approvals" element={<Approvals />} />
           <Route path="compliance" element={<ComplianceManagement />} />
           <Route path="society-profile" element={<SocietyProfile />} />
         </Route>
 
-        {/* Admin Routes with Sidebar + Layout */}
-        <Route
-          path="*"
-          element={
-            <div className="flex">
-              <Sidebar />
-              <div className="flex-1">
-                <Layout>
-                  <Routes>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/userManagementDashboard" element={<UserManagementDashboard />} />
-                    <Route path="/society-management" element={<SocietyManagement />} />
-                    <Route path="/review-management" element={<ReviewManagement />} />
-                    <Route path="/advertisement-management" element={<AdvertisementManagement />} />
-                    <Route path="/reports" element={<ReportManagement />} />
-                    {/* <Route path="*" element={<Navigate to="/dashboard" replace />} /> */}
-                  </Routes>
-                </Layout>
-              </div>
-            </div>
-          }
-        />
+        {/* Admin Routes */}
+        <Route path="/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
+        <Route path="/UserManagementDashboard" element={<AdminLayout><UserManagementDashboard /></AdminLayout>} />
+        <Route path="/society-management" element={<AdminLayout><SocietyManagement /></AdminLayout>} />
+        <Route path="/review-management" element={<AdminLayout><ReviewManagement /></AdminLayout>} />
+        <Route path="/advertisement-management" element={<AdminLayout><AdvertisementManagement /></AdminLayout>} />
+        <Route path="/reports" element={<AdminLayout><ReportManagement /></AdminLayout>} />
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

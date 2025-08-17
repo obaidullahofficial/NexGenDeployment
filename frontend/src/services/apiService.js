@@ -19,12 +19,55 @@ export async function signupUser({ username, email, password, role = "user" }) {
 }
 
 export async function loginUser({ email, password }) {
-  const response = await fetch(`${API_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  return response.json();
+  console.log('[API] Attempting login with:', { email });
+  
+  try {
+    // Check if email and password are provided
+    if (!email || !password) {
+      console.error('[API] Missing email or password');
+      throw new Error('Email and password are required');
+    }
+
+    const response = await fetch(`${API_URL}/login`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    console.log('[API] Login response:', {
+      status: response.status,
+      success: data.success,
+      hasToken: !!data.access_token,
+      role: data.role,
+      error: data.error
+    });
+
+    // For authentication/authorization errors (401, 403), return the data with error info
+    // so the frontend can handle specific error types (like registration status)
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        // Return error data for proper handling in frontend
+        return {
+          success: false,
+          error: data.error,
+          message: data.message,
+          status: response.status
+        };
+      } else {
+        // For other errors, throw exception
+        throw new Error(data.error || 'Login failed');
+      }
+    }
+
+    return data;
+  } catch (error) {
+    console.error('[API] Login error:', error.message);
+    throw error;
+  }
 }
 
 export async function societySignup(societyData) {
@@ -280,7 +323,7 @@ export function getSessionTimeRemaining() {
     }
     
     return 0;
-  } catch (error) {
+  } catch {
     return 0;
   }
 }
@@ -315,6 +358,210 @@ export async function testTokenValidity() {
     return result;
   } catch (error) {
     console.error('Token test failed:', error);
+    throw error;
+  }
+}
+
+// ===================
+// PLOT API FUNCTIONS
+// ===================
+
+/**
+ * Get all plots for the current society
+ */
+export async function getPlots() {
+  const token = getValidToken();
+  
+  console.log('[getPlots] Fetching plots...');
+  
+  try {
+    const response = await fetch(`${API_URL}/plots`, {
+      method: "GET",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    
+    const result = await response.json();
+    console.log('[getPlots] Response:', { status: response.status, result });
+    
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to fetch plots');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[getPlots] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new plot
+ */
+export async function createPlot(plotData) {
+  const token = getValidToken();
+  
+  console.log('[createPlot] Creating plot with data:', plotData);
+  
+  // Check if plotData is FormData (for file uploads) or regular object
+  const isFormData = plotData instanceof FormData;
+  
+  const headers = {
+    "Authorization": `Bearer ${token}`
+  };
+  
+  // Don't set Content-Type for FormData, let browser set it with boundary
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/plots`, {
+      method: "POST",
+      headers,
+      body: isFormData ? plotData : JSON.stringify(plotData)
+    });
+    
+    const result = await response.json();
+    console.log('[createPlot] Response:', { status: response.status, result });
+    
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to create plot');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[createPlot] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get a single plot by ID
+ */
+export async function getPlot(plotId) {
+  const token = getValidToken();
+  
+  console.log('[getPlot] Fetching plot:', plotId);
+  
+  try {
+    const response = await fetch(`${API_URL}/plots/${plotId}`, {
+      method: "GET",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    
+    const result = await response.json();
+    console.log('[getPlot] Response:', { status: response.status, result });
+    
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to fetch plot');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[getPlot] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing plot
+ */
+export async function updatePlot(plotId, plotData) {
+  const token = getValidToken();
+  
+  console.log('[updatePlot] Updating plot:', plotId, 'with data:', plotData);
+  
+  // Check if plotData is FormData (for file uploads) or regular object
+  const isFormData = plotData instanceof FormData;
+  
+  const headers = {
+    "Authorization": `Bearer ${token}`
+  };
+  
+  // Don't set Content-Type for FormData, let browser set it with boundary
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/plots/${plotId}`, {
+      method: "PUT",
+      headers,
+      body: isFormData ? plotData : JSON.stringify(plotData)
+    });
+    
+    const result = await response.json();
+    console.log('[updatePlot] Response:', { status: response.status, result });
+    
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to update plot');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[updatePlot] Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a plot
+ */
+export async function deletePlot(plotId) {
+  const token = getValidToken();
+  
+  console.log('[deletePlot] Deleting plot:', plotId);
+  
+  try {
+    const response = await fetch(`${API_URL}/plots/${plotId}`, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
+    
+    const result = await response.json();
+    console.log('[deletePlot] Response:', { status: response.status, result });
+    
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to delete plot');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[deletePlot] Error:', error);
     throw error;
   }
 }

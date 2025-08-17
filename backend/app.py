@@ -2,17 +2,30 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from routes.user_routes import user_bp
 from routes.society_profile_routes import society_profile_bp
+from routes.plot_routes import plot_bp
 from flask_cors import CORS  
 from utils.db import test_connection
 
 from datetime import timedelta
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
-app.config['JWT_SECRET_KEY'] = '6b30c0cdbdc749228ae16f07492b441310eac85611cbd607e1e110237218f89b'  # Replace with your secret key
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)  # 30 minutes session timeout
+
+# Configure CORS
+CORS(app, 
+     origins=["http://localhost:5173"], 
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     expose_headers=["Content-Type", "Authorization"])
+
+# JWT Configuration
+app.config['JWT_SECRET_KEY'] = '6b30c0cdbdc749228ae16f07492b441310eac85611cbd607e1e110237218f89b'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # Increased to 1 hour
 app.config['JWT_ALGORITHM'] = 'HS256'
-app.config['JWT_DECODE_LEEWAY'] = 30  # 30 seconds leeway for token validation
+app.config['JWT_DECODE_LEEWAY'] = 30
+app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
+app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # Set to True in production
+app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 jwt = JWTManager(app)
 
@@ -32,7 +45,7 @@ def missing_token_callback(error):
 # Register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(society_profile_bp, url_prefix='/api')
-
+app.register_blueprint(plot_bp, url_prefix='/api')
 @app.route('/api/db-test')
 def db_test():
     result = test_connection()

@@ -21,7 +21,59 @@ def get_society_profile():
         profile = profiles.find_one({'user_email': user_email})
         
         if not profile:
-            return jsonify({"error": "Profile not found"}), 404
+            # If no profile exists, create one with society name from registration
+            from models.registration_form import registration_form_collection
+            reg_forms = registration_form_collection(db)
+            registration = reg_forms.find_one({'user_email': user_email, 'status': 'approved'})
+            
+            if registration and registration.get('name'):
+                # Create new profile with hardcoded society name from registration
+                new_profile = {
+                    'user_email': user_email,
+                    'name': registration['name'],  # Hardcoded from registration
+                    'registered_society_name': registration['name'],  # Store original registration name
+                    'description': '',
+                    'location': '',
+                    'available_plots': '',
+                    'price_range': '',
+                    'society_logo': '',
+                    'is_complete': False,
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow()
+                }
+                
+                result = profiles.insert_one(new_profile)
+                new_profile['_id'] = str(result.inserted_id)
+                
+                print(f"[GET PROFILE] Created new profile with hardcoded name: {registration['name']}")
+                
+                return jsonify({
+                    "success": True,
+                    "profile": new_profile
+                }), 200
+            else:
+                return jsonify({"error": "Registration not found or not approved"}), 404
+        
+        # If profile exists but doesn't have registered_society_name, add it from registration
+        if not profile.get('registered_society_name'):
+            from models.registration_form import registration_form_collection
+            reg_forms = registration_form_collection(db)
+            registration = reg_forms.find_one({'user_email': user_email, 'status': 'approved'})
+            
+            if registration and registration.get('name'):
+                # Update profile to include registered society name and ensure name matches registration
+                profiles.update_one(
+                    {'user_email': user_email},
+                    {'$set': {
+                        'name': registration['name'],  # Hardcode from registration
+                        'registered_society_name': registration['name'],
+                        'updated_at': datetime.utcnow()
+                    }}
+                )
+                profile['name'] = registration['name']
+                profile['registered_society_name'] = registration['name']
+                
+                print(f"[GET PROFILE] Updated profile with hardcoded name: {registration['name']}")
         
         # Convert ObjectId to string for JSON
         profile['_id'] = str(profile['_id'])
@@ -128,9 +180,16 @@ def create_or_update_society_profile():
             'updated_at': datetime.utcnow()
         }
         
-        # Add non-empty fields
+        # Get existing profile to check for registered society name
+        existing_profile = profiles.find_one({'user_email': user_email})
+        
+        # Add non-empty fields but EXCLUDE name if it's already registered
         for field in ['name', 'description', 'location', 'available_plots', 'price_range', 'society_logo']:
             if field in profile_data and profile_data[field]:
+                # Do not allow changing the society name if it's already set from registration
+                if field == 'name' and existing_profile and existing_profile.get('registered_society_name'):
+                    print(f"[DEBUG] Blocked attempt to change society name from '{existing_profile.get('name')}' to '{profile_data[field]}'")
+                    continue  # Skip updating name field
                 update_data[field] = profile_data[field]
         
         # Check completeness
@@ -410,3 +469,16 @@ def debug_society_profile():
         
     except Exception as e:
         return jsonify({"error": f"Debug failed: {str(e)}"}), 500
+
+@society_profile_bp.route('/society-profiles', methods=['GET'])
+def get_all_society_profiles():
+    """Get all society profiles (public endpoint)"""
+    try:
+        db = get_db()
+        profiles = society_profile_collection(db)
+        all_profiles = list(profiles.find())
+        for profile in all_profiles:
+            profile['_id'] = str(profile['_id'])
+        return jsonify(all_profiles), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to get all profiles: {str(e)}"}), 500

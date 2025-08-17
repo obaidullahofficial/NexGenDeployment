@@ -14,6 +14,8 @@ const SocietyProfileSetup = () => {
     available_plots: '',
     price_range: ''
   });
+  
+  const [societyName, setSocietyName] = useState(''); // Store the original society name from registration
 
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -47,8 +49,12 @@ const SocietyProfileSetup = () => {
     try {
       const result = await getSocietyProfile();
       if (result.success && result.profile) {
+        // Store the original society name from registration (this should be read-only)
+        const originalSocietyName = result.profile.name || '';
+        setSocietyName(originalSocietyName);
+        
         setProfile({
-          name: result.profile.name || '',
+          name: originalSocietyName, // Use original name from registration
           description: result.profile.description || '',
           location: result.profile.location || '',
           available_plots: result.profile.available_plots || '',
@@ -161,7 +167,12 @@ const SocietyProfileSetup = () => {
       // Create FormData
       const formData = new FormData();
       Object.keys(profile).forEach(key => {
-        formData.append(key, profile[key]);
+        if (key === 'name') {
+          // Always use the original society name from registration
+          formData.append(key, societyName || profile[key]);
+        } else {
+          formData.append(key, profile[key]);
+        }
       });
       
       if (logo) {
@@ -180,28 +191,49 @@ const SocietyProfileSetup = () => {
       });
       
       if (result.success) {
-        if (result.is_complete) {
-          console.log('[PROFILE SETUP] Initial profile setup complete, navigating to dashboard');
+        // Check if profile is complete OR if all required fields are filled
+        const allFieldsFilled = profile.name && profile.description && profile.location && 
+                               profile.available_plots && profile.price_range && 
+                               (logo || logoPreview);
+        
+        console.log('[PROFILE SETUP] Profile completion check:', {
+          backend_is_complete: result.is_complete,
+          all_fields_filled: allFieldsFilled,
+          will_navigate: result.is_complete || allFieldsFilled
+        });
+        
+        if (result.is_complete || allFieldsFilled) {
+          console.log('[PROFILE SETUP] Profile setup complete, navigating to dashboard');
+          
+          // Create navigation callback for popup
+          const handleNavigationSuccess = () => {
+            console.log('[PROFILE SETUP] User clicked OK, navigating to /subadmin dashboard');
+            navigate('/subadmin');
+          };
           
           showPopup(
             'Profile Complete!',
-            'Your society profile has been completed successfully. Welcome to your dashboard!',
+            'Your society profile has been completed successfully. Click OK to access your dashboard!',
             'success'
           );
           
+          // Also add automatic fallback navigation in case popup doesn't work
           setTimeout(() => {
-            console.log('[PROFILE SETUP] Navigating to /subadmin dashboard');
+            console.log('[PROFILE SETUP] Auto-fallback navigation to /subadmin dashboard');
             closePopup();
             navigate('/subadmin');
-          }, 2000);
+          }, 3000);
+          
         } else {
+          console.log('[PROFILE SETUP] Profile incomplete, showing update message');
           showPopup(
             'Profile Updated!',
-            'Profile updated successfully. Please fill in all required fields to access your dashboard.',
+            `Profile updated successfully. Missing fields: ${result.missing_fields ? result.missing_fields.join(', ') : 'Please check all required fields'}`,
             'success'
           );
         }
       } else {
+        console.log('[PROFILE SETUP] Profile update failed:', result.error);
         setMessage(result.error || 'Failed to update profile');
       }
       
@@ -244,11 +276,18 @@ const SocietyProfileSetup = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   label="Society Name"
-                  value={profile.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  value={societyName || profile.name}
                   fullWidth
                   required
                   variant="outlined"
+                  InputProps={{
+                    readOnly: true,
+                    style: { 
+                      backgroundColor: '#f5f5f5',
+                      color: '#666'
+                    }
+                  }}
+                  helperText="This name is from your approved registration and cannot be changed"
                 />
               </Grid>
 
@@ -300,78 +339,89 @@ const SocietyProfileSetup = () => {
 
               {/* Logo Upload Section */}
               <Grid item xs={12}>
-                <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2, borderBottom: '2px solid #ED7600', pb: 1, mt: 2 }}>
-                  Society Logo
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box sx={{ mb: 2 }}>
-                  <input
-                    accept="image/png,image/jpeg,image/jpg"
-                    style={{ display: 'none' }}
-                    id="logo-upload"
-                    type="file"
-                    onChange={handleLogoChange}
-                  />
-                  <label htmlFor="logo-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      sx={{ mr: 2 }}
-                    >
-                      Upload Logo (PNG/JPG)
-                    </Button>
-                  </label>
-                  <Typography variant="caption" color="textSecondary">
-                    Required: PNG, JPG, or JPEG format (max 5MB)
+                {/* Society Logo Heading with Upload Button */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, borderBottom: '2px solid #ED7600', pb: 1, mt: 2 }}>
+                  <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600 }}>
+                    Society Logo
                   </Typography>
+                  
+                  {/* Upload Button aligned with heading */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <input
+                      accept="image/png,image/jpeg,image/jpg"
+                      style={{ display: 'none' }}
+                      id="logo-upload"
+                      type="file"
+                      onChange={handleLogoChange}
+                    />
+                    <label htmlFor="logo-upload">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        sx={{ 
+                          background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
+                          color: 'white',
+                          fontWeight: 600,
+                          '&:hover': {
+                            background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
+                          }
+                        }}
+                      >
+                        {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                      </Button>
+                    </label>
+                  </Box>
                 </Box>
                 
+                {/* Format requirements */}
+                <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 2 }}>
+                  Required: PNG, JPG, or JPEG format (max 5MB)
+                </Typography>
+                
+                {/* Logo Preview */}
                 {logoPreview && (
                   <Box sx={{ mt: 2, textAlign: 'center' }}>
                     <img
                       src={logoPreview}
                       alt="Logo Preview"
                       style={{
-                        maxWidth: '200px',
-                        maxHeight: '200px',
-                        border: '1px solid #ddd',
-                        borderRadius: '8px'
+                        maxWidth: '250px',
+                        maxHeight: '250px',
+                        border: '2px solid #ED7600',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                       }}
                     />
-                    <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                      Logo Preview
+                    <Typography variant="body2" sx={{ mt: 1, color: '#2F3D57', fontWeight: 500 }}>
+                      ✅ Logo Preview - Ready for submission
                     </Typography>
                   </Box>
                 )}
               </Grid>
-
-              {/* Submit Button */}
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    sx={{
-                      background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
-                      color: 'white',
-                      fontWeight: 700,
-                      fontSize: 18,
-                      px: 6,
-                      py: 2,
-                      borderRadius: 3,
-                      '&:hover': {
-                        background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
-                      }
-                    }}
-                  >
-                    {loading ? 'Updating Profile...' : 'Complete Profile'}
-                  </Button>
-                </Box>
-              </Grid>
             </Grid>
+            
+            {/* Submit Button - Outside main grid, positioned at bottom-right */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid #e0e0e0' }}>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={loading}
+                sx={{
+                  background: 'linear-gradient(45deg, #2F3D57 30%, #ED7600 90%)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: 18,
+                  px: 6,
+                  py: 2,
+                  borderRadius: 3,
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #1a2332 30%, #d65c00 90%)',
+                  }
+                }}
+              >
+                {loading ? 'Updating Profile...' : 'Complete Profile'}
+              </Button>
+            </Box>
           </form>
         </Paper>
       </Box>

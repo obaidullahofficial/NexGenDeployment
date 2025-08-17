@@ -39,8 +39,8 @@ const PopupModal = ({ isOpen, onClose, title, message, type = "info" }) => {
   const styles = getTypeStyles();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 border-2 ${styles.borderColor} animate-fadeIn`}>
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50">
+      <div className={`bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 border border-white/20 border-t-4 ${styles.borderColor} animate-fadeIn`}>
         <div className="flex items-center mb-4">
           <div className={`w-12 h-12 rounded-full ${styles.iconBg} flex items-center justify-center mr-4`}>
             <span className={`text-2xl font-bold ${styles.iconColor}`}>

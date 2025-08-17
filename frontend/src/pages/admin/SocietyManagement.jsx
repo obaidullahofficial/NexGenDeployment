@@ -118,7 +118,7 @@ function SearchAndFilter({ search, setSearch }) {
   );
 }
 
-function Pagination({ currentPage, totalPages, setCurrentPage }) {
+function Pagination({ currentPage, setCurrentPage }) {
   return (
     <div className="flex items-center justify-between py-3 px-4 border-t">
       <div className="text-gray-600 text-sm">

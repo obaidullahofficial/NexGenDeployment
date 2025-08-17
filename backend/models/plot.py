@@ -4,7 +4,8 @@ def plot_collection(db):
 
 # Example plot schema (for reference, not enforced by MongoDB)
 plot_schema = {
-    'id': str,  # Plot ID
+    'plot_id': str,  # Plot ID
+    'plot_number': str,  # Unique plot number within a society
     'societyId': str,  # Society ID
     'image': str,  # Image URL or path
     'price': str,  # e.g., 'PKR 50 Lakh'

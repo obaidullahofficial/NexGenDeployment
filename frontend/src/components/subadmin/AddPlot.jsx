@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiPhone } from "react-icons/fi";
+import AlertModal from '../common/AlertModal';
+import { useAlert } from '../../hooks/useAlert';
 
-const AddPlotForm = ({ onSubmit, onCancel }) => {
+const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
   const [form, setForm] = useState({
     plotId: "",
+    plot_number: "", // New field for plot number
     price: "",
     status: "Available",
     type: "Residential",
@@ -14,7 +17,7 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
     description: [""],
     contactName: "",
     contactPhone: "",
-  // contactAvailability removed
+    images: [], // New field for storing images
     amenities: {
       gatedCommunity: false,
       security: false,
@@ -24,6 +27,13 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
       mosque: false
     }
   });
+
+  const [imagePreviews, setImagePreviews] = useState([]); // For displaying previews
+  const [plotImage, setPlotImage] = useState(null); // For storing single image file
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
+  const [imageError, setImageError] = useState(false); // Track image validation error
+  const { alertState, showError, showWarning, showSuccess, closeAlert } = useAlert();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -54,24 +64,202 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  // Handle plot image selection (similar to society profile)
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    console.log('File selected:', file);
+    
+    if (file) {
+      // Clear image error when user uploads an image
+      setImageError(false);
+      // Validate image format (PNG, JPG, JPEG)
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showError('Invalid Image Format', 'Please select a PNG, JPG, or JPEG file for the plot image.');
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showError('File Size Too Large', 'Plot image file size must be less than 5MB.');
+        return;
+      }
+      
+      console.log('Setting plot image:', file.name);
+      setPlotImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        console.log('FileReader loaded, setting preview');
+        const dataUrl = e.target.result;
+        console.log('Data URL length:', dataUrl.length);
+        setImagePreviews([dataUrl]);
+      };
+      reader.onerror = (e) => {
+        console.error('FileReader error:', e);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log('No file selected');
+    }
+  };
+
+  const removeImage = () => {
+    setPlotImage(null);
+    setImagePreviews([]);
+  };
+
+  // Helper to convert amenities object to array of enabled amenities
+  const getSelectedAmenities = (amenitiesObj) =>
+    Object.entries(amenitiesObj)
+      .filter((entry) => entry[1])
+      .map(([key]) => key);
+
+  // API integration for Add Plot using FormData (like society profile)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(form);
+    
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log('[AddPlot] Submission already in progress, ignoring duplicate request');
+      return;
+    }
+    
+    setLoading(true);
+    setIsSubmitting(true);
+
+    try {
+      // Simple validation - reset states immediately on validation failure
+      const requiredFields = ['plot_number', 'price', 'area', 'dimension_x', 'dimension_y', 'location', 'contactName', 'contactPhone'];
+      for (let field of requiredFields) {
+        if (!form[field] || form[field].toString().trim() === '') {
+          // Reset states before showing alert so button becomes available again after user clicks OK
+          setLoading(false);
+          setIsSubmitting(false);
+          await showWarning('Missing Information', `Please fill in ${field.replace('_', ' ')}.`);
+          return;
+        }
+      }
+      
+      // Image is mandatory
+      if (!plotImage) {
+        // Show red border validation instead of alert
+        setImageError(true);
+        setLoading(false);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Clear image error if validation passes
+      setImageError(false);
+      
+      // Create FormData like society profile
+      const formData = new FormData();
+      formData.append('plot_number', form.plot_number);
+      formData.append('price', form.price);
+      formData.append('status', form.status);
+      formData.append('type', form.type);
+      formData.append('area', form.area);
+      formData.append('dimension_x', form.dimension_x);  // Send as string, backend will convert to int
+      formData.append('dimension_y', form.dimension_y);  // Send as string, backend will convert to int
+      formData.append('location', form.location);
+      
+      // Add description array
+      const descriptions = form.description.filter(d => d.trim() !== '');
+      descriptions.forEach((desc, index) => {
+        formData.append(`description[${index}]`, desc);
+      });
+      
+      // Add seller info
+      formData.append('seller[name]', form.contactName);
+      formData.append('seller[phone]', form.contactPhone);
+      
+      // Add amenities
+      const amenities = getSelectedAmenities(form.amenities);
+      amenities.forEach((amenity, index) => {
+        formData.append(`amenities[${index}]`, amenity);
+      });
+      
+      // Add plot image (matching backend expectation)
+      if (plotImage) {
+        console.log('[AddPlot] Adding plot image to FormData:', plotImage.name, plotImage.type, plotImage.size);
+        formData.append('plot_image', plotImage);
+      }
+      
+      // Debug: Log what's being sent
+      console.log('[AddPlot] FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
+      }
+      
+      // Additional validation debug
+      console.log('[AddPlot] Pre-submission validation:', {
+        hasPlotImage: !!plotImage,
+        imageFileName: plotImage?.name,
+        imageFileSize: plotImage?.size,
+        imageFileType: plotImage?.type,
+        formDataSize: Array.from(formData.entries()).length
+      });
+      
+      const result = await onSubmit(formData); // Use parent's handler with FormData
+      
+      if (result !== false) { // If parent handler succeeds
+        // Show success message and wait for user acknowledgment
+        await showSuccess('Success!', 'Plot added successfully!');
+        // After user clicks OK, reset form and close modal
+        setForm({
+          plotId: "",
+          plot_number: "",
+          price: "",
+          status: "Available",
+          type: "Residential",
+          area: "",
+          dimension_x: "",
+          dimension_y: "",
+          location: "",
+          description: [""],
+          contactName: "",
+          contactPhone: "",
+          images: [],
+          amenities: {
+            gatedCommunity: false,
+            security: false,
+            electricity: false,
+            waterSupply: false,
+            parks: false,
+            mosque: false
+          }
+        });
+        setPlotImage(null);
+        setImagePreviews([]);
+        
+        if (onCancel) onCancel(); // Close the form
+      }
+      
+    } catch (error) {
+      console.error('Error creating plot:', error);
+      await showError('Error Creating Plot', error.message || 'An unexpected error occurred while creating the plot.');
+    } finally {
+      setLoading(false);
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="bg-white p-10 rounded-lg shadow-lg max-w-6xl mx-auto min-h-95vh">
+    <>
+      <div className="bg-white p-10 rounded-lg shadow-lg max-w-6xl mx-auto min-h-95vh">
       <h2 className="text-2xl font-bold text-[#2F3D57] mb-6">Add New Plot</h2>
       <form onSubmit={handleSubmit}>
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Plot ID</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Plot Number</label>
               <input
                 type="text"
-                name="plotId"
-                value={form.plotId}
+                name="plot_number"
+                value={form.plot_number}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
                 required
@@ -224,11 +412,87 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
               </div>
             </div>
 
-            {/* Contact Availability removed */}
+            {/* Image Upload Section - Society Profile Style */}
+            <div className={`${imageError ? 'border-2 border-red-500 rounded-lg p-4 bg-red-50' : ''}`}>
+              <label className={`block text-sm font-medium mb-3 text-lg font-semibold border-b-2 pb-2 ${
+                imageError ? 'text-red-600 border-red-500' : 'text-gray-700 border-[#ED7600]'
+              }`}>
+                Plot Image <span className="text-red-600">*</span>
+                {imageError && (
+                  <span className="block text-sm font-normal text-red-600 mt-1">
+                    Image upload is required. Please upload a plot image.
+                  </span>
+                )}
+              </label>
+              
+              {/* Upload button */}
+              <div className="mb-4">
+                <input
+                  accept="image/png,image/jpeg,image/jpg"
+                  style={{ display: 'none' }}
+                  id="plot-image-upload"
+                  type="file"
+                  onChange={handleImageUpload}
+                />
+                <label htmlFor="plot-image-upload">
+                  <button
+                    type="button"
+                    className="px-4 py-2 border-2 border-[#ED7600] text-[#ED7600] rounded-md hover:bg-[#ED7600] hover:text-white transition-colors mr-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('plot-image-upload').click();
+                    }}
+                  >
+                    {imagePreviews.length > 0 ? 'Change Image' : 'Upload Image'} (PNG/JPG)
+                  </button>
+                </label>
+                <span className="text-xs text-gray-500 ml-2">
+                  PNG, JPG, or JPEG format (max 5MB) - <strong className="text-red-600">Required</strong>
+                </span>
+              </div>
+              
+              {/* Image preview in society profile view format */}
+              {imagePreviews.length > 0 ? (
+                <div className="text-center">
+                  <div className="mb-2 text-sm text-green-600">✓ Current Image</div>
+                  <img
+                    src={imagePreviews[0]}
+                    alt="Plot Preview"
+                    style={{
+                      maxWidth: '200px',
+                      maxHeight: '200px',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      objectFit: 'cover'
+                    }}
+                    onLoad={() => console.log('Image loaded successfully')}
+                    onError={(e) => {
+                      console.error('Image load error:', e);
+                      console.error('Image src:', imagePreviews[0]);
+                    }}
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    {plotImage ? plotImage.name : 'Current Image'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="mt-2 px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center p-4 border-2 border-dashed border-gray-300 rounded">
+                  <p className="text-gray-500">No image selected</p>
+                  <p className="text-xs text-gray-400 mt-1">Click "Upload Image" to add a plot image</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Amenities Section moved here */}
+        {/* Amenities Section */}
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
           <div className="grid grid-cols-2 gap-2">
@@ -266,14 +530,39 @@ const AddPlotForm = ({ onSubmit, onCancel }) => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#ED7600] text-white rounded-md hover:bg-[#D56900]"
+              disabled={isSubmitting || loading}
+              className={`px-6 py-2 rounded-md ${
+                isSubmitting || loading
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-[#ED7600] text-white hover:bg-[#D56900]'
+              }`}
             >
-              Add Plot
+              {isSubmitting || loading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding Plot...
+                </span>
+              ) : (
+                'Add Plot'
+              )}
             </button>
           </div>
         </div>
       </form>
     </div>
+    
+    {/* Custom Alert Modal */}
+    <AlertModal
+      isOpen={alertState.isOpen}
+      onClose={alertState.onClose}
+      title={alertState.title}
+      message={alertState.message}
+      type={alertState.type}
+    />
+    </>
   );
 };
 

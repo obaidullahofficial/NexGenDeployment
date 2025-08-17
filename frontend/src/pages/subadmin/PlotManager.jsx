@@ -1,107 +1,190 @@
-import React, { useState } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaChartLine, FaFilter } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaChartLine, FaFilter, FaSpinner } from "react-icons/fa";
 import AddPlot from "../../components/subadmin/AddPlot";
+import EditPlot from "../../components/subadmin/EditPlot";
+import ConfirmModal from "../../components/common/ConfirmModal";
+import { useConfirm } from "../../hooks/useConfirm";
+import { getPlots, createPlot, updatePlot, deletePlot } from "../../services/apiService";
 
 const PlotManager = () => {
-  const [plots, setPlots] = useState([
-    {
-      id: 1,
-      plotNumber: "PL-1001",
-      name: "Residential Plot A",
-      type: "Residential",
-      size: "10 Marla",
-      dimensions: "50ft x 90ft",
-      price: "PKR 50 Lakh",
-      location: "Bahria Town, Islamabad",
-      status: "Available",
-      lastUpdated: "2023-05-15"
-    },
-    {
-      id: 2,
-      plotNumber: "PL-1002",
-      name: "Residential Plot B",
-      type: "Residential",
-      size: "1 Kanal",
-      dimensions: "60ft x 100ft",
-      price: "PKR 1.2 Crore",
-      location: "DHA Phase 5, Lahore",
-      status: "Sold",
-      lastUpdated: "2023-06-20"
-    },
-    {
-      id: 3,
-      plotNumber: "PL-1003",
-      name: "Residential Plot C",
-      type: "Residential",
-      size: "8 Marla",
-      dimensions: "40ft x 80ft",
-      price: "PKR 35 Lakh",
-      location: "Gulberg, Lahore",
-      status: "Available",
-      lastUpdated: "2023-07-10"
-    },
-    {
-      id: 4,
-      plotNumber: "PL-1004",
-      name: "Residential Plot D",
-      type: "Residential",
-      size: "2 Kanal",
-      dimensions: "100ft x 120ft",
-      price: "PKR 2.5 Crore",
-      location: "Murree Road, Islamabad",
-      status: "Available",
-      lastUpdated: "2023-04-05"
-    },
-    {
-      id: 5,
-      plotNumber: "PL-1005",
-      name: "Residential Plot E",
-      type: "Residential",
-      size: "15 Marla",
-      dimensions: "70ft x 95ft",
-      price: "PKR 75 Lakh",
-      location: "Clifton, Karachi",
-      status: "Sold",
-      lastUpdated: "2023-08-12"
-    }
-  ]);
-
+  // State management
+  const [plots, setPlots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [editPlot, setEditPlot] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [plotNumberFilter, setPlotNumberFilter] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const { confirmState, showConfirm } = useConfirm();
 
-  const handleDelete = (id) => {
-    setPlots(plots.filter((plot) => plot.id !== id));
-  };
+  // Load plots on component mount
+  useEffect(() => {
+    loadPlots();
+  }, []);
 
-  const handleEdit = (plot) => {
-    setEditPlot(plot);
-    setShowAddForm(true);
-  };
-
-  const handleAddOrUpdate = (newPlot) => {
-    // Ensure all plots are residential
-    const plotData = {
-      ...newPlot,
-      type: "Residential"
-    };
-
-    if (editPlot) {
-      setPlots(
-        plots.map((p) => (p.id === editPlot.id ? { ...plotData, id: editPlot.id } : p))
-      );
-    } else {
-      setPlots([...plots, { 
-        ...plotData, 
-        id: Date.now(), 
-        plotNumber: `PL-${Math.floor(1000 + Math.random() * 9000)}`,
-        lastUpdated: new Date().toISOString().split('T')[0] 
-      }]);
+  // Function to load plots from API
+  const loadPlots = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const plotsData = await getPlots();
+      
+      // Debug: Log the raw API response
+      console.log('Raw API response:', plotsData);
+      console.log('Sample plot data:', plotsData[0]);
+      
+      // Transform API data to match expected format
+      const transformedPlots = plotsData.map(plot => ({
+        id: plot._id,
+        plotNumber: plot.plot_number || plot.plotNumber || `PL-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: plot.name || 'Residential Plot',
+        type: plot.type || 'Residential',
+        area: plot.area || 'N/A',
+        dimension_x: plot.dimension_x || 'N/A',
+        dimension_y: plot.dimension_y || 'N/A',
+        dimensions: plot.dimension_x && plot.dimension_y ? `${plot.dimension_x}ft x ${plot.dimension_y}ft` : 'N/A',
+        price: plot.price || 'N/A',
+        location: plot.location || 'N/A',
+        status: plot.status || 'Available',
+        image: plot.image || '',
+        // For table display: show image status, but keep raw data in _originalData
+        images: plot.image ? 'Has image' : 'No image',
+        description: Array.isArray(plot.description) ? plot.description.join(', ') : (plot.description || 'No description'),
+        contactName: plot.seller?.name || 'N/A',
+        contactPhone: plot.seller?.phone || 'N/A',
+        seller: plot.seller ? `${plot.seller.name || 'N/A'} (${plot.seller.phone || 'N/A'})` : 'N/A',
+        amenities: Array.isArray(plot.amenities) ? plot.amenities.join(', ') : 'N/A',
+        lastUpdated: plot.lastUpdated ? new Date(plot.lastUpdated).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        createdDate: plot.createdAt ? new Date(plot.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        // Keep original data for API calls - this preserves the raw image data
+        _originalData: plot
+      }));
+      
+      setPlots(transformedPlots);
+    } catch (err) {
+      console.error('Error loading plots:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    setEditPlot(null);
-    setShowAddForm(false);
+  };
+
+  // Show success message temporarily
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
+
+  // Delete plot handler
+  const handleDelete = async (id) => {
+    const confirmed = await showConfirm({
+      title: 'Delete Plot',
+      message: 'Are you sure you want to delete this plot? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(id);
+      await deletePlot(id);
+      setPlots(plots.filter((plot) => plot.id !== id));
+      showSuccess('Plot deleted successfully!');
+    } catch (err) {
+      console.error('Error deleting plot:', err);
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Edit plot handler
+  const handleEdit = (plot) => {
+    setEditPlot(plot._originalData || plot); // Use original data for editing
+    setShowEditForm(true);
+  };
+
+  // Add plot handler
+  const handleAdd = async (plotFormData) => {
+    try {
+      setSubmitting(true);
+      setError(null);
+      
+      // Check if it's FormData (from new components) or regular object (legacy)
+      let finalFormData;
+      
+      if (plotFormData instanceof FormData) {
+        // It's already FormData from the new component
+        finalFormData = plotFormData;
+        // Ensure type is set to Residential
+        finalFormData.set('type', 'Residential');
+        finalFormData.set('lastUpdated', new Date().toISOString());
+      } else {
+        // Legacy object format - convert to FormData or keep as object
+        finalFormData = {
+          ...plotFormData,
+          type: "Residential",
+          plotNumber: plotFormData.plot_number || `PL-${Math.floor(1000 + Math.random() * 9000)}`,
+          lastUpdated: new Date().toISOString()
+        };
+      }
+
+      console.log('[PlotManager] Creating plot with:', finalFormData instanceof FormData ? 'FormData' : 'Object');
+      
+      // Create new plot
+      const result = await createPlot(finalFormData);
+      
+      // Reload plots to get the fresh data
+      await loadPlots();
+      showSuccess('Plot created successfully!');
+      setShowAddForm(false);
+      
+      return result;
+      
+    } catch (err) {
+      console.error('Error creating plot:', err);
+      setError(err.message);
+      throw err; // Re-throw so component can handle it
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Update plot handler
+  const handleUpdate = async (plotFormData) => {
+    try {
+      setSubmitting(true);
+      setError(null);
+      
+      console.log('[PlotManager] Updating plot with:', plotFormData instanceof FormData ? 'FormData' : 'Object');
+      
+      // Update existing plot
+      const result = await updatePlot(editPlot._id, plotFormData);
+      
+      // Reload plots to get the fresh data
+      await loadPlots();
+      showSuccess('Plot updated successfully!');
+      setShowEditForm(false);
+      setEditPlot(null);
+      
+      return result;
+      
+    } catch (err) {
+      console.error('Error updating plot:', err);
+      setError(err.message);
+      throw err; // Re-throw so component can handle it
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Filter and search functionality
@@ -129,7 +212,33 @@ const PlotManager = () => {
           <FaChartLine className="inline mr-2 text-[#ED7600]" />
           Residential Plot Management Dashboard
         </h1>
+        {loading && (
+          <div className="flex items-center gap-2 text-[#ED7600]">
+            <FaSpinner className="animate-spin" />
+            <span>Loading plots...</span>
+          </div>
+        )}
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex justify-between items-center">
+          <span>{error}</span>
+          <button 
+            onClick={() => setError(null)} 
+            className="text-red-500 hover:text-red-700 font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Stats Cards - Removed Reserved */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -154,7 +263,7 @@ const PlotManager = () => {
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search residential plots..."
+              placeholder="Search by area..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
@@ -200,35 +309,40 @@ const PlotManager = () => {
           <table className="min-w-full text-sm">
             <thead className="bg-[#2F3D57] text-white">
               <tr>
-                <th className="px-6 py-4 text-left font-medium">Plot Number</th>
-                <th className="px-6 py-4 text-left font-medium">Plot Name</th>
-                <th className="px-6 py-4 text-left font-medium">Type</th>
-                <th className="px-6 py-4 text-left font-medium">Size</th>
-                <th className="px-6 py-4 text-left font-medium">Dimensions</th>
-                <th className="px-6 py-4 text-left font-medium">Price</th>
-                <th className="px-6 py-4 text-left font-medium">Location</th>
-                <th className="px-6 py-4 text-left font-medium">Status</th>
-                <th className="px-6 py-4 text-left font-medium">Last Updated</th>
-                <th className="px-6 py-4 text-right font-medium">Actions</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Plot #</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Type</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Area</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Dim X</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Dim Y</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Price</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Location</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Contact Name</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Contact Phone</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Description</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Amenities</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Images</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Created</th>
+                <th className="px-4 py-3 text-left font-medium text-xs">Updated</th>
+                <th className="px-4 py-3 text-right font-medium text-xs">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredPlots.length > 0 ? (
                 filteredPlots.map((plot) => (
                   <tr key={plot.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium">{plot.plotNumber}</td>
-                    <td className="px-6 py-4 font-medium">{plot.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                    <td className="px-4 py-3 font-medium text-xs">{plot.plotNumber}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
                         {plot.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{plot.size}</td>
-                    <td className="px-6 py-4">{plot.dimensions}</td>
-                    <td className="px-6 py-4 font-medium">{plot.price}</td>
-                    <td className="px-6 py-4">{plot.location}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    <td className="px-4 py-3 text-xs">{plot.area}</td>
+                    <td className="px-4 py-3 text-xs">{plot.dimension_x}</td>
+                    <td className="px-4 py-3 text-xs">{plot.dimension_y}</td>
+                    <td className="px-4 py-3 font-medium text-xs">{plot.price}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         plot.status === "Available"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
@@ -236,31 +350,49 @@ const PlotManager = () => {
                         {plot.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">{plot.lastUpdated}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-3">
+                    <td className="px-4 py-3 text-xs max-w-32 truncate" title={plot.location}>{plot.location}</td>
+                    <td className="px-4 py-3 text-xs max-w-32 truncate" title={plot.contactName}>{plot.contactName}</td>
+                    <td className="px-4 py-3 text-xs max-w-32 truncate" title={plot.contactPhone}>{plot.contactPhone}</td>
+                    <td className="px-4 py-3 text-xs max-w-40 truncate" title={plot.description}>{plot.description}</td>
+                    <td className="px-4 py-3 text-xs max-w-32 truncate" title={plot.amenities}>{plot.amenities}</td>
+                    <td className="px-4 py-3 text-xs max-w-32 truncate" title={plot.images}>{plot.images}</td>
+                    <td className="px-4 py-3 text-xs">{plot.createdDate}</td>
+                    <td className="px-4 py-3 text-xs">{plot.lastUpdated}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
                         <button
                           onClick={() => handleEdit(plot)}
-                          className="text-[#2F3D57] hover:text-[#ED7600] transition p-1 rounded-full hover:bg-gray-100"
+                          disabled={submitting}
+                          className={`text-[#2F3D57] hover:text-[#ED7600] transition p-1 rounded-full hover:bg-gray-100 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Edit"
                         >
-                          <FaEdit size={16} />
+                          <FaEdit size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(plot.id)}
-                          className="text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-gray-100"
+                          disabled={deletingId === plot.id}
+                          className={`text-red-500 hover:text-red-700 transition p-1 rounded-full hover:bg-gray-100 ${deletingId === plot.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Delete"
                         >
-                          <FaTrash size={16} />
+                          {deletingId === plot.id ? <FaSpinner className="animate-spin" size={14} /> : <FaTrash size={14} />}
                         </button>
                       </div>
                     </td>
                   </tr>
                 ))
+              ) : loading ? (
+                <tr>
+                  <td colSpan="16" className="px-6 py-4 text-center text-gray-500">
+                    <div className="flex items-center justify-center gap-2">
+                      <FaSpinner className="animate-spin" />
+                      <span>Loading plots...</span>
+                    </div>
+                  </td>
+                </tr>
               ) : (
                 <tr>
-                  <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
-                    No residential plots found matching your criteria
+                  <td colSpan="16" className="px-6 py-4 text-center text-gray-500">
+                    {error ? 'Failed to load plots. Please try again.' : 'No residential plots found matching your criteria'}
                   </td>
                 </tr>
               )}
@@ -269,22 +401,46 @@ const PlotManager = () => {
         </div>
       </div>
 
-      {/* Add/Edit Form Modal */}
+      {/* Add Form Modal */}
       {showAddForm && (
-        <div className="fixed inset-10 backdrop-blur-lg bg-white/50 border border-white/30 flex items-center justify-center z-50 p-4 w-[700px] mx-auto rounded-2xl">
-          <div className="bg-[#2F3D57] rounded-xl shadow-2xl w-full max-w-3xl max-h-[100vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2F3D57]/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
             <AddPlot
-              onSubmit={handleAddOrUpdate}
-              initialData={editPlot}
-              onCancel={() => {
-                setShowAddForm(false);
-                setEditPlot(null);
-              }}
-              plotType="Residential" // Force residential type
+              onSubmit={handleAdd}
+              onCancel={() => setShowAddForm(false)}
+              plotType="Residential"
             />
           </div>
         </div>
       )}
+      
+      {/* Edit Form Modal */}
+      {showEditForm && editPlot && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-[#2F3D57]/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <EditPlot
+              plot={editPlot}
+              onSubmit={handleUpdate}
+              onCancel={() => {
+                setShowEditForm(false);
+                setEditPlot(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={confirmState.onClose}
+        onConfirm={confirmState.onConfirm}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+      />
     </div>
   );
 };

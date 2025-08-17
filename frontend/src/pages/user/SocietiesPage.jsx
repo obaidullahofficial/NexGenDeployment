@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NavBar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { FaMapMarkerAlt, FaHome, FaStar, FaChevronRight } from 'react-icons/fa';
@@ -9,50 +9,30 @@ import ghauri from '../../assets/Ghauri.png';
 import bahria from '../../assets/bahria.png';
 import cda from '../../assets/CDA.png';
 
+const imageMap = {
+  'Bahria Town': bahria,
+  'CDA': cda,
+  'Ghauri Town': ghauri,
+};
+
 const Societies = () => {
   const navigate = useNavigate();
+  const [societies, setSocieties] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const societies = [
-    {
-      id: 1,
-      name: 'Bahria Town',
-      description: 'Bahria Town develops to be the greatest practical real estate developer of all times, with pioneer interest for aviation and engineering, at major business with small-scale amenities.',
-      image: bahria,
-      rating: 4.8,
-      totalPlots: 1250,
-      availablePlots: 85,
-      priceRange: '25L - 1.2Cr',
-      location: 'Rawalpindi/Lahore',
-      amenities: ['Shopping Mall', 'Schools', 'Hospital', 'Golf Course'],
-      features: ['Gated Community', '24/7 Security', 'Developed Infrastructure']
-    },
-    {
-      id: 2,
-      name: 'CDA',
-      description: 'Capital Development Authority: A cornerstone of modern business culture, offering prime locations, advanced operations, and catering to diverse needs with excellence.',
-      image: cda,
-      rating: 4.6,
-      totalPlots: 890,
-      availablePlots: 45,
-      priceRange: '35L - 2Cr',
-      location: 'Islamabad',
-      amenities: ['Metro Access', 'Universities', 'Parks', 'Commercial Areas'],
-      features: ['Government Approved', 'Prime Location', 'Investment Potential']
-    },
-    {
-      id: 3,
-      name: 'Ghauri Town',
-      description: 'Ghauri Town offers affordable housing with easy accessibility, continuous innovation in infrastructure, and essential amenities for residents.',
-      image: ghauri,
-      rating: 4.3,
-      totalPlots: 750,
-      availablePlots: 120,
-      priceRange: '15L - 75L',
-      location: 'Islamabad',
-      amenities: ['Community Center', 'Mosque', 'Parks', 'Market'],
-      features: ['Affordable Housing', 'Easy Payment Plans', 'Growing Community']
-    }
-  ];
+  useEffect(() => {
+    // Replace with your actual API endpoint
+    fetch('http://localhost:5000/api/society-profiles')
+      .then(res => res.json())
+      .then(data => {
+        setSocieties(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch societies:', err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#2F3D57] text-white">
@@ -102,84 +82,79 @@ const Societies = () => {
             <div className="w-20 md:w-24 h-1 bg-[#ED7600] mx-auto rounded-full"></div>
           </div>
           
-          <div className="space-y-8 md:space-y-12">
-            {societies.map((society) => (
-              <div
-                key={society.id}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20"
-              >
-                <div className="flex flex-col lg:flex-row">
-                  {/* Image Section */}
-                  <div className="lg:w-2/5 relative overflow-hidden">
-                    <img
-                      src={society.image}
-                      alt={society.name}
-                      className="w-full h-64 md:h-80 lg:h-full object-cover transition-transform duration-700 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                    
-                    {/* Rating Badge */}
-                    <div className="absolute top-4 md:top-6 right-4 md:right-6 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 md:px-4 md:py-2 flex items-center gap-2 shadow-lg">
-                      <FaStar className="text-yellow-500" />
-                      <span className="text-gray-800 font-bold">{society.rating}</span>
-                    </div>
-                    
-                    {/* Price Badge */}
-                    <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 bg-[#ED7600]/90 backdrop-blur-sm rounded-full px-3 py-1 md:px-4 md:py-2 shadow-lg">
-                      <span className="text-white font-bold text-sm md:text-base">{society.priceRange}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Content Section */}
-                  <div className="lg:w-3/5 p-6 md:p-8 lg:p-10">
-                    <div className="space-y-4 md:space-y-6">
-                      <div className="space-y-2 md:space-y-3">
-                        <h3 className="text-2xl md:text-3xl font-bold text-white hover:text-[#ED7600] transition-colors duration-300">
-                          {society.name}
-                        </h3>
-                        <p className="text-gray-200 leading-relaxed text-base md:text-lg">
-                          {society.description}
-                        </p>
+          {loading ? (
+            <div className="text-center text-lg text-gray-200">Loading societies...</div>
+          ) : (
+            <div className="space-y-8 md:space-y-12">
+              {societies.map((society) => (
+                <div
+                  key={society._id}
+                  className="bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/20"
+                >
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Image Section */}
+                    <div className="lg:w-2/5 relative overflow-hidden">
+                      <img
+                        src={imageMap[society.name] || societiesImg}
+                        alt={society.name}
+                        className="w-full h-64 md:h-80 lg:h-full object-cover transition-transform duration-700 hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                      {/* Price Badge */}
+                      <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 bg-[#ED7600]/90 backdrop-blur-sm rounded-full px-3 py-1 md:px-4 md:py-2 shadow-lg">
+                        <span className="text-white font-bold text-sm md:text-base">
+                          {society.price_range || 'Price on request'}
+                        </span>
                       </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                        <div className="bg-white/5 rounded-xl p-3 md:p-4 border border-white/10 hover:bg-white/10 transition-colors">
-                          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                            <FaMapMarkerAlt className="text-[#ED7600] text-base md:text-lg" />
-                            <span className="text-gray-300 font-medium">Location</span>
-                          </div>
-                          <span className="text-white font-bold">{society.location}</span>
+                    </div>
+                    {/* Content Section */}
+                    <div className="lg:w-3/5 p-6 md:p-8 lg:p-10">
+                      <div className="space-y-4 md:space-y-6">
+                        <div className="space-y-2 md:space-y-3">
+                          <h3 className="text-2xl md:text-3xl font-bold text-white hover:text-[#ED7600] transition-colors duration-300">
+                            {society.name}
+                          </h3>
+                          <p className="text-gray-200 leading-relaxed text-base md:text-lg">
+                            {society.description}
+                          </p>
                         </div>
-                        
-                        <div className="bg-white/5 rounded-xl p-3 md:p-4 border border-white/10 hover:bg-white/10 transition-colors">
-                          <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
-                            <FaHome className="text-[#ED7600] text-base md:text-lg" />
-                            <span className="text-gray-300 font-medium">Available</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                          <div className="bg-white/5 rounded-xl p-3 md:p-4 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                              <FaMapMarkerAlt className="text-[#ED7600] text-base md:text-lg" />
+                              <span className="text-gray-300 font-medium">Location</span>
+                            </div>
+                            <span className="text-white font-bold">{society.location}</span>
                           </div>
-                          <span className="text-white font-bold">{society.availablePlots} plots</span>
+                          <div className="bg-white/5 rounded-xl p-3 md:p-4 border border-white/10 hover:bg-white/10 transition-colors">
+                            <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+                              <FaHome className="text-[#ED7600] text-base md:text-lg" />
+                              <span className="text-gray-300 font-medium">Available</span>
+                            </div>
+                            <span className="text-white font-bold">{society.availablePlots || 0} plots</span>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-3 md:pt-4">
-                        <button 
-                          onClick={() => navigate(`/societies/${society.id}/plots`)}
-                          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-4 bg-[#ED7600] hover:bg-[#d96b00] text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        >
-                          View Plots
-                          <FaChevronRight className="text-sm" />
-                        </button>
-                        <button 
-                          className="flex-1 px-4 py-3 md:px-6 md:py-4 border-2 border-white/30 hover:border-[#ED7600] hover:bg-[#ED7600]/10 text-white font-bold rounded-xl transition-all duration-300"
-                        >
-                          Learn More
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-3 md:pt-4">
+                          <button 
+                            onClick={() => navigate(`/societies/${society._id}/plots`)}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 md:px-6 md:py-4 bg-[#ED7600] hover:bg-[#d96b00] text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                          >
+                            View Plots
+                            <FaChevronRight className="text-sm" />
+                          </button>
+                          <button 
+                            className="flex-1 px-4 py-3 md:px-6 md:py-4 border-2 border-white/30 hover:border-[#ED7600] hover:bg-[#ED7600]/10 text-white font-bold rounded-xl transition-all duration-300"
+                          >
+                            Learn More
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Call to Action Section */}

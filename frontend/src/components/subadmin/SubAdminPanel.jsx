@@ -4,19 +4,41 @@ import {
   FiCheckSquare,
   FiShield,
   FiUsers,
-  FiSettings,
   FiLogOut
 } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/logo2.png';
 
 const SubAdminPanel = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Clear any local storage items if needed
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Redirect to login page
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <aside className="fixed top-0 left-0 h-full w-64 bg-[#2F3D57] text-white flex flex-col z-10">
-      <div className="p-6 text-2xl font-bold border-b border-gray-700">
-        Societies Dashboard
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex items-center space-x-3">
+          <img src={logo} alt="Logo" className="h-8 w-8" />
+          <div className="text-xl font-bold text-white">NextGenArchitect</div>
+        </div>
+        <div className="text-sm text-gray-300 mt-2">Societies Dashboard</div>
       </div>
   <nav className="flex flex-col mt-6 space-y-1 flex-grow">
         <button
@@ -69,16 +91,7 @@ const SubAdminPanel = ({ activeTab, setActiveTab }) => {
         <div className="mt-auto">
           <div className="border-t border-gray-700"></div>
           <button
-            onClick={() => handleTabClick('settings')}
-            className={`flex items-center px-6 py-3 text-left w-full hover:bg-[#ED7600] hover:text-white transition-colors ${
-              activeTab === 'settings' ? 'bg-[#ED7600] text-white font-semibold' : 'text-gray-300'
-            }`}
-          >
-            <FiSettings className="mr-3 text-lg" />
-            Settings
-          </button>
-          <button
-            onClick={() => console.log('Logout')}
+            onClick={handleLogout}
             className="flex items-center px-6 py-3 text-left w-full text-gray-300 hover:bg-red-600 hover:text-white transition-colors"
           >
             <FiLogOut className="mr-3 text-lg" />

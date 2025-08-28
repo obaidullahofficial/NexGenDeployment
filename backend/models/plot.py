@@ -2,8 +2,11 @@ from datetime import datetime
 from bson import ObjectId
 
 class Plot:
-    def __init__(self, plot_number, societyId, price, status='Available', type='Residential Plot', 
-                 area='', dimension_x=0, dimension_y=0, location='', description=None, 
+    """
+    Represents a plot document in the database.
+    """
+    def __init__(self, plot_number, societyId, price, status='Available', type='Residential Plot',
+                 area='', dimension_x=0, dimension_y=0, location='', description=None,
                  seller=None, amenities=None, image=None, plot_id=None, created_at=None, updated_at=None):
         
         self.plot_id = plot_id

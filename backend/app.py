@@ -2,9 +2,10 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from routes.user_routes import user_bp
 from routes.society_profile_routes import society_profile_bp
-from routes.plot_routes import plot_bp
 from flask_cors import CORS  
 from utils.db import test_connection
+from routes.review_routes import review_bp
+from routes.plot_routes import plot_bp  # Import the blueprint
 
 from datetime import timedelta
 
@@ -46,6 +47,10 @@ def missing_token_callback(error):
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(society_profile_bp, url_prefix='/api')
 app.register_blueprint(plot_bp, url_prefix='/api')
+app.register_blueprint(review_bp, url_prefix='/api')
+app.register_blueprint(plot_bp, url_prefix='/api')
+
+
 @app.route('/api/db-test')
 def db_test():
     result = test_connection()

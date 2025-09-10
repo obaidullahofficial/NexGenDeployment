@@ -5,8 +5,199 @@ from models.registration_form import registration_form_collection
 from models.user import user_collection
 from models.society_profile import society_profile_collection
 from utils.db import get_db
+from datetime import datetime, timedelta
+from bson import ObjectId
 
 user_bp = Blueprint('user', __name__)
+
+# Get all users (for admin dashboard)
+@user_bp.route('/users', methods=['GET'])
+@jwt_required()
+def get_all_users():
+    try:
+        db = get_db()
+        users = user_collection(db)
+        
+        # Get all users except passwords
+        user_list = list(users.find({}, {'password': 0}))
+        
+        # Convert ObjectId to string
+        for user in user_list:
+            user['_id'] = str(user['_id'])
+            # Add created date if not present
+            if 'created_at' not in user:
+                user['created_at'] = datetime.now().isoformat()
+        
+        return jsonify({
+            "success": True,
+            "data": user_list,
+            "users": user_list,  # Keep both for backward compatibility
+            "total": len(user_list),
+            "total_count": len(user_list),
+            "message": f"Retrieved {len(user_list)} users successfully"
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to fetch users: {str(e)}"
+        }), 500
+
+# Get user statistics (consolidated route)
+@user_bp.route('/users/stats', methods=['GET'])
+@jwt_required()
+def get_user_stats():
+    try:
+        # Check if current user is admin
+        current_user_email = get_jwt_identity()
+        db = get_db()
+        users = user_collection(db)
+        
+        current_user = users.find_one({'email': current_user_email})
+        if not current_user or current_user.get('role') != 'admin':
+            return jsonify({"success": False, "message": "Admin access required"}), 403
+        
+        total_users = users.count_documents({})
+        
+        # Calculate users from last month
+        last_month = datetime.now() - timedelta(days=30)
+        new_users_this_month = users.count_documents({
+            'created_at': {'$gte': last_month.isoformat()}
+        })
+        
+        # Estimate active users (could be improved with actual activity tracking)
+        active_users = int(total_users * 0.7)  # Rough estimate
+        
+        # Calculate growth rate
+        last_month_start = datetime.now() - timedelta(days=60)
+        last_month_end = datetime.now() - timedelta(days=30)
+        users_previous_month = users.count_documents({
+            'created_at': {
+                '$gte': last_month_start.isoformat(),
+                '$lt': last_month_end.isoformat()
+            }
+        })
+        
+        growth_rate = 0
+        if users_previous_month > 0:
+            growth_rate = ((new_users_this_month - users_previous_month) / users_previous_month) * 100
+        
+        # Get role-based counts
+        admin_count = users.count_documents({'role': 'admin'})
+        society_count = users.count_documents({'role': 'society'})
+        regular_user_count = users.count_documents({'role': 'user'})
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "total_users": total_users,
+                "active_users": active_users,
+                "new_users_this_month": new_users_this_month,
+                "user_growth_rate": round(growth_rate, 2),
+                "admin_count": admin_count,
+                "society_count": society_count,
+                "regular_user_count": regular_user_count,
+                "role_distribution": {
+                    "admin": admin_count,
+                    "society": society_count,
+                    "user": regular_user_count
+                }
+            },
+            "stats": {
+                "total_users": total_users,
+                "admin_count": admin_count,
+                "society_count": society_count,
+                "regular_user_count": regular_user_count,
+                "recent_users_30_days": new_users_this_month,
+                "role_distribution": {
+                    "admin": admin_count,
+                    "society": society_count,
+                    "user": regular_user_count
+                }
+            },
+            "message": "User statistics retrieved successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"[USER STATS ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Failed to fetch user statistics: {str(e)}"
+        }), 500
+
+# Get user analytics
+@user_bp.route('/analytics', methods=['GET'])
+@jwt_required()
+def get_user_analytics():
+    try:
+        date_range = request.args.get('range', '7days')
+        db = get_db()
+        users = user_collection(db)
+        
+        # Calculate date range
+        if date_range == '7days':
+            start_date = datetime.now() - timedelta(days=7)
+        elif date_range == '30days':
+            start_date = datetime.now() - timedelta(days=30)
+        elif date_range == '90days':
+            start_date = datetime.now() - timedelta(days=90)
+        else:
+            start_date = datetime.now() - timedelta(days=365)
+        
+        # Get registrations over time
+        registrations_pipeline = [
+            {
+                '$match': {
+                    'created_at': {'$gte': start_date.isoformat()}
+                }
+            },
+            {
+                '$group': {
+                    '_id': {
+                        '$dateToString': {
+                            'format': '%Y-%m-%d',
+                            'date': {'$dateFromString': {'dateString': '$created_at'}}
+                        }
+                    },
+                    'count': {'$sum': 1}
+                }
+            },
+            {'$sort': {'_id': 1}}
+        ]
+        
+        registrations_over_time = list(users.aggregate(registrations_pipeline))
+        
+        # Get user types
+        user_types_pipeline = [
+            {
+                '$group': {
+                    '_id': '$role',
+                    'count': {'$sum': 1}
+                }
+            }
+        ]
+        
+        user_types = list(users.aggregate(user_types_pipeline))
+        
+        return jsonify({
+            "success": True,
+            "data": {
+                "registrations_over_time": registrations_over_time,
+                "user_types": user_types,
+                "activity_metrics": {
+                    "total_users": users.count_documents({}),
+                    "active_in_range": users.count_documents({
+                        'created_at': {'$gte': start_date.isoformat()}
+                    })
+                }
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Failed to fetch user analytics: {str(e)}"
+        }), 500
 
 @user_bp.route('/register-society', methods=['POST'])
 def register_society():
@@ -235,32 +426,6 @@ def logout():
     response = jsonify({'msg': 'Logout successful'})
     unset_jwt_cookies(response)
     return response, 200
-
-@user_bp.route('/users', methods=['GET'])
-def get_all_users():
-    """Get all users from the database"""
-    try:
-        db = get_db()
-        users = user_collection(db)
-        
-        # Get all users from database
-        all_users = list(users.find())
-        
-        # Remove sensitive information (password hash) and convert ObjectId to string
-        for user in all_users:
-            user['_id'] = str(user['_id'])
-            user.pop('password_hash', None)  # Remove password hash for security
-            
-        return jsonify({
-            "success": True,
-            "users": all_users,
-            "total_count": len(all_users),
-            "message": f"Retrieved {len(all_users)} users successfully"
-        }), 200
-        
-    except Exception as e:
-        print(f"[GET USERS ERROR] {str(e)}")
-        return jsonify({"error": "Failed to retrieve users. Please try again."}), 500
 
 @user_bp.route('/register', methods=['POST'])
 @jwt_required()
@@ -526,61 +691,7 @@ def search_users():
         print(f"[SEARCH USERS ERROR] {str(e)}")
         return jsonify({"success": False, "message": "Failed to search users"}), 500
 
-@user_bp.route('/users/stats', methods=['GET'])
-@jwt_required()
-def get_user_stats():
-    """Get user statistics (Admin only)"""
-    try:
-        # Check if current user is admin
-        current_user_email = get_jwt_identity()
-        db = get_db()
-        users = user_collection(db)
-        
-        current_user = users.find_one({'email': current_user_email})
-        if not current_user or current_user.get('role') != 'admin':
-            return jsonify({"success": False, "message": "Admin access required"}), 403
-        
-        # Get role-based counts
-        total_users = users.count_documents({})
-        admin_count = users.count_documents({'role': 'admin'})
-        society_count = users.count_documents({'role': 'society'})
-        regular_user_count = users.count_documents({'role': 'user'})
-        
-        # Get recent users (last 30 days) - simplified version
-        from datetime import datetime, timedelta
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-        
-        # Note: This assumes you have a 'created_at' field in your user documents
-        # If not, you can remove this or add the field when creating users
-        recent_users = 0
-        try:
-            recent_users = users.count_documents({
-                'created_at': {'$gte': thirty_days_ago}
-            })
-        except:
-            # If created_at field doesn't exist, skip this stat
-            pass
-        
-        return jsonify({
-            "success": True,
-            "stats": {
-                "total_users": total_users,
-                "admin_count": admin_count,
-                "society_count": society_count,
-                "regular_user_count": regular_user_count,
-                "recent_users_30_days": recent_users,
-                "role_distribution": {
-                    "admin": admin_count,
-                    "society": society_count,
-                    "user": regular_user_count
-                }
-            },
-            "message": "User statistics retrieved successfully"
-        }), 200
-        
-    except Exception as e:
-        print(f"[USER STATS ERROR] {str(e)}")
-        return jsonify({"success": False, "message": "Failed to retrieve user statistics"}), 500
+
 
 @user_bp.route('/users/bulk-delete', methods=['DELETE'])
 @jwt_required()

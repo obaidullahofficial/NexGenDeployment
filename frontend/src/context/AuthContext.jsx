@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || data.message || 'Login failed');
       }
       
-      // Store user data including societyId
+      // Store user data from backend response
       const userData = {
-        email: data.email,
-        role: data.role,
+        email: data.email || email,
+        role: data.user?.role || data.role,
         societyId: data.societyId
       };
 

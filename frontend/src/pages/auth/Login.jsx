@@ -3,6 +3,7 @@ import Logo from '../../assets/Logo.png';
 import { useNavigate } from 'react-router-dom';
 import { signupUser, loginUser, checkEmail } from '../../services/apiService';
 import PopupModal from '../../components/common/PopupModal';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
     const [isLoginMode, setIsLoginMode] = useState(false);
@@ -22,6 +23,7 @@ const Login = () => {
     });
     
     const navigate = useNavigate();
+    const { login } = useAuth(); // Use AuthContext login method
 
     // Handle input for signup and login
     const handleSignupInput = (e) => {
@@ -158,130 +160,62 @@ const Login = () => {
         try {
             console.log('[LOGIN] Attempting login with:', { email: loginForm.email });
             
-            const result = await loginUser({
-                email: loginForm.email,
-                password: loginForm.password
-            });
+            // Use AuthContext login method instead of direct API call
+            const userData = await login(loginForm.email, loginForm.password);
             
-            console.log('[LOGIN] Server response:', {
-                success: result.success,
-                hasToken: !!result.access_token,
-                userRole: result.user?.role,
-                isAdmin: result.user?.is_admin,
-                profileComplete: result.profile_complete,
-                error: result.error,
-                status: result.status
-            });
+            console.log('[LOGIN] AuthContext login successful:', userData);
             
-            // Check for successful login first
-            if (result.success === true && result.access_token) {
-                // Successful login
-                console.log('[LOGIN] Storing token:', {
-                    tokenLength: result.access_token.length,
-                    tokenStart: result.access_token.substring(0, 50) + '...'
-                });
-                
-                localStorage.setItem('token', result.access_token);
-                
-                // Store user data for ProtectedSubAdminRoute
-                const userData = {
-                    email: loginForm.email,
-                    role: result.user?.role || result.role,
-                    is_admin: result.user?.is_admin || (result.user?.role === 'admin'),
-                    profile_complete: result.profile_complete,
-                    profile_exists: result.profile_exists,
-                    missing_fields: result.missing_fields
-                };
-                localStorage.setItem('user', JSON.stringify(userData));
-                
-                // Immediately verify the stored token
-                const storedToken = localStorage.getItem('token');
-                console.log('[LOGIN] Token stored successfully:', {
-                    stored: !!storedToken,
-                    same: storedToken === result.access_token
-                });
-                console.log('[LOGIN] User data stored:', userData);
-                
-                // Decode and check the token
-                try {
-                    const payload = JSON.parse(atob(result.access_token.split('.')[1]));
-                    const currentTime = Date.now() / 1000;
-                    console.log('[LOGIN] Token details:', {
-                        issuedAt: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'Unknown',
-                        expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'Never',
-                        timeUntilExpiry: payload.exp ? Math.round((payload.exp - currentTime) / 60) + ' minutes' : 'Never',
-                        currentTime: new Date(currentTime * 1000).toISOString()
-                    });
-                } catch (decodeError) {
-                    console.error('[LOGIN] Error decoding token:', decodeError);
-                }
-                
-                // Show success popup and wait for user to click OK before navigating
-                const handleLoginSuccess = () => {
-                    if (result.user?.is_admin || result.user?.role === 'admin') {
-                        console.log('[LOGIN] Redirecting to admin dashboard');
-                        navigate('/dashboard');
-                    } else if (result.user?.role === 'society') {
-                        // Always check profile completeness for society users
-                        console.log('Society user login - profile complete:', result.profile_complete);
-                        
-                        if (result.profile_complete === false || 
-                            result.profile_exists === false || 
-                            (result.missing_fields && result.missing_fields.length > 0)) {
-                            // Profile is incomplete - redirect to profile setup
-                            console.log('Redirecting to profile setup due to incomplete profile');
-                            navigate('/society-profile-setup');
-                        } else {
-                            // Profile is complete - go to dashboard
-                            console.log('Profile is complete - redirecting to dashboard');
-                            navigate('/subadmin');
-                        }
-                    } else {
-                        console.log('[LOGIN] Redirecting to user profile');
-                        navigate('/userprofile');
-                    }
-                };
-                
-                showPopup(
-                    'Login Successful!',
-                    'Welcome back! Click OK to continue to your dashboard.',
-                    'success',
-                    handleLoginSuccess
-                );
-                
-            } else {
-                console.log('[LOGIN] Login failed:', result);
-                
-                // Handle specific error types for society users
-                if (result.error === 'registration_pending') {
-                    showPopup(
-                        'Registration Pending',
-                        'Your society registration request is still being processed. Please wait for admin approval before you can access your dashboard. You will get access to the portal once approved.',
-                        'warning'
-                    );
-                } else if (result.error === 'registration_rejected') {
-                    showPopup(
-                        'Registration Rejected',
-                        'Unfortunately, your society registration request has been rejected by the administrator. Please contact support at admin@nextgenarchitect.com for queries.',
-                        'error'
-                    );
-                } else if (result.error === 'registration_invalid') {
-                    showPopup(
-                        'Registration Status Issue', 
-                        'There appears to be an issue with your registration status in our system. Please contact the administrator at admin@nextgenarchitect.com for immediate assistance.',
-                        'error'
-                    );
-                } else if (result.error === 'Invalid password') {
-                    setLoginError('Invalid email or password. Please try again.');
-                } else if (result.error === 'User not found') {
-                    setLoginError('No account found with this email address.');
+            // Show success popup and wait for user to click OK before navigating
+            const handleLoginSuccess = () => {
+                if (userData.role === 'admin') {
+                    console.log('[LOGIN] Redirecting to admin dashboard');
+                    navigate('/dashboard');
+                } else if (userData.role === 'society') {
+                    console.log('[LOGIN] Redirecting to society dashboard');
+                    navigate('/subadmin');
                 } else {
-                    // Generic error - could be from status messages or other errors
-                    setLoginError(result.error || result.message || 'Login failed. Please check your credentials.');
+                    console.log('[LOGIN] Redirecting to user profile');
+                    navigate('/userprofile');
                 }
-            }
+            };
+            
+            showPopup(
+                'Login Successful!',
+                'Welcome back! Click OK to continue to your dashboard.',
+                'success',
+                handleLoginSuccess
+            );
+            
         } catch (error) {
-            setLoginError('An error occurred. Please try again.',error);
+            console.log('[LOGIN] Login failed:', error);
+            
+            // Handle specific error types for society users
+            if (error.message?.includes('registration_pending')) {
+                showPopup(
+                    'Registration Pending',
+                    'Your society registration request is still being processed. Please wait for admin approval before you can access your dashboard. You will get access to the portal once approved.',
+                    'warning'
+                );
+            } else if (error.message?.includes('registration_rejected')) {
+                showPopup(
+                    'Registration Rejected',
+                    'Unfortunately, your society registration request has been rejected by the administrator. Please contact support at admin@nextgenarchitect.com for queries.',
+                    'error'
+                );
+            } else if (error.message?.includes('registration_invalid')) {
+                showPopup(
+                    'Registration Status Issue', 
+                    'There appears to be an issue with your registration status in our system. Please contact the administrator at admin@nextgenarchitect.com for immediate assistance.',
+                    'error'
+                );
+            } else if (error.message?.includes('Invalid password')) {
+                setLoginError('Invalid email or password. Please try again.');
+            } else if (error.message?.includes('User not found')) {
+                setLoginError('No account found with this email address.');
+            } else {
+                // Generic error - could be from status messages or other errors
+                setLoginError(error.message || 'Login failed. Please check your credentials.');
+            }
         }
     };
 

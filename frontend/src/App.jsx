@@ -11,6 +11,7 @@ import Approvals from './pages/subadmin/Approvals';
 import ComplianceManagement from './pages/subadmin/ComplianceManagement';
 import FloorPlanGenerator from './pages/subadmin/FloorPlanGenerator';
 import ProtectedSubAdminRoute from './components/common/ProtectedSubAdminRoute';
+import ProtectedAdminRoute from './components/common/ProtectedAdminRoute';
 
 // User imports 
 import Login from './pages/auth/Login';
@@ -81,13 +82,37 @@ function App() {
           <Route path="society-profile" element={<SocietyProfile />} />
         </Route>
 
-        {/* Admin Routes */}
-        <Route path="/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
-        <Route path="/UserManagementDashboard" element={<AdminLayout><UserManagementDashboard /></AdminLayout>} />
-        <Route path="/society-management" element={<AdminLayout><SocietyManagement /></AdminLayout>} />
-        <Route path="/review-management" element={<AdminLayout><ReviewManagement /></AdminLayout>} />
-        <Route path="/advertisement-management" element={<AdminLayout><AdvertisementManagement /></AdminLayout>} />
-        <Route path="/reports" element={<AdminLayout><ReportManagement /></AdminLayout>} />
+        {/* Admin Routes - Protected */}
+        <Route path="/dashboard" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><Dashboard /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/UserManagementDashboard" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><UserManagementDashboard /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/society-management" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><SocietyManagement /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/review-management" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><ReviewManagement /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/advertisement-management" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><AdvertisementManagement /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedAdminRoute>
+            <AdminLayout><ReportManagement /></AdminLayout>
+          </ProtectedAdminRoute>
+        } />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

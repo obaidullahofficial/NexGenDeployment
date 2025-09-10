@@ -6,6 +6,7 @@ from flask_cors import CORS
 from utils.db import test_connection
 from routes.review_routes import review_bp
 from routes.plot_routes import plot_bp  # Import the blueprint
+from routes.advertisement_routes import advertisement_bp  # Import advertisement routes
 
 from datetime import timedelta
 
@@ -48,6 +49,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(society_profile_bp, url_prefix='/api')
 app.register_blueprint(plot_bp, url_prefix='/api')
 app.register_blueprint(review_bp, url_prefix='/api')
+app.register_blueprint(advertisement_bp, url_prefix='/api')
 
 
 @app.route('/api/db-test')

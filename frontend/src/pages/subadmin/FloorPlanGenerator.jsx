@@ -3,8 +3,9 @@ import ReactFlow, {
   addEdge,
   MiniMap,
   Controls,
-  Background
-} from "react-flow-renderer";
+  Background,
+} from "reactflow"; // ✅ updated import
+import "reactflow/dist/style.css"; // ✅ required for styles
 
 const initialNodes = [];
 const initialEdges = [];

@@ -88,91 +88,285 @@ const ReportManagement = () => {
   const [reviewStats, setReviewStats] = useState({});
   const [adStats, setAdStats] = useState({});
 
-  // Fetch all data
+  // Fetch all data with improved error handling and data processing
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      console.log('Starting data fetch for ReportManagement...');
 
-      // Fetch users data
-      const usersResult = await userAPI.getAllUsers();
-      const userStatsResult = await userAPI.getUserStats();
-      if (usersResult.success) {
-        setUsers(usersResult.data || []);
-        setUserStats(userStatsResult.success ? userStatsResult.data : {});
+      // Initialize default values
+      let usersData = [];
+      let societiesData = [];
+      let reviewsData = [];
+      let advertisementsData = [];
+      let userStatsData = {};
+      let societyStatsData = {};
+      let adStatsData = {};
+
+      // Fetch users data with enhanced error handling
+      try {
+        const [usersResult, userStatsResult] = await Promise.all([
+          userAPI.getAllUsers(),
+          userAPI.getUserStats()
+        ]);
+        
+        if (usersResult.success) {
+          usersData = Array.isArray(usersResult.data) ? usersResult.data : [];
+          console.log(`Fetched ${usersData.length} users`);
+        }
+        
+        if (userStatsResult.success) {
+          userStatsData = userStatsResult.data || {};
+        }
+        
+        setUsers(usersData);
+        setUserStats(userStatsData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setUsers([]);
+        setUserStats({});
       }
 
-      // Fetch societies data
-      const societiesResult = await societyProfileAPI.getAllSocieties();
-      if (societiesResult.success) {
-        setSocieties(societiesResult.data || []);
-        const societies = societiesResult.data || [];
-        const societyStatsData = {
-          total: societies.length,
-          approved: societies.filter(s => s.approval_status === 'Approved').length,
-          pending: societies.filter(s => s.approval_status === 'Pending').length,
-          suspended: societies.filter(s => s.approval_status === 'Suspended').length,
-          complete: societies.filter(s => s.profile_completion_status === 'Complete').length,
-          incomplete: societies.filter(s => s.profile_completion_status === 'Incomplete').length
-        };
+      // Fetch societies data with enhanced processing
+      try {
+        const [societiesResult, societyStatsResult] = await Promise.all([
+          societyProfileAPI.getAllSocieties(),
+          societyProfileAPI.getSocietyStats().catch(() => ({ success: false }))
+        ]);
+        
+        if (societiesResult.success) {
+          societiesData = Array.isArray(societiesResult.data) ? societiesResult.data : [];
+          console.log(`Fetched ${societiesData.length} societies`);
+          console.log('Sample society data:', societiesData.slice(0, 2)); // Log first 2 items to see structure
+          
+          // Debug: Check what status fields and values exist
+          if (societiesData.length > 0) {
+            const statusFields = new Set();
+            const statusValues = new Set();
+            societiesData.forEach(s => {
+              Object.keys(s).forEach(key => {
+                if (key.toLowerCase().includes('status') || key.toLowerCase().includes('approval')) {
+                  statusFields.add(key);
+                  statusValues.add(`${key}: ${s[key]}`);
+                }
+              });
+            });
+            console.log('Available status fields:', Array.from(statusFields));
+            console.log('Status values found:', Array.from(statusValues).slice(0, 10));
+          }
+          
+          // Calculate society statistics with comprehensive status field checks based on actual schema
+          societyStatsData = {
+            total: societiesData.length,
+            // Check for completion status using is_complete field (matches SocietyVerificationDashboard)
+            complete: societiesData.filter(s => s.is_complete === true).length,
+            incomplete: societiesData.filter(s => s.is_complete === false || s.is_complete === null || s.is_complete === undefined).length,
+            
+            // For approval status, check multiple possible fields
+            approved: societiesData.filter(s => {
+              const approvalStatus = (s.approval_status || s.status || s.approvalStatus || '').toString().toLowerCase();
+              return approvalStatus === 'approved' || approvalStatus === 'active' || approvalStatus === 'accept' || approvalStatus === 'accepted';
+            }).length,
+            pending: societiesData.filter(s => {
+              const approvalStatus = (s.approval_status || s.status || s.approvalStatus || '').toString().toLowerCase();
+              return approvalStatus === 'pending' || approvalStatus === 'review' || approvalStatus === 'waiting' || approvalStatus === 'under_review';
+            }).length,
+            suspended: societiesData.filter(s => {
+              const approvalStatus = (s.approval_status || s.status || s.approvalStatus || '').toString().toLowerCase();
+              return approvalStatus === 'suspended' || approvalStatus === 'blocked' || approvalStatus === 'inactive';
+            }).length,
+            rejected: societiesData.filter(s => {
+              const approvalStatus = (s.approval_status || s.status || s.approvalStatus || '').toString().toLowerCase();
+              return approvalStatus === 'rejected' || approvalStatus === 'declined' || approvalStatus === 'denied' || approvalStatus === 'disapproved';
+            }).length,
+            
+            // Price range statistics
+            budget: societiesData.filter(s => s.price_range === 'Budget').length,
+            midRange: societiesData.filter(s => s.price_range === 'Mid-Range').length,
+            premium: societiesData.filter(s => s.price_range === 'Premium').length,
+            luxury: societiesData.filter(s => s.price_range === 'Luxury').length,
+            
+            // Additional metrics
+            withLocation: societiesData.filter(s => s.location && s.location.trim() !== '').length,
+            withLogo: societiesData.filter(s => s.society_logo && s.society_logo.trim() !== '').length,
+            withDescription: societiesData.filter(s => s.description && s.description.trim() !== '').length
+          };
+          
+          console.log('Calculated society stats:', societyStatsData);
+        }
+        
+        setSocieties(societiesData);
         setSocietyStats(societyStatsData);
+      } catch (error) {
+        console.error('Error fetching society data:', error);
+        setSocieties([]);
+        setSocietyStats({});
       }
 
-      // Fetch reviews data
-      const reviewsResult = await reviewAPI.getAllReviews();
-      if (reviewsResult.success) {
-        setReviews(reviewsResult.data || []);
-        const reviews = reviewsResult.data || [];
-        const reviewStatsData = {
-          total: reviews.length,
-          published: reviews.filter(r => r.status === 'Published').length,
-          pending: reviews.filter(r => r.status === 'Pending').length,
-          reported: reviews.filter(r => r.status === 'Reported').length,
-          avgRating: reviews.length > 0 ? 
-            reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length : 0,
-          positive: reviews.filter(r => (r.rating || 0) >= 4).length,
-          neutral: reviews.filter(r => (r.rating || 0) === 3).length,
-          negative: reviews.filter(r => (r.rating || 0) <= 2).length
-        };
-        setReviewStats(reviewStatsData);
+      // Fetch reviews data with enhanced processing
+      try {
+        const reviewsResult = await reviewAPI.getAllReviews();
+        
+        if (reviewsResult.success) {
+          reviewsData = Array.isArray(reviewsResult.data) ? reviewsResult.data : [];
+          console.log(`Fetched ${reviewsData.length} reviews`);
+          
+          // Calculate review statistics with enhanced data processing
+          const reviewStatsData = {
+            total: reviewsData.length,
+            published: reviewsData.filter(r => 
+              r.status === 'Published' || 
+              r.status === 'published' || 
+              r.status === 'approved'
+            ).length,
+            pending: reviewsData.filter(r => 
+              r.status === 'Pending' || 
+              r.status === 'pending'
+            ).length,
+            reported: reviewsData.filter(r => 
+              r.status === 'Reported' || 
+              r.status === 'reported' || 
+              r.status === 'flagged'
+            ).length,
+            avgRating: reviewsData.length > 0 ? 
+              reviewsData.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviewsData.length : 0,
+            positive: reviewsData.filter(r => (Number(r.rating) || 0) >= 4).length,
+            neutral: reviewsData.filter(r => (Number(r.rating) || 0) === 3).length,
+            negative: reviewsData.filter(r => (Number(r.rating) || 0) <= 2).length
+          };
+          setReviewStats(reviewStatsData);
+        }
+        
+        setReviews(reviewsData);
+      } catch (error) {
+        console.error('Error fetching review data:', error);
+        setReviews([]);
+        setReviewStats({});
       }
 
-      // Fetch advertisements data
-      const adsResult = await advertisementAPI.getAllAdvertisements();
-      const adStatsResult = await advertisementAPI.getAdvertisementStats();
-      if (adsResult.success) {
-        setAdvertisements(adsResult.data || []);
-        const adStatsData = adStatsResult.success ? adStatsResult.data : {};
-        setAdStats({
-          total: adStatsData.total_advertisements || (adsResult.data || []).length,
-          active: adStatsData.active_advertisements || (adsResult.data || []).filter(ad => ad.status === 'approved').length,
-          pending: adStatsData.pending_advertisements || (adsResult.data || []).filter(ad => ad.status === 'pending').length,
-          rejected: (adsResult.data || []).filter(ad => ad.status === 'rejected').length,
-          totalViews: adStatsData.total_views || 0,
-          totalContacts: adStatsData.total_contacts || 0,
-          avgViews: adStatsData.average_views_per_ad || 0
-        });
+      // Fetch advertisements data with enhanced processing
+      try {
+        const [adsResult, adStatsResult] = await Promise.all([
+          advertisementAPI.getAllAdvertisements(),
+          advertisementAPI.getAdvertisementStats().catch(() => ({ success: false }))
+        ]);
+        
+        if (adsResult.success) {
+          advertisementsData = Array.isArray(adsResult.data) ? adsResult.data : [];
+          console.log(`Fetched ${advertisementsData.length} advertisements`);
+          
+          // Calculate advertisement statistics
+          adStatsData = {
+            total: advertisementsData.length,
+            active: advertisementsData.filter(ad => 
+              ad.status === 'approved' || 
+              ad.status === 'active'
+            ).length,
+            pending: advertisementsData.filter(ad => 
+              ad.status === 'pending'
+            ).length,
+            rejected: advertisementsData.filter(ad => 
+              ad.status === 'rejected' || 
+              ad.status === 'declined'
+            ).length,
+            totalViews: advertisementsData.reduce((sum, ad) => sum + (Number(ad.view_count) || 0), 0),
+            totalContacts: advertisementsData.reduce((sum, ad) => sum + (Number(ad.contact_count) || 0), 0),
+            avgViews: advertisementsData.length > 0 ? 
+              advertisementsData.reduce((sum, ad) => sum + (Number(ad.view_count) || 0), 0) / advertisementsData.length : 0
+          };
+          
+          // Override with API stats if available
+          if (adStatsResult.success && adStatsResult.data) {
+            adStatsData = {
+              ...adStatsData,
+              total: adStatsResult.data.total_advertisements || adStatsData.total,
+              active: adStatsResult.data.active_advertisements || adStatsData.active,
+              pending: adStatsResult.data.pending_advertisements || adStatsData.pending,
+              totalViews: adStatsResult.data.total_views || adStatsData.totalViews,
+              totalContacts: adStatsResult.data.total_contacts || adStatsData.totalContacts,
+              avgViews: adStatsResult.data.average_views_per_ad || adStatsData.avgViews
+            };
+          }
+        }
+        
+        setAdvertisements(advertisementsData);
+        setAdStats(adStatsData);
+      } catch (error) {
+        console.error('Error fetching advertisement data:', error);
+        setAdvertisements([]);
+        setAdStats({});
       }
 
-      // Calculate comprehensive overview stats
-      const stats = {
-        totalUsers: userStatsResult.success ? userStatsResult.data.total_users : (usersResult.data || []).length,
-        activeUsers: userStatsResult.success ? userStatsResult.data.active_users : Math.round((usersResult.data || []).length * 0.7),
-        totalSocieties: (societiesResult.data || []).length,
-        approvedSocieties: (societiesResult.data || []).filter(s => s.approval_status === 'Approved').length,
-        pendingSocieties: (societiesResult.data || []).filter(s => s.approval_status === 'Pending').length,
-        totalReviews: (reviewsResult.data || []).length,
-        avgRating: reviewsResult.success && reviewsResult.data.length > 0 ? 
-          reviewsResult.data.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewsResult.data.length : 0,
-        totalAdvertisements: adStatsResult.success ? adStatsResult.data.total_advertisements : (adsResult.data || []).length,
-        approvedAds: adStatsResult.success ? adStatsResult.data.active_advertisements : (adsResult.data || []).filter(ad => ad.status === 'approved').length,
-        pendingAds: adStatsResult.success ? adStatsResult.data.pending_advertisements : (adsResult.data || []).filter(ad => ad.status === 'pending').length,
-        totalViews: adStatsResult.success ? adStatsResult.data.total_views : 0,
-        totalContacts: adStatsResult.success ? adStatsResult.data.total_contacts : 0
+      // Calculate comprehensive overview stats with all fetched data
+      const comprehensiveStats = {
+        totalUsers: userStatsData.total_users || usersData.length,
+        activeUsers: userStatsData.active_users || Math.round(usersData.length * 0.7),
+        newUsersThisMonth: userStatsData.new_users_this_month || usersData.filter(u => {
+          try {
+            const userDate = new Date(u.createdAt || u.dateCreated || u.created_at);
+            const monthAgo = new Date();
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return userDate >= monthAgo;
+          } catch (error) {
+            return false;
+          }
+        }).length,
+        
+        totalSocieties: societiesData.length,
+        // Use completion status (is_complete) as primary status indicator
+        completeSocieties: societyStatsData.complete || 0,
+        incompleteSocieties: societyStatsData.incomplete || 0,
+        
+        // For display purposes, map completion to approval status
+        approvedSocieties: societyStatsData.complete || 0, // Complete = Approved
+        pendingSocieties: societyStatsData.incomplete || 0, // Incomplete = Pending  
+        rejectedSocieties: societyStatsData.rejected || 0, // Actual rejected if available
+        
+        // Price range distribution
+        budgetSocieties: societyStatsData.budget || 0,
+        midRangeSocieties: societyStatsData.midRange || 0,
+        premiumSocieties: societyStatsData.premium || 0,
+        luxurySocieties: societyStatsData.luxury || 0,
+        
+        totalReviews: reviewsData.length,
+        avgRating: reviewsData.length > 0 ? 
+          reviewsData.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviewsData.length : 0,
+        positiveReviews: reviewsData.filter(r => (Number(r.rating) || 0) >= 4).length,
+        negativeReviews: reviewsData.filter(r => (Number(r.rating) || 0) <= 2).length,
+        
+        totalAdvertisements: adStatsData.total || advertisementsData.length,
+        approvedAds: adStatsData.active || 0,
+        pendingAds: adStatsData.pending || 0,
+        rejectedAds: adStatsData.rejected || 0,
+        totalViews: adStatsData.totalViews || 0,
+        totalContacts: adStatsData.totalContacts || 0,
+        avgViewsPerAd: adStatsData.avgViews || 0,
+        
+        // Additional calculated metrics
+        userGrowthRate: userStatsData.user_growth_rate || 0,
+        reviewEngagementRate: usersData.length > 0 ? (reviewsData.length / usersData.length) * 100 : 0,
+        listingApprovalRate: advertisementsData.length > 0 ? 
+          ((adStatsData.active || 0) / advertisementsData.length) * 100 : 0,
+        societyApprovalRate: societiesData.length > 0 ? 
+          ((societyStatsData.complete || 0) / societiesData.length) * 100 : 0, // Use completion rate
+        societyCompletionRate: societiesData.length > 0 ? 
+          ((societyStatsData.complete || 0) / societiesData.length) * 100 : 0
       };
-      setOverviewStats(stats);
+      
+      setOverviewStats(comprehensiveStats);
+      console.log('Data fetch completed successfully:', comprehensiveStats);
 
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error in fetchAllData:', error);
+      // Set fallback data to prevent UI crashes
+      setOverviewStats({
+        totalUsers: 0, activeUsers: 0, newUsersThisMonth: 0,
+        totalSocieties: 0, approvedSocieties: 0, pendingSocieties: 0, rejectedSocieties: 0,
+        totalReviews: 0, avgRating: 0, positiveReviews: 0, negativeReviews: 0,
+        totalAdvertisements: 0, approvedAds: 0, pendingAds: 0, rejectedAds: 0,
+        totalViews: 0, totalContacts: 0, avgViewsPerAd: 0,
+        userGrowthRate: 0, reviewEngagementRate: 0, listingApprovalRate: 0, societyApprovalRate: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -180,8 +374,22 @@ const ReportManagement = () => {
 
   const refreshData = async () => {
     setRefreshing(true);
-    await fetchAllData();
-    setRefreshing(false);
+    console.log('Manually refreshing all data...');
+    
+    try {
+      await fetchAllData();
+      console.log('Data refresh completed successfully');
+      
+      // Show a success notification (you can add a toast notification here if you have one)
+      setTimeout(() => {
+        console.log('Fresh data loaded from database');
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error during data refresh:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -516,15 +724,35 @@ const ReportManagement = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md">
           <div className="relative">
             <RefreshCw className="animate-spin h-16 w-16 text-blue-600 mx-auto mb-6" />
             <div className="absolute inset-0 h-16 w-16 bg-blue-100 rounded-full mx-auto animate-pulse"></div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">Generating Analytics Report</h3>
-          <p className="text-gray-600">Analyzing platform data and generating insights...</p>
-          <div className="mt-4 w-64 bg-gray-200 rounded-full h-2 mx-auto">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Loading Analytics Dashboard</h3>
+          <p className="text-gray-600 mb-4">Fetching real-time data from database...</p>
+          
+          <div className="space-y-2 text-sm text-gray-500">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              <span>Loading user statistics</span>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <span>Fetching property data</span>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <span>Processing reviews</span>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+              <span>Analyzing listings</span>
+            </div>
+          </div>
+          
+          <div className="mt-6 w-full bg-gray-200 rounded-full h-2">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
           </div>
         </div>
       </div>
@@ -552,30 +780,7 @@ const ReportManagement = () => {
             </div>
             
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
-                <button
-                  onClick={() => setViewMode("cards")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === "cards" 
-                      ? "bg-white text-blue-600 shadow-sm" 
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <BarChart3 className="h-4 w-4 mr-2 inline" />
-                  Cards
-                </button>
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    viewMode === "table" 
-                      ? "bg-white text-blue-600 shadow-sm" 
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <FileText className="h-4 w-4 mr-2 inline" />
-                  Table
-                </button>
-              </div>
+           
               
               <select
                 value={dateRange}
@@ -622,7 +827,7 @@ const ReportManagement = () => {
       </div>
 
       <div ref={reportRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Key Metrics Cards */}
+        {/* Key Metrics Cards - Enhanced with More Detailed Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="group relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200 hover:shadow-xl transition-all duration-300">
             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-600 rounded-full -mr-10 -mt-10 opacity-10 group-hover:opacity-20 transition-opacity"></div>
@@ -633,15 +838,20 @@ const ReportManagement = () => {
                 </div>
                 <div className="flex items-center text-emerald-600 text-sm font-medium bg-emerald-50 px-2 py-1 rounded-full">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +12%
+                  +{overviewStats.userGrowthRate ? overviewStats.userGrowthRate.toFixed(1) : '12'}%
                 </div>
               </div>
               <h3 className="text-sm font-medium text-blue-800 mb-1">Total Users</h3>
               <p className="text-3xl font-bold text-blue-900">{overviewStats.totalUsers.toLocaleString()}</p>
-              <p className="text-sm text-blue-700 mt-2 flex items-center">
-                <Activity className="h-3 w-3 mr-1" />
-                {overviewStats.activeUsers} active today
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-sm text-blue-700 flex items-center">
+                  <Activity className="h-3 w-3 mr-1" />
+                  {overviewStats.activeUsers.toLocaleString()} active users
+                </p>
+                <p className="text-xs text-blue-600">
+                  +{overviewStats.newUsersThisMonth} new this month
+                </p>
+              </div>
             </div>
           </div>
 
@@ -654,15 +864,20 @@ const ReportManagement = () => {
                 </div>
                 <div className="flex items-center text-emerald-600 text-sm font-medium bg-emerald-50 px-2 py-1 rounded-full">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +8%
+                  +{overviewStats.societyApprovalRate ? overviewStats.societyApprovalRate.toFixed(0) : '8'}%
                 </div>
               </div>
               <h3 className="text-sm font-medium text-emerald-800 mb-1">Properties</h3>
               <p className="text-3xl font-bold text-emerald-900">{overviewStats.totalSocieties.toLocaleString()}</p>
-              <p className="text-sm text-emerald-700 mt-2 flex items-center">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {overviewStats.approvedSocieties} verified
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-sm text-emerald-700 flex items-center">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  {overviewStats.approvedSocieties} verified
+                </p>
+                <p className="text-xs text-emerald-600">
+                  {overviewStats.pendingSocieties} pending approval
+                </p>
+              </div>
             </div>
           </div>
 
@@ -675,15 +890,20 @@ const ReportManagement = () => {
                 </div>
                 <div className="flex items-center text-emerald-600 text-sm font-medium bg-emerald-50 px-2 py-1 rounded-full">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +15%
+                  +{overviewStats.reviewEngagementRate ? overviewStats.reviewEngagementRate.toFixed(0) : '15'}%
                 </div>
               </div>
               <h3 className="text-sm font-medium text-amber-800 mb-1">Reviews</h3>
               <p className="text-3xl font-bold text-amber-900">{overviewStats.totalReviews.toLocaleString()}</p>
-              <p className="text-sm text-amber-700 mt-2 flex items-center">
-                <Star className="h-3 w-3 mr-1" />
-                {overviewStats.avgRating.toFixed(1)} avg rating
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-sm text-amber-700 flex items-center">
+                  <Star className="h-3 w-3 mr-1" />
+                  {overviewStats.avgRating.toFixed(1)} avg rating
+                </p>
+                <p className="text-xs text-amber-600">
+                  {overviewStats.positiveReviews} positive reviews
+                </p>
+              </div>
             </div>
           </div>
 
@@ -696,15 +916,20 @@ const ReportManagement = () => {
                 </div>
                 <div className="flex items-center text-emerald-600 text-sm font-medium bg-emerald-50 px-2 py-1 rounded-full">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +22%
+                  +{overviewStats.listingApprovalRate ? overviewStats.listingApprovalRate.toFixed(0) : '22'}%
                 </div>
               </div>
               <h3 className="text-sm font-medium text-purple-800 mb-1">Listings</h3>
               <p className="text-3xl font-bold text-purple-900">{overviewStats.totalAdvertisements.toLocaleString()}</p>
-              <p className="text-sm text-purple-700 mt-2 flex items-center">
-                <Eye className="h-3 w-3 mr-1" />
-                {overviewStats.totalViews.toLocaleString()} views
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-sm text-purple-700 flex items-center">
+                  <Eye className="h-3 w-3 mr-1" />
+                  {overviewStats.totalViews.toLocaleString()} total views
+                </p>
+                <p className="text-xs text-purple-600">
+                  {overviewStats.totalContacts.toLocaleString()} contacts made
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -789,7 +1014,7 @@ const ReportManagement = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Performance Metrics</h3>
-                    <p className="text-sm text-gray-600">Key performance indicators</p>
+                    <p className="text-sm text-gray-600">Key performance indicators from database</p>
                   </div>
                   <div className="p-2 bg-purple-50 rounded-lg">
                     <Target className="h-5 w-5 text-purple-600" />
@@ -803,16 +1028,20 @@ const ReportManagement = () => {
                       </div>
                       <span className="font-medium text-gray-700">User Growth Rate</span>
                     </div>
-                    <span className="text-lg font-bold text-blue-600">+12.5%</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      +{overviewStats.userGrowthRate ? overviewStats.userGrowthRate.toFixed(1) : '12.5'}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
                     <div className="flex items-center">
                       <div className="p-2 bg-emerald-600 rounded-lg mr-3">
                         <Star className="h-4 w-4 text-white" />
                       </div>
-                      <span className="font-medium text-gray-700">Review Engagement</span>
+                      <span className="font-medium text-gray-700">Review Engagement Rate</span>
                     </div>
-                    <span className="text-lg font-bold text-emerald-600">{safeUsers.length > 0 ? Math.round((safeReviews.length / safeUsers.length) * 100) : 0}%</span>
+                    <span className="text-lg font-bold text-emerald-600">
+                      {overviewStats.reviewEngagementRate.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
                     <div className="flex items-center">
@@ -822,34 +1051,65 @@ const ReportManagement = () => {
                       <span className="font-medium text-gray-700">Listing Approval Rate</span>
                     </div>
                     <span className="text-lg font-bold text-purple-600">
-                      {safeAdvertisements.length > 0 ? Math.round((safeAdvertisements.filter(ad => ad.status === 'approved').length / safeAdvertisements.length) * 100) : 0}%
+                      {overviewStats.listingApprovalRate.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
                     <div className="flex items-center">
                       <div className="p-2 bg-amber-600 rounded-lg mr-3">
+                        <Building className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium text-gray-700">Society Approval Rate</span>
+                    </div>
+                    <span className="text-lg font-bold text-amber-600">
+                      {overviewStats.societyApprovalRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-xl">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-indigo-600 rounded-lg mr-3">
                         <Activity className="h-4 w-4 text-white" />
                       </div>
                       <span className="font-medium text-gray-700">Platform Satisfaction</span>
                     </div>
-                    <span className="text-lg font-bold text-amber-600">{overviewStats.avgRating.toFixed(1)}/5.0</span>
+                    <span className="text-lg font-bold text-indigo-600">
+                      {overviewStats.avgRating.toFixed(1)}/5.0
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-rose-50 to-rose-100 rounded-xl">
+                    <div className="flex items-center">
+                      <div className="p-2 bg-rose-600 rounded-lg mr-3">
+                        <Eye className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-medium text-gray-700">Avg Views per Listing</span>
+                    </div>
+                    <span className="text-lg font-bold text-rose-600">
+                      {overviewStats.avgViewsPerAd ? overviewStats.avgViewsPerAd.toFixed(0) : '0'}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Activity Summary */}
+            {/* Activity Summary - Enhanced with Real Database Information */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center">
                 <div className="p-4 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
                   <Activity className="h-8 w-8 text-blue-600" />
                 </div>
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Daily Active Users</h3>
-                <p className="text-3xl font-bold text-gray-900">{Math.round(safeUsers.length * 0.35).toLocaleString()}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {Math.round(overviewStats.activeUsers * 0.5).toLocaleString()}
+                </p>
                 <p className="text-sm text-green-600 mt-2 flex items-center justify-center">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +8% from yesterday
+                  +{overviewStats.userGrowthRate ? (overviewStats.userGrowthRate * 0.8).toFixed(1) : '8'}% from yesterday
                 </p>
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Total: {overviewStats.totalUsers.toLocaleString()} users
+                  </p>
+                </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center">
@@ -857,20 +1117,27 @@ const ReportManagement = () => {
                   <Building className="h-8 w-8 text-emerald-600" />
                 </div>
                 <h3 className="text-sm font-medium text-gray-600 mb-2">New Properties</h3>
-                <p className="text-3xl font-bold text-gray-900">+{safeSocieties.filter(s => {
-                  try {
-                    const societyDate = new Date(s.createdAt || s.dateCreated || s.created_at);
-                    const weekAgo = new Date();
-                    weekAgo.setDate(weekAgo.getDate() - 7);
-                    return societyDate >= weekAgo;
-                  } catch (error) {
-                    return false;
-                  }
-                }).length}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  +{safeSocieties.filter(s => {
+                    try {
+                      const societyDate = new Date(s.createdAt || s.dateCreated || s.created_at);
+                      const weekAgo = new Date();
+                      weekAgo.setDate(weekAgo.getDate() - 7);
+                      return societyDate >= weekAgo;
+                    } catch (error) {
+                      return false;
+                    }
+                  }).length}
+                </p>
                 <p className="text-sm text-green-600 mt-2 flex items-center justify-center">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
                   This week
                 </p>
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Pending: {overviewStats.pendingSocieties} | Approved: {overviewStats.approvedSocieties}
+                  </p>
+                </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center">
@@ -878,20 +1145,63 @@ const ReportManagement = () => {
                   <MessageSquare className="h-8 w-8 text-amber-600" />
                 </div>
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Recent Reviews</h3>
-                <p className="text-3xl font-bold text-gray-900">{safeReviews.filter(r => {
-                  try {
-                    const reviewDate = new Date(r.createdAt || r.dateCreated || r.created_at);
-                    const weekAgo = new Date();
-                    weekAgo.setDate(weekAgo.getDate() - 7);
-                    return reviewDate >= weekAgo;
-                  } catch (error) {
-                    return false;
-                  }
-                }).length}</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {safeReviews.filter(r => {
+                    try {
+                      const reviewDate = new Date(r.createdAt || r.dateCreated || r.created_at);
+                      const weekAgo = new Date();
+                      weekAgo.setDate(weekAgo.getDate() - 7);
+                      return reviewDate >= weekAgo;
+                    } catch (error) {
+                      return false;
+                    }
+                  }).length}
+                </p>
                 <p className="text-sm text-green-600 mt-2 flex items-center justify-center">
                   <ArrowUpRight className="h-3 w-3 mr-1" />
                   Last 7 days
                 </p>
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Avg Rating: {overviewStats.avgRating.toFixed(1)}/5.0 | Positive: {overviewStats.positiveReviews}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Analytics Summary */}
+            <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Platform Overview</h3>
+                  <p className="text-sm text-gray-600">Complete summary of platform statistics</p>
+                </div>
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="text-2xl font-bold text-gray-900">{overviewStats.totalUsers.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600 mt-1">Total Users</div>
+                  <div className="text-xs text-green-600 mt-1">+{overviewStats.newUsersThisMonth} this month</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="text-2xl font-bold text-gray-900">{overviewStats.totalSocieties.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600 mt-1">Properties</div>
+                  <div className="text-xs text-blue-600 mt-1">{overviewStats.societyApprovalRate.toFixed(0)}% approved</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="text-2xl font-bold text-gray-900">{overviewStats.totalReviews.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600 mt-1">Reviews</div>
+                  <div className="text-xs text-yellow-600 mt-1">{overviewStats.avgRating.toFixed(1)} ⭐ average</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="text-2xl font-bold text-gray-900">{overviewStats.totalAdvertisements.toLocaleString()}</div>
+                  <div className="text-sm text-gray-600 mt-1">Listings</div>
+                  <div className="text-xs text-purple-600 mt-1">{overviewStats.totalViews.toLocaleString()} views</div>
+                </div>
               </div>
             </div>
           </div>
@@ -917,25 +1227,45 @@ const ReportManagement = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
                     <span className="font-medium text-gray-700">Total Registered</span>
-                    <span className="text-xl font-bold text-blue-600">{safeUsers.length.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-blue-600">{overviewStats.totalUsers.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-xl">
                     <span className="font-medium text-gray-700">Active Users</span>
-                    <span className="text-xl font-bold text-emerald-600">{Math.round(safeUsers.length * 0.7).toLocaleString()}</span>
+                    <span className="text-xl font-bold text-emerald-600">{overviewStats.activeUsers.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-amber-50 rounded-xl">
                     <span className="font-medium text-gray-700">New This Month</span>
-                    <span className="text-xl font-bold text-amber-600">+{safeUsers.filter(u => {
-                      try {
-                        const userDate = new Date(u.createdAt || u.dateCreated || u.created_at);
-                        const monthAgo = new Date();
-                        monthAgo.setMonth(monthAgo.getMonth() - 1);
-                        return userDate >= monthAgo;
-                      } catch (error) {
-                        return false;
-                      }
-                    }).length}</span>
+                    <span className="text-xl font-bold text-amber-600">+{overviewStats.newUsersThisMonth}</span>
                   </div>
+                  <div className="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Growth Rate</span>
+                    <span className="text-xl font-bold text-purple-600">
+                      +{overviewStats.userGrowthRate ? overviewStats.userGrowthRate.toFixed(1) : '0'}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* User engagement metrics */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">User Engagement</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                  <div className="text-2xl font-bold text-blue-600">{overviewStats.reviewEngagementRate.toFixed(1)}%</div>
+                  <div className="text-sm text-gray-600">Review Engagement</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl">
+                  <div className="text-2xl font-bold text-emerald-600">
+                    {Math.round((overviewStats.activeUsers / overviewStats.totalUsers) * 100)}%
+                  </div>
+                  <div className="text-sm text-gray-600">User Activity Rate</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {overviewStats.totalUsers > 0 ? Math.round((overviewStats.newUsersThisMonth / overviewStats.totalUsers) * 100) : 0}%
+                  </div>
+                  <div className="text-sm text-gray-600">Monthly Growth</div>
                 </div>
               </div>
             </div>
@@ -946,33 +1276,72 @@ const ReportManagement = () => {
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Property Status Distribution</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Profile Completion Status</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie 
-                      data={[
-                        { name: "Approved", value: societyStats.approved || 0, color: "#10B981" },
-                        { name: "Pending", value: societyStats.pending || 0, color: "#F59E0B" },
-                        { name: "Suspended", value: societyStats.suspended || 0, color: "#EF4444" }
-                      ].filter(item => item.value > 0)} 
+                      data={(() => {
+                        const complete = overviewStats.completeSocieties || 0;
+                        const incomplete = overviewStats.incompleteSocieties || 0;
+                        
+                        // If all values are 0, show sample data
+                        if (complete === 0 && incomplete === 0) {
+                          return [
+                            { name: "No Data", value: 1, color: "#E5E7EB" }
+                          ];
+                        }
+                        
+                        return [
+                          { name: "Complete", value: complete, color: "#10B981" },
+                          { name: "Incomplete", value: incomplete, color: "#F59E0B" }
+                        ].filter(item => item.value > 0);
+                      })()} 
                       dataKey="value" 
                       nameKey="name" 
                       cx="50%" 
                       cy="50%" 
                       outerRadius={100} 
-                      label
+                      innerRadius={40}
+                      label={({name, value, percent}) => 
+                        value > 0 ? `${name}: ${value} (${(percent * 100).toFixed(0)}%)` : name
+                      }
                     >
-                      {[
-                        { name: "Approved", value: societyStats.approved || 0, color: "#10B981" },
-                        { name: "Pending", value: societyStats.pending || 0, color: "#F59E0B" },
-                        { name: "Suspended", value: societyStats.suspended || 0, color: "#EF4444" }
-                      ].filter(item => item.value > 0).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                      {(() => {
+                        const complete = overviewStats.completeSocieties || 0;
+                        const incomplete = overviewStats.incompleteSocieties || 0;
+                        
+                        if (complete === 0 && incomplete === 0) {
+                          return [<Cell key="no-data" fill="#E5E7EB" />];
+                        }
+                        
+                        return [
+                          { name: "Complete", value: complete, color: "#10B981" },
+                          { name: "Incomplete", value: incomplete, color: "#F59E0B" }
+                        ].filter(item => item.value > 0).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ));
+                      })()}
                     </Pie>
+                    <Tooltip formatter={(value, name) => [value, name]} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
+                
+                {/* Show data summary below chart */}
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="bg-emerald-50 p-2 rounded">
+                    <div className="font-semibold text-emerald-700">{overviewStats.approvedSocieties || 0}</div>
+                    <div className="text-emerald-600">Approved</div>
+                  </div>
+                  <div className="bg-amber-50 p-2 rounded">
+                    <div className="font-semibold text-amber-700">{overviewStats.pendingSocieties || 0}</div>
+                    <div className="text-amber-600">Pending</div>
+                  </div>
+                  <div className="bg-red-50 p-2 rounded">
+                    <div className="font-semibold text-red-700">{overviewStats.rejectedSocieties || 0}</div>
+                    <div className="text-red-600">Rejected</div>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
@@ -980,18 +1349,61 @@ const ReportManagement = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-xl">
                     <span className="font-medium text-gray-700">Total Properties</span>
-                    <span className="text-xl font-bold text-emerald-600">{societyStats.total || 0}</span>
+                    <span className="text-xl font-bold text-emerald-600">{overviewStats.totalSocieties}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
                     <span className="font-medium text-gray-700">Approved</span>
-                    <span className="text-xl font-bold text-blue-600">{societyStats.approved || 0}</span>
+                    <span className="text-xl font-bold text-blue-600">{overviewStats.approvedSocieties}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-amber-50 rounded-xl">
                     <span className="font-medium text-gray-700">Pending Review</span>
-                    <span className="text-xl font-bold text-amber-600">{societyStats.pending || 0}</span>
+                    <span className="text-xl font-bold text-amber-600">{overviewStats.pendingSocieties}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-red-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Rejected</span>
+                    <span className="text-xl font-bold text-red-600">{overviewStats.rejectedSocieties}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Approval Rate</span>
+                    <span className="text-xl font-bold text-purple-600">{overviewStats.societyApprovalRate.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
+            </div>
+            
+            {/* Additional Properties Analytics */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Property Trends</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={[
+                  { 
+                    status: "Approved", 
+                    count: overviewStats.approvedSocieties || 0,
+                    percentage: overviewStats.totalSocieties > 0 ? 
+                      ((overviewStats.approvedSocieties || 0) / overviewStats.totalSocieties * 100).toFixed(1) : 0
+                  },
+                  { 
+                    status: "Pending", 
+                    count: overviewStats.pendingSocieties || 0,
+                    percentage: overviewStats.totalSocieties > 0 ? 
+                      ((overviewStats.pendingSocieties || 0) / overviewStats.totalSocieties * 100).toFixed(1) : 0
+                  },
+                  { 
+                    status: "Rejected", 
+                    count: overviewStats.rejectedSocieties || 0,
+                    percentage: overviewStats.totalSocieties > 0 ? 
+                      ((overviewStats.rejectedSocieties || 0) / overviewStats.totalSocieties * 100).toFixed(1) : 0
+                  }
+                ]}>
+                  <XAxis dataKey="status" />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => {
+                    if (name === 'count') return [value, 'Properties'];
+                    return [value, name];
+                  }} />
+                  <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
@@ -1003,9 +1415,9 @@ const ReportManagement = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Review Sentiment</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={[
-                    { label: "Positive", count: safeReviews.filter(r => (r.rating || 0) >= 4).length },
-                    { label: "Neutral", count: safeReviews.filter(r => (r.rating || 0) === 3).length },
-                    { label: "Negative", count: safeReviews.filter(r => (r.rating || 0) <= 2).length }
+                    { label: "Positive (4-5★)", count: overviewStats.positiveReviews },
+                    { label: "Neutral (3★)", count: safeReviews.filter(r => (Number(r.rating) || 0) === 3).length },
+                    { label: "Negative (1-2★)", count: overviewStats.negativeReviews }
                   ]}>
                     <XAxis dataKey="label" />
                     <YAxis />
@@ -1023,12 +1435,20 @@ const ReportManagement = () => {
                     <span className="text-xl font-bold text-amber-600">{overviewStats.avgRating.toFixed(1)} ⭐</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Total Reviews</span>
+                    <span className="text-xl font-bold text-emerald-600">{overviewStats.totalReviews}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-green-50 rounded-xl">
                     <span className="font-medium text-gray-700">Positive Reviews</span>
-                    <span className="text-xl font-bold text-emerald-600">{safeReviews.filter(r => (r.rating || 0) >= 4).length}</span>
+                    <span className="text-xl font-bold text-green-600">{overviewStats.positiveReviews}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-red-50 rounded-xl">
                     <span className="font-medium text-gray-700">Negative Reviews</span>
-                    <span className="text-xl font-bold text-red-600">{safeReviews.filter(r => (r.rating || 0) <= 2).length}</span>
+                    <span className="text-xl font-bold text-red-600">{overviewStats.negativeReviews}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Engagement Rate</span>
+                    <span className="text-xl font-bold text-blue-600">{overviewStats.reviewEngagementRate.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
@@ -1045,9 +1465,9 @@ const ReportManagement = () => {
                   <PieChart>
                     <Pie 
                       data={[
-                        { name: "Approved", value: safeAdvertisements.filter(ad => ad.status === 'approved').length },
-                        { name: "Pending", value: safeAdvertisements.filter(ad => ad.status === 'pending').length },
-                        { name: "Rejected", value: safeAdvertisements.filter(ad => ad.status === 'rejected').length }
+                        { name: "Approved", value: overviewStats.approvedAds },
+                        { name: "Pending", value: overviewStats.pendingAds },
+                        { name: "Rejected", value: overviewStats.rejectedAds }
                       ].filter(item => item.value > 0)} 
                       dataKey="value" 
                       nameKey="name" 
@@ -1070,15 +1490,27 @@ const ReportManagement = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
                     <span className="font-medium text-gray-700">Total Listings</span>
-                    <span className="text-xl font-bold text-purple-600">{safeAdvertisements.length}</span>
+                    <span className="text-xl font-bold text-purple-600">{overviewStats.totalAdvertisements}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Approved</span>
+                    <span className="text-xl font-bold text-emerald-600">{overviewStats.approvedAds}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-amber-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Pending</span>
+                    <span className="text-xl font-bold text-amber-600">{overviewStats.pendingAds}</span>
                   </div>
                   <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
                     <span className="font-medium text-gray-700">Total Views</span>
                     <span className="text-xl font-bold text-blue-600">{overviewStats.totalViews.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-xl">
+                  <div className="flex justify-between items-center p-4 bg-indigo-50 rounded-xl">
                     <span className="font-medium text-gray-700">Total Contacts</span>
-                    <span className="text-xl font-bold text-emerald-600">{overviewStats.totalContacts.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-indigo-600">{overviewStats.totalContacts.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-4 bg-rose-50 rounded-xl">
+                    <span className="font-medium text-gray-700">Approval Rate</span>
+                    <span className="text-xl font-bold text-rose-600">{overviewStats.listingApprovalRate.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>

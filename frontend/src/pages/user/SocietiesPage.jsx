@@ -6,15 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { getAllSocietyProfiles } from '../../services/societyService.js';
 
 import societiesImg from '../../assets/societies.png';
-import ghauri from '../../assets/Ghauri.png';
-import bahria from '../../assets/bahria.png';
-import cda from '../../assets/CDA.png';
 
-const imageMap = {
-  'Bahria Town': bahria,
-  'CDA': cda,
-  'Ghauri Town': ghauri,
-};
+
+
 
 const Societies = () => {
   const navigate = useNavigate();
@@ -100,7 +94,7 @@ const Societies = () => {
                     {/* Image Section */}
                     <div className="lg:w-2/5 relative overflow-hidden">
                       <img
-                        src={imageMap[society.name] || societiesImg}
+                        src={society.society_logo}
                         alt={society.name}
                         className="w-full h-64 md:h-80 lg:h-full object-cover transition-transform duration-700 hover:scale-105"
                       />

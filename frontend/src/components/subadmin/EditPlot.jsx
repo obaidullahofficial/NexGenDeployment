@@ -250,8 +250,15 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
       formData.append('dimension_y', Number(form.dimension_y));
       formData.append('location', form.location);
       
-      // Add description array
+      // Add description array - ensure we append description[] array
       const descriptions = form.description.filter(d => d.trim() !== '');
+      
+      // First, append empty array marker for Flask to detect
+      if (descriptions.length > 0) {
+        formData.append('description[]', ''); 
+      }
+      
+      // Then append each description item with index
       descriptions.forEach((desc, index) => {
         formData.append(`description[${index}]`, desc);
       });
@@ -260,8 +267,15 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
       formData.append('seller[name]', form.contactName);
       formData.append('seller[phone]', form.contactPhone);
       
-      // Add amenities
+      // Add amenities - ensure we append amenities[] array
       const amenities = getSelectedAmenities(form.amenities);
+      
+      // First, append empty array marker for Flask to detect
+      if (amenities.length > 0) {
+        formData.append('amenities[]', '');
+      }
+      
+      // Then append each amenity with index
       amenities.forEach((amenity, index) => {
         formData.append(`amenities[${index}]`, amenity);
       });

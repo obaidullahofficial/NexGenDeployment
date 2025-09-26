@@ -110,11 +110,21 @@ const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
     setImagePreviews([]);
   };
 
-  // Helper to convert amenities object to array of enabled amenities
-  const getSelectedAmenities = (amenitiesObj) =>
-    Object.entries(amenitiesObj)
-      .filter((entry) => entry[1])
-      .map(([key]) => key);
+  // Helper to convert amenities object to array of human-readable enabled amenities
+  const getSelectedAmenities = (amenitiesObj) => {
+    const amenityMap = {
+      gatedCommunity: "Gated Community",
+      security: "Security",
+      electricity: "Electricity",
+      waterSupply: "Water Supply",
+      parks: "Parks",
+      mosque: "Mosque"
+    };
+    
+    return Object.entries(amenitiesObj)
+      .filter((entry) => entry[1]) // Only include true values
+      .map(([key]) => amenityMap[key] || key); // Use human-readable name if available
+  };
 
   // API integration for Add Plot using FormData (like society profile)
   const handleSubmit = async (e) => {
@@ -165,8 +175,15 @@ const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
       formData.append('dimension_y', form.dimension_y);  // Send as string, backend will convert to int
       formData.append('location', form.location);
       
-      // Add description array
+      // Add description array - ensure we append description[] array
       const descriptions = form.description.filter(d => d.trim() !== '');
+      
+      // First, append empty array marker for Flask to detect
+      if (descriptions.length > 0) {
+        formData.append('description[]', ''); 
+      }
+      
+      // Then append each description item with index
       descriptions.forEach((desc, index) => {
         formData.append(`description[${index}]`, desc);
       });
@@ -175,8 +192,15 @@ const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
       formData.append('seller[name]', form.contactName);
       formData.append('seller[phone]', form.contactPhone);
       
-      // Add amenities
+      // Add amenities - ensure we append amenities[] array
       const amenities = getSelectedAmenities(form.amenities);
+      
+      // First, append empty array marker for Flask to detect
+      if (amenities.length > 0) {
+        formData.append('amenities[]', '');
+      }
+      
+      // Then append each amenity with index
       amenities.forEach((amenity, index) => {
         formData.append(`amenities[${index}]`, amenity);
       });

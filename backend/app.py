@@ -55,6 +55,10 @@ app.register_blueprint(plot_bp, url_prefix='/api')
 app.register_blueprint(review_bp, url_prefix='/api')
 app.register_blueprint(advertisement_bp, url_prefix='/api')
 
+# Import and register user profile blueprint
+from routes.user_profile_routes import user_profile_bp
+app.register_blueprint(user_profile_bp, url_prefix='/api')
+
 
 @app.route('/api/db-test')
 def db_test():

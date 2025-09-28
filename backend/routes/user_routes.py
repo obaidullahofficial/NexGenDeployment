@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from controllers.user_controller import UserController
-from models.registration_form import registration_form_collection
 from models.user import user_collection
 from models.society_profile import society_profile_collection
 from utils.db import get_db
@@ -202,17 +201,7 @@ def get_user_analytics():
             "error": f"Failed to fetch user analytics: {str(e)}"
         }), 500
 
-@user_bp.route('/register-society', methods=['POST'])
-def register_society():
-    data = request.json
-    required_fields = ['name', 'type', 'regNo', 'established', 'authority', 'contact', 'website', 'plots']
-    if not all(field in data and data[field] for field in required_fields):
-        return jsonify({"error": "All fields are required"}), 400
-    data['status'] = "pending"
-    db = get_db()
-    reg_forms = registration_form_collection(db)
-    reg_id = reg_forms.insert_one(data).inserted_id
-    return jsonify({"message": "Society registration submitted", "registration_id": str(reg_id)}), 201
+# Society registration routes have been moved to registration_form_routes.py
 
 @user_bp.route('/check-email', methods=['POST'])
 def check_email():
@@ -254,62 +243,7 @@ def signup():
 
     return jsonify({"message": message, "user_id": user_id}), 201
 
-@user_bp.route('/signup-society', methods=['POST'])
-def signup_society():
-    data = request.json
-    
-    # Extract user data
-    user_name = data.get('userName')
-    user_email = data.get('userEmail')
-    user_password = data.get('userPassword')
-    
-    # Extract society data
-    society_data = {
-        'name': data.get('name'),
-        'type': data.get('type'),
-        'regNo': data.get('regNo'),
-        'established': data.get('established'),
-        'authority': data.get('authority'),
-        'contact': data.get('contact'),
-        'website': data.get('website'),
-        'plots': data.get('plots'),
-        'user_email': user_email  # Link society to user email
-    }
-    
-    # Validate required fields
-    user_required = [user_name, user_email, user_password]
-    society_required = [society_data['name'], society_data['type'], society_data['regNo'], 
-                       society_data['established'], society_data['authority'], 
-                       society_data['contact'], society_data['website'], society_data['plots']]
-    
-    if not all(user_required):
-        return jsonify({"error": "User information is incomplete"}), 400
-    
-    if not all(society_required):
-        return jsonify({"error": "Society information is incomplete"}), 400
-    
-    try:
-        # Create user account with society role
-        user_id, user_message = UserController.create_user(user_name, user_email, user_password, 'society')
-        if not user_id:
-            return jsonify({"error": user_message}), 400
-        
-        # Create society registration form
-        society_data['status'] = "pending"
-        society_data['user_id'] = user_id  # Link society to user ID
-        
-        db = get_db()
-        reg_forms = registration_form_collection(db)
-        reg_id = reg_forms.insert_one(society_data).inserted_id
-        
-        return jsonify({
-            "message": "Society signup successful! Your registration is pending admin approval.",
-            "user_id": user_id,
-            "registration_id": str(reg_id)
-        }), 201
-        
-    except Exception as e:
-        return jsonify({"error": f"Registration failed: {str(e)}"}), 500
+# Society signup route has been moved to registration_form_routes.py
 
 @user_bp.route('/login', methods=['POST'])
 def login():
@@ -333,30 +267,26 @@ def login():
 
     # Quick society status check only for society users (optimized)
     if user['role'] == 'society':
-        db = get_db()
-        reg_forms = registration_form_collection(db)
+        from controllers.registration_form_controller import RegistrationFormController
         
-        # Single query with projection to get only status field
-        society = reg_forms.find_one({'user_email': email}, {'status': 1})
+        # Use the controller to check society status
+        society_status = RegistrationFormController.check_society_status(email)
         
-        if society:
-            society_status = society.get('status', 'pending')
-            
-            if society_status == 'pending':
-                return jsonify({
-                    "error": "registration_pending",
-                    "message": "Your society registration is pending admin approval."
-                }), 403
-            elif society_status == 'rejected':
-                return jsonify({
-                    "error": "registration_rejected", 
-                    "message": "Your registration has been rejected. Contact admin."
-                }), 403
-            elif society_status != 'approved':
-                return jsonify({
-                    "error": "registration_invalid",
-                    "message": "Invalid registration status. Contact admin."
-                }), 403
+        if society_status == 'pending':
+            return jsonify({
+                "error": "registration_pending",
+                "message": "Your society registration is pending admin approval."
+            }), 403
+        elif society_status == 'rejected':
+            return jsonify({
+                "error": "registration_rejected", 
+                "message": "Your registration has been rejected. Contact admin."
+            }), 403
+        elif society_status != 'approved':
+            return jsonify({
+                "error": "registration_invalid",
+                "message": "Invalid registration status. Contact admin."
+            }), 403
 
     # Fast token generation without debug overhead
     access_token = create_access_token(
@@ -587,27 +517,26 @@ def google_login():
                 
                 # Check society status if applicable
                 if existing_user['role'] == 'society':
-                    reg_forms = registration_form_collection(db)
-                    society = reg_forms.find_one({'user_email': google_email}, {'status': 1})
+                    from controllers.registration_form_controller import RegistrationFormController
                     
-                    if society:
-                        society_status = society.get('status', 'pending')
-                        
-                        if society_status == 'pending':
-                            return jsonify({
-                                "error": "registration_pending",
-                                "message": "Your society registration is pending admin approval."
-                            }), 403
-                        elif society_status == 'rejected':
-                            return jsonify({
-                                "error": "registration_rejected", 
-                                "message": "Your registration has been rejected. Contact admin."
-                            }), 403
-                        elif society_status != 'approved':
-                            return jsonify({
-                                "error": "registration_invalid",
-                                "message": "Invalid registration status. Contact admin."
-                            }), 403
+                    # Use the controller to check society status
+                    society_status = RegistrationFormController.check_society_status(google_email)
+                    
+                    if society_status == 'pending':
+                        return jsonify({
+                            "error": "registration_pending",
+                            "message": "Your society registration is pending admin approval."
+                        }), 403
+                    elif society_status == 'rejected':
+                        return jsonify({
+                            "error": "registration_rejected", 
+                            "message": "Your registration has been rejected. Contact admin."
+                        }), 403
+                    elif society_status != 'approved':
+                        return jsonify({
+                            "error": "registration_invalid",
+                            "message": "Invalid registration status. Contact admin."
+                        }), 403
                 
                 # Create access token
                 access_token = create_access_token(
@@ -703,25 +632,7 @@ def google_login():
         print(f"[GOOGLE {intent.upper()}] General error: {str(e)}")
         return jsonify({"error": "Google authentication failed", "details": str(e)}), 500
 
-@user_bp.route('/my-society', methods=['GET'])
-@jwt_required()
-def get_my_society():
-    """Get society information for the logged-in user"""
-    user_email = get_jwt_identity()  # Now returns email directly
-    
-    db = get_db()
-    reg_forms = registration_form_collection(db)
-    
-    # Find society by user email
-    society = reg_forms.find_one({'user_email': user_email})
-    
-    if not society:
-        return jsonify({"error": "No society found for this user"}), 404
-    
-    # Convert ObjectId to string for JSON serialization
-    society['_id'] = str(society['_id'])
-    
-    return jsonify({"society": society}), 200
+# Society information route has been moved to registration_form_routes.py
 
 @user_bp.route('/logout', methods=['POST'])
 def logout():
@@ -1045,37 +956,7 @@ def bulk_delete_users():
         print(f"[BULK DELETE ERROR] {str(e)}")
         return jsonify({"success": False, "message": "Failed to delete users"}), 500
 
-@user_bp.route('/registration-forms', methods=['GET'])
-@jwt_required()
-def get_registration_forms():
-    """Get all registration forms (Admin only)"""
-    try:
-        # Check if current user is admin
-        current_user_email = get_jwt_identity()
-        db = get_db()
-        users = user_collection(db)
-        
-        current_user = users.find_one({'email': current_user_email})
-        if not current_user or current_user.get('role') != 'admin':
-            return jsonify({"success": False, "message": "Admin access required"}), 403
-        
-        # Get all registration forms
-        reg_forms = registration_form_collection(db)
-        registration_list = list(reg_forms.find({}))
-        
-        # Convert ObjectId to string
-        for registration in registration_list:
-            registration['_id'] = str(registration['_id'])
-            # Add created date if not present
-            if 'created_at' not in registration:
-                registration['created_at'] = datetime.now().isoformat()
-        
-        return jsonify({
-            "success": True,
-            "data": registration_list,
-            "total": len(registration_list),
-            "message": f"Retrieved {len(registration_list)} registration forms successfully"
-        }), 200
+# Registration forms route has been moved to registration_form_routes.py
         
     except Exception as e:
         print(f"[GET REGISTRATION FORMS ERROR] {str(e)}")

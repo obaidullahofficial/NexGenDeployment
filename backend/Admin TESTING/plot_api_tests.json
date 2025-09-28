@@ -1,0 +1,1076 @@
+{
+	"info": {
+		"_postman_id": "4fedf71e-5cb4-4a5c-ad2b-8d046a9c8e12",
+		"name": "NextGenArchitect - Plot API Tests",
+		"description": "Comprehensive test suite for the Plot APIs in NextGenArchitect application.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Society Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.access_token).to.not.be.undefined;",
+									"    ",
+									"    // Store the access token for subsequent requests",
+									"    pm.environment.set(\"access_token\", jsonData.access_token);",
+									"});",
+									"",
+									"pm.test(\"User is a society admin\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.user.role).to.eql(\"society\");",
+									"    ",
+									"    // Store user information for later tests",
+									"    pm.environment.set(\"user_email\", jsonData.user.email);",
+									"    pm.environment.set(\"user_role\", jsonData.user.role);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"abcf@example.com\",\n  \"password\": \"abcf@example.com\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Login to get the authentication token for subsequent API calls. This test uses the society account."
+					}
+				}
+			]
+		},
+		{
+			"name": "Plots - Create",
+			"item": [
+				{
+					"name": "Create Plot - Valid Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains plot_id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.plot_id).to.not.be.undefined;",
+									"    ",
+									"    // Store the plot ID for subsequent requests",
+									"    pm.environment.set(\"plot_id\", jsonData.plot_id);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate a random plot number to avoid conflicts",
+									"pm.environment.set(\"random_plot_number\", \"P\" + Math.floor(Math.random() * 10000));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "plot_number",
+									"value": "{{random_plot_number}}",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "750000",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Available",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "Residential",
+									"type": "text"
+								},
+								{
+									"key": "area",
+									"value": "1250 sqft",
+									"type": "text"
+								},
+								{
+									"key": "dimension_x",
+									"value": "25",
+									"type": "text"
+								},
+								{
+									"key": "dimension_y",
+									"value": "50",
+									"type": "text"
+								},
+								{
+									"key": "location",
+									"value": "Block A, Sector 5",
+									"type": "text"
+								},
+								{
+									"key": "description[]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "description[0]",
+									"value": "Premium plot in prime location",
+									"type": "text"
+								},
+								{
+									"key": "description[1]",
+									"value": "Near to main road with excellent connectivity",
+									"type": "text"
+								},
+								{
+									"key": "seller[name]",
+									"value": "John Doe",
+									"type": "text"
+								},
+								{
+									"key": "seller[phone]",
+									"value": "1234567890",
+									"type": "text"
+								},
+								{
+									"key": "amenities[]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "amenities[0]",
+									"value": "Gated Community",
+									"type": "text"
+								},
+								{
+									"key": "amenities[1]",
+									"value": "Electricity",
+									"type": "text"
+								},
+								{
+									"key": "amenities[2]",
+									"value": "Water Supply",
+									"type": "text"
+								},
+								{
+									"key": "plot_image",
+									"type": "file",
+									"src": "/path/to/sample-plot-image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots"
+							]
+						},
+						"description": "Create a new plot with all required fields and some optional fields. Includes description and amenities arrays."
+					}
+				},
+				{
+					"name": "Create Plot - Missing Required Fields",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "price",
+									"value": "750000",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Available",
+									"type": "text"
+								},
+								{
+									"key": "area",
+									"value": "1250 sqft",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots"
+							]
+						},
+						"description": "Attempt to create a plot without the required plot_number field and without an image, which should fail with a 400 error."
+					}
+				},
+				{
+					"name": "Create Plot - Duplicate Plot Number",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response contains duplicate plot number error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.include(\"already exists\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "plot_number",
+									"value": "{{random_plot_number}}",
+									"description": "Using the same plot number from a previously created plot",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "850000",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Available",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "Residential",
+									"type": "text"
+								},
+								{
+									"key": "area",
+									"value": "1500 sqft",
+									"type": "text"
+								},
+								{
+									"key": "plot_image",
+									"type": "file",
+									"src": "/path/to/sample-plot-image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots"
+							]
+						},
+						"description": "Attempt to create a plot with a duplicate plot number, which should fail with a 400 error."
+					}
+				},
+				{
+					"name": "Create Plot - Unauthorized",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response contains authorization error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.include(\"token\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "plot_number",
+									"value": "P1234",
+									"type": "text"
+								},
+								{
+									"key": "price",
+									"value": "750000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots"
+							]
+						},
+						"description": "Attempt to create a plot without authentication, which should fail with a 401 error."
+					}
+				}
+			]
+		},
+		{
+			"name": "Plots - Retrieve",
+			"item": [
+				{
+					"name": "Get All Plots",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(Array.isArray(jsonData)).to.be.true;",
+									"});",
+									"",
+									"pm.test(\"Response contains at least one plot\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"// Verify plot structure",
+									"if (pm.response.json().length > 0) {",
+									"    var firstPlot = pm.response.json()[0];",
+									"    ",
+									"    pm.test(\"Plot has required fields\", function () {",
+									"        pm.expect(firstPlot).to.have.property('_id');",
+									"        pm.expect(firstPlot).to.have.property('plot_number');",
+									"        pm.expect(firstPlot).to.have.property('price');",
+									"        pm.expect(firstPlot).to.have.property('status');",
+									"        pm.expect(firstPlot).to.have.property('type');",
+									"        pm.expect(firstPlot).to.have.property('societyId');",
+									"    });",
+									"    ",
+									"    // Check if our newly created plot is in the list",
+									"    var plotFound = false;",
+									"    var plots = pm.response.json();",
+									"    ",
+									"    for (var i = 0; i < plots.length; i++) {",
+									"        if (plots[i]._id === pm.environment.get(\"plot_id\")) {",
+									"            plotFound = true;",
+									"            break;",
+									"        }",
+									"    }",
+									"    ",
+									"    pm.test(\"Newly created plot is in the list\", function() {",
+									"        pm.expect(plotFound).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots"
+							]
+						},
+						"description": "Retrieve all plots for the current user's society."
+					}
+				},
+				{
+					"name": "Get Single Plot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains correct plot\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData._id).to.eql(pm.environment.get(\"plot_id\"));",
+									"    pm.expect(jsonData.plot_number).to.eql(pm.environment.get(\"random_plot_number\"));",
+									"});",
+									"",
+									"pm.test(\"Plot has description array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.description).to.be.an('array');",
+									"    pm.expect(jsonData.description.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Plot has amenities array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.amenities).to.be.an('array');",
+									"    pm.expect(jsonData.amenities.length).to.be.at.least(1);",
+									"});",
+									"",
+									"pm.test(\"Plot has image data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.image).to.be.a('string');",
+									"    pm.expect(jsonData.image.length).to.be.above(20);  // Should be a data URL or path",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Retrieve a single plot by its ID."
+					}
+				},
+				{
+					"name": "Get Plot - Invalid ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/invalid_id_123",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"invalid_id_123"
+							]
+						},
+						"description": "Attempt to retrieve a plot with an invalid ID, which should fail with a 400 or 404 error."
+					}
+				}
+			]
+		},
+		{
+			"name": "Plots - Update",
+			"item": [
+				{
+					"name": "Update Plot - Valid Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains success message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.eql(\"Plot updated\");",
+									"});",
+									"",
+									"// Store updated values for verification in the next request",
+									"pm.environment.set(\"updated_price\", \"950000\");",
+									"pm.environment.set(\"updated_description\", \"Updated premium plot with mountain view\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "price",
+									"value": "950000",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Available",
+									"type": "text"
+								},
+								{
+									"key": "description[]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "description[0]",
+									"value": "Updated premium plot with mountain view",
+									"type": "text"
+								},
+								{
+									"key": "description[1]",
+									"value": "Near to main road with excellent connectivity",
+									"type": "text"
+								},
+								{
+									"key": "amenities[]",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "amenities[0]",
+									"value": "Gated Community",
+									"type": "text"
+								},
+								{
+									"key": "amenities[1]",
+									"value": "Security",
+									"type": "text"
+								},
+								{
+									"key": "amenities[2]",
+									"value": "Electricity",
+									"type": "text"
+								},
+								{
+									"key": "amenities[3]",
+									"value": "Water Supply",
+									"type": "text"
+								},
+								{
+									"key": "amenities[4]",
+									"value": "Parks",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Update an existing plot with new price, description and amenities."
+					}
+				},
+				{
+					"name": "Verify Plot Update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Plot price was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.price).to.eql(pm.environment.get(\"updated_price\"));",
+									"});",
+									"",
+									"pm.test(\"Plot description was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.description[0]).to.eql(pm.environment.get(\"updated_description\"));",
+									"});",
+									"",
+									"pm.test(\"Plot has more amenities after update\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.amenities.length).to.be.at.least(4);",
+									"    pm.expect(jsonData.amenities).to.include(\"Security\");",
+									"    pm.expect(jsonData.amenities).to.include(\"Parks\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Verify that the plot was successfully updated by retrieving it and checking the updated values."
+					}
+				},
+				{
+					"name": "Update Plot - Invalid ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "price",
+									"value": "850000",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "Sold",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots/invalid_id_123",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"invalid_id_123"
+							]
+						},
+						"description": "Attempt to update a plot with an invalid ID, which should fail with a 400 or 404 error."
+					}
+				},
+				{
+					"name": "Update Plot - Unauthorized",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response contains authorization error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.include(\"token\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "price",
+									"value": "850000",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Attempt to update a plot without authentication, which should fail with a 401 error."
+					}
+				}
+			]
+		},
+		{
+			"name": "Plots - Delete",
+			"item": [
+				{
+					"name": "Delete Plot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains success message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.eql(\"Plot deleted\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Delete a plot by its ID."
+					}
+				},
+				{
+					"name": "Verify Plot Deletion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Response indicates plot not found\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.eql(\"Plot not found\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Verify that the plot was successfully deleted by attempting to retrieve it, which should fail with a 404 error."
+					}
+				},
+				{
+					"name": "Delete Plot - Invalid ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400 or 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+									"});",
+									"",
+									"pm.test(\"Response contains error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/invalid_id_123",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"invalid_id_123"
+							]
+						},
+						"description": "Attempt to delete a plot with an invalid ID, which should fail with a 400 or 404 error."
+					}
+				},
+				{
+					"name": "Delete Plot - Unauthorized",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response contains authorization error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error).to.include(\"token\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5000/api/plots/{{plot_id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"plots",
+								"{{plot_id}}"
+							]
+						},
+						"description": "Attempt to delete a plot without authentication, which should fail with a 401 error."
+					}
+				}
+			]
+		}
+	]
+}

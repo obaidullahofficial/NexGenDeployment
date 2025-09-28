@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FiPhone } from "react-icons/fi";
 import AlertModal from '../common/AlertModal';
 import { useAlert } from '../../hooks/useAlert';
 
-const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
+const AddPlotForm = ({ onSubmit, onCancel}) => {
   const [form, setForm] = useState({
     plotId: "",
     plot_number: "", // New field for plot number
@@ -33,7 +33,7 @@ const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
   const [imageError, setImageError] = useState(false); // Track image validation error
-  const { alertState, showError, showWarning, showSuccess, closeAlert } = useAlert();
+  const { alertState, showError, showWarning, showSuccess } = useAlert();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -438,7 +438,7 @@ const AddPlotForm = ({ onSubmit, onCancel, societyId }) => {
 
             {/* Image Upload Section - Society Profile Style */}
             <div className={`${imageError ? 'border-2 border-red-500 rounded-lg p-4 bg-red-50' : ''}`}>
-              <label className={`block text-sm font-medium mb-3 text-lg font-semibold border-b-2 pb-2 ${
+              <label className={`block mb-3 text-lg font-semibold border-b-2 pb-2 ${
                 imageError ? 'text-red-600 border-red-500' : 'text-gray-700 border-[#ED7600]'
               }`}>
                 Plot Image <span className="text-red-600">*</span>

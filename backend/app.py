@@ -7,6 +7,8 @@ from utils.db import test_connection
 from routes.review_routes import review_bp
 from routes.plot_routes import plot_bp  # Import the blueprint
 from routes.advertisement_routes import advertisement_bp  # Import advertisement routes
+from routes.registration_form_routes import registration_form_bp  # Import registration form routes
+from routes.registration_form_routes import registration_form_bp  # Import registration form routes
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
@@ -54,6 +56,7 @@ app.register_blueprint(society_profile_bp, url_prefix='/api')
 app.register_blueprint(plot_bp, url_prefix='/api')
 app.register_blueprint(review_bp, url_prefix='/api')
 app.register_blueprint(advertisement_bp, url_prefix='/api')
+app.register_blueprint(registration_form_bp, url_prefix='/api')
 
 
 @app.route('/api/db-test')

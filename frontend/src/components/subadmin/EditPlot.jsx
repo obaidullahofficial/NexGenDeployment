@@ -29,7 +29,7 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
   const [imageError, setImageError] = useState(false); // Track image validation error
-  const { alertState, showError, showWarning, showSuccess, closeAlert } = useAlert();
+  const { alertState, showError } = useAlert();
 
   useEffect(() => {
     if (plot) {
@@ -491,7 +491,7 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
             </div>
             {/* Image Upload Section */}
             <div className={`${imageError ? 'border-2 border-red-500 rounded-lg p-4 bg-red-50' : ''}`}>
-              <label className={`block text-sm font-medium mb-3 text-lg font-semibold border-b-2 pb-2 ${
+              <label className={`block mb-3 text-lg font-semibold border-b-2 pb-2 ${
                 imageError ? 'text-red-600 border-red-500' : 'text-gray-700 border-[#ED7600]'
               }`}>
                 Plot Image <span className="text-red-600">*</span>
@@ -572,10 +572,10 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
                                 e.target.style.display = 'none';
                                 e.target.nextElementSibling.style.display = 'block';
                               }}
-                              onLoad={() => {
+                              onLoad={(event) => {
                                 console.log('Image loaded successfully:', imageUrl);
                                 // Hide error placeholder if image loads
-                                const errorDiv = e.target.nextElementSibling;
+                                const errorDiv = event.target.nextElementSibling;
                                 if (errorDiv && errorDiv.classList.contains('error-placeholder')) {
                                   errorDiv.style.display = 'none';
                                 }

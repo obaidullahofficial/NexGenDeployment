@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments, FaBullhorn, FaPhone, FaEye, FaStar } from 'react-icons/fa';
 import homepagePic1 from '../../assets/homepage-pic1.png';
 import homepagePic3 from '../../assets/homepage-pic3.png';
@@ -7,6 +8,7 @@ import Footer from '../../components/user/Footer';
 import advertisementAPI from '../../services/advertisementAPI';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [advertisement, setAdvertisement] = useState(null); // Holds ad content
   const [showPopup, setShowPopup] = useState(false);
@@ -24,6 +26,11 @@ const HomePage = () => {
     { image: homepagePic1, alt: "Modern architectural design 1" },
     { image: homepagePic3, alt: "Modern architectural design 3" }
   ];
+
+  // Handle navigation to floor plan generator
+  const handleGenerateNow = () => {
+    navigate('/floor-plan/generate');
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -252,7 +259,10 @@ const HomePage = () => {
               NextGenArchitect: Your AI-Powered Gateway to<br />
               Custom Floor Plans & Seamless Plot Purchasing
             </p>
-            <button className="px-8 py-3 bg-[#ED7600] text-white rounded-lg text-lg font-semibold hover:bg-[#D56900] transition-colors">
+            <button 
+              onClick={handleGenerateNow}
+              className="px-8 py-3 bg-[#ED7600] text-white rounded-lg text-lg font-semibold hover:bg-[#D56900] transition-colors"
+            >
               Generate Now
             </button>
           </div>

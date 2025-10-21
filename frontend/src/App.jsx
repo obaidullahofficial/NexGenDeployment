@@ -25,6 +25,8 @@ import RegistrationForm from './pages/RegistrationForm/RegistrationForm';
 import UserProfileLayout from './layouts/UserProfileLayout';
 import SocietyPlots from "./pages/user/SocietyPlots";
 import GenerateFloorPlan from './pages/user/GenerateFloorPlan';
+import { FloorPlanGenerator as FloorPlanGen } from './pages/FloorPlanGeneration';
+import FloorPlanCustomization from './pages/FloorPlanGeneration/FloorPlanCustomization';
 
 // Admin imports
 import Sidebar from "./components/admin/sidebar";
@@ -64,6 +66,10 @@ function App() {
           {/* Society Profile Standalone */}
           <Route path="/society-profile-setup" element={<SocietyProfileSetup />} />
           <Route path="/society-profile-edit" element={<SocietyProfileEdit />} />
+
+          {/* Floor Plan Generation */}
+          <Route path="/floor-plan/generate" element={<FloorPlanGen />} />
+          <Route path="/floor-plan/customize" element={<FloorPlanCustomization />} />
 
           {/* User Routes */}
           <Route path="/" element={<UserLayout />}>

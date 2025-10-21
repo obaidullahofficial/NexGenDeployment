@@ -61,6 +61,10 @@ app.register_blueprint(registration_form_bp, url_prefix='/api')
 from routes.user_profile_routes import user_profile_bp
 app.register_blueprint(user_profile_bp, url_prefix='/api')
 
+# Import and register floor plan blueprint
+from routes.floorplan_routes import floorplan_bp
+app.register_blueprint(floorplan_bp, url_prefix='/api')
+
 
 @app.route('/api/db-test')
 def db_test():

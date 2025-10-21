@@ -15,3 +15,5 @@ npm install html2canvas
 npm install react-toastify
 nm jspdf html2canvas
  npm install @react-oauth/google jwt-decode
+npm install react-konva konva
+npm install three @react-three/fiber @react-three/drei @react-three/postprocessing

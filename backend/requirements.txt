@@ -5,7 +5,7 @@ python -m pip install "pymongo[srv]"
 npm install jspdf html2canvas
 pip install google-auth google-auth-oauthlib google-auth-httplib2
 pip install python-dotenv
-
+pip install numpy
 python app.py
 
 {

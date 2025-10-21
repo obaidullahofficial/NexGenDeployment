@@ -11,10 +11,10 @@ const initialNodes = [];
 const initialEdges = [];
 
 const roomColors = {
-  Bedroom: "#6C63FF",      // Indigo
-  Bathroom: "#FF6584",    // Pink
-  Kitchen: "#43E97B",     // Green
-  LivingRoom: "#FFD86E"   // Yellow
+  Bedroom: "#ED7600",      // Orange (primary theme color)
+  Bathroom: "#2F3D57",     // Dark blue (secondary theme color)
+  Kitchen: "#ED7600",      // Orange (primary theme color)
+  LivingRoom: "#2F3D57"    // Dark blue (secondary theme color)
 };
 
 function FloorPlanGenerator() {

@@ -1,6 +1,8 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from utils.db import get_db
 from models.user import user_collection
+from utils.email_service import EmailService
+from datetime import datetime
 
 class UserController:
     @staticmethod
@@ -24,19 +26,185 @@ class UserController:
         return str(result.inserted_id), "User created successfully"
 
     @staticmethod
+    def signup_user(username, email, password, role='user', society_id=None):
+        """
+        Create a new user account with email verification
+        
+        Step 1: User signs up (Collect info)
+        Step 2: Generate token (Secure identifier)
+        Step 3: Send verification email (Confirm email ownership)
+        
+        Returns:
+            tuple: (success: bool, message/user_id: str, additional_info: dict)
+        """
+        try:
+            db = get_db()
+            users = user_collection(db)
+            
+            # Check if email already exists
+            existing_user = users.find_one({'email': email})
+            if existing_user:
+                if existing_user.get('is_verified', False):
+                    return False, "Email already registered and verified", {}
+                else:
+                    # Email exists but not verified - allow re-registration
+                    users.delete_one({'email': email})
+                    EmailService.delete_user_tokens(email)
+            
+            # Create user with unverified status
+            password_hash = generate_password_hash(password)
+            user_data = {
+                'username': username,
+                'email': email,
+                'password_hash': password_hash,
+                'role': role,
+                'society_id': society_id,
+                'is_verified': False,  # User must verify email
+                'created_at': datetime.utcnow()
+            }
+            
+            result = users.insert_one(user_data)
+            user_id = str(result.inserted_id)
+            
+            # Step 2: Generate verification token
+            token, token_doc = EmailService.create_verification_token(email)
+            
+            if not token:
+                # Rollback user creation if token generation fails
+                users.delete_one({'_id': result.inserted_id})
+                return False, f"Failed to create verification token: {token_doc}", {}
+            
+            # Step 3: Send verification email
+            email_sent, email_message = EmailService.send_verification_email(email, username, token)
+            
+            if not email_sent:
+                print(f"[SIGNUP WARNING] User created but email failed: {email_message}")
+                return True, "Account created but verification email failed. Please request a new verification email.", {
+                    'user_id': user_id,
+                    'email_sent': False,
+                    'error': email_message
+                }
+            
+            print(f"[SIGNUP] ✅ User {username} ({email}) created successfully. Verification email sent.")
+            return True, "Account created successfully! Please check your email to verify your account.", {
+                'user_id': user_id,
+                'email_sent': True
+            }
+            
+        except Exception as e:
+            print(f"[SIGNUP ERROR] {str(e)}")
+            return False, f"Signup failed: {str(e)}", {}
+    
+    @staticmethod
+    def verify_email(token):
+        """
+        Verify user's email using token
+        
+        Step 4: Verify token (Activate account)
+        Step 5: Delete/expire token (Security)
+        
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        try:
+            # Step 4: Verify the token
+            token_valid, email_or_error = EmailService.verify_token(token)
+            
+            if not token_valid:
+                return False, email_or_error
+            
+            email = email_or_error
+            
+            # Activate the user account
+            db = get_db()
+            users = user_collection(db)
+            
+            result = users.update_one(
+                {'email': email},
+                {'$set': {'is_verified': True}}
+            )
+            
+            if result.modified_count == 0:
+                return False, "User not found or already verified"
+            
+            # Step 5: Clean up old tokens (token already marked as used in verify_token)
+            print(f"[VERIFY EMAIL] ✅ Email {email} verified successfully")
+            return True, "Email verified successfully! You can now log in."
+            
+        except Exception as e:
+            print(f"[VERIFY EMAIL ERROR] {str(e)}")
+            return False, f"Verification failed: {str(e)}"
+    
+    @staticmethod
+    def resend_verification_email(email):
+        """
+        Resend verification email to user
+        
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        try:
+            db = get_db()
+            users = user_collection(db)
+            
+            # Check if user exists
+            user = users.find_one({'email': email})
+            
+            if not user:
+                return False, "No account found with this email address"
+            
+            # Check if already verified
+            if user.get('is_verified', False):
+                return False, "This email is already verified. Please log in."
+            
+            # Delete old tokens
+            EmailService.delete_user_tokens(email)
+            
+            # Generate new token
+            token, token_doc = EmailService.create_verification_token(email)
+            
+            if not token:
+                return False, f"Failed to create verification token: {token_doc}"
+            
+            # Send new verification email
+            email_sent, email_message = EmailService.send_verification_email(
+                email, 
+                user.get('username', 'User'), 
+                token
+            )
+            
+            if not email_sent:
+                return False, f"Failed to send email: {email_message}"
+            
+            print(f"[RESEND] ✅ Verification email resent to {email}")
+            return True, "Verification email sent! Please check your inbox."
+            
+        except Exception as e:
+            print(f"[RESEND ERROR] {str(e)}")
+            return False, f"Failed to resend email: {str(e)}"
+    
+    @staticmethod
     def verify_user(email, password):
-        """Fast user verification with minimal database queries"""
+        """
+        Fast user verification with minimal database queries
+        NOW REQUIRES EMAIL VERIFICATION - Only verified Gmail users can log in
+        """
         db = get_db()
         users = user_collection(db)
         
-        # Single optimized query with only required fields
+        # Single optimized query with only required fields including is_verified
         user = users.find_one(
             {'email': email},
-            {'email': 1, 'username': 1, 'password_hash': 1, 'role': 1, 'society_id': 1}
+            {'email': 1, 'username': 1, 'password_hash': 1, 'role': 1, 'society_id': 1, 'is_verified': 1}
         )
         
         if not user:
             return None
+        
+        # Check if email is verified
+        if not user.get('is_verified', False):
+            print(f"[LOGIN BLOCKED] User {email} attempted login without email verification")
+            return {'error': 'email_not_verified', 'message': 'Please verify your email before logging in'}
             
         # Fast password verification
         try:

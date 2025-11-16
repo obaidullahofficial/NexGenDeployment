@@ -314,12 +314,15 @@ def login():
             db = get_db()
             profiles = society_profile_collection(db)
             
-            # Quick check if profile exists (only _id field)
-            profile_exists = profiles.find_one({'user_email': email}, {'_id': 1}) is not None
+            # Fetch the society profile for this user to get its _id
+            profile = profiles.find_one({'user_email': email}, {'_id': 1})
+            profile_exists = profile is not None
+            society_id = str(profile['_id']) if profile else None
             
             response_data.update({
                 "profile_exists": profile_exists,
-                "profile_complete": profile_exists  # Simplified check
+                "profile_complete": profile_exists,  # Simplified check
+                "societyId": society_id,
             })
             
         except Exception as e:
@@ -327,7 +330,8 @@ def login():
             # Don't fail login for profile issues
             response_data.update({
                 "profile_exists": False,
-                "profile_complete": False
+                "profile_complete": False,
+                "societyId": None,
             })
     
     return jsonify(response_data), 200

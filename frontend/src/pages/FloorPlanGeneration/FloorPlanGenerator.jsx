@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import KonvaFloorPlan from '../../components/FloorPlan/KonvaFloorPlan';
 
 const FloorPlanGenerator = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPlans, setGeneratedPlans] = useState([]);
@@ -35,6 +36,32 @@ const FloorPlanGenerator = () => {
     areas: false,
     connections: false
   });
+
+  // If coming from an approval request, import external JSON floor plan
+  useEffect(() => {
+    const importUrl = location.state?.importFromUrl;
+    if (!importUrl) return;
+
+    const loadImportedPlan = async () => {
+      try {
+        const res = await fetch(importUrl);
+        const data = await res.json();
+
+        // Support either a single plan object or an array of plans
+        const plans = Array.isArray(data) ? data : [data];
+        if (plans.length === 0) return;
+
+        setGeneratedPlans(plans);
+        setCurrentPlanIndex(0);
+        setCurrentStep(3); // Jump directly to review/visualization step
+      } catch (err) {
+        console.error('Failed to import floor plan JSON:', err);
+        alert('Could not load floor plan JSON from approval request.');
+      }
+    };
+
+    loadImportedPlan();
+  }, [location.state]);
 
   // Auto-calculate total and available area whenever room configuration changes
   useEffect(() => {

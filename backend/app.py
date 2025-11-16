@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file, abort
 from flask_jwt_extended import JWTManager
 from routes.user_routes import user_bp
 from routes.society_profile_routes import society_profile_bp
@@ -64,6 +64,33 @@ app.register_blueprint(user_profile_bp, url_prefix='/api')
 # Import and register floor plan blueprint
 from routes.floorplan_routes import floorplan_bp
 app.register_blueprint(floorplan_bp, url_prefix='/api')
+
+
+# ========== FILE SERVING ROUTES (for uploaded user documents) ==========
+
+UPLOAD_ROOT = os.path.join(os.getcwd(), 'uploads')
+
+@app.route('/api/file/<path:filepath>', methods=['GET'])
+def serve_uploaded_file(filepath):
+    """Serve uploaded files (e.g., floor plan PDFs) in a safe way.
+
+    The `filepath` is stored in the database, typically starting with
+    "uploads/" (e.g., "uploads/user_profiles/user_<id>/floor_plans/file.pdf").
+    This endpoint ensures we only serve files from the `uploads` directory.
+    """
+    # Normalize path and ensure it stays within the uploads directory
+    normalized = os.path.normpath(filepath)
+    full_path = os.path.normpath(os.path.join(os.getcwd(), normalized))
+
+    # Security check: file must be inside the UPLOAD_ROOT directory
+    if not full_path.startswith(UPLOAD_ROOT):
+        abort(403)
+
+    if not os.path.exists(full_path) or not os.path.isfile(full_path):
+        abort(404)
+
+    # Let Flask infer the correct MIME type (PDF/image/etc.)
+    return send_file(full_path, as_attachment=False)
 
 
 @app.route('/api/db-test')

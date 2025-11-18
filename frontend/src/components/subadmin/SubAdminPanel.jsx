@@ -17,7 +17,7 @@ const SubAdminPanel = ({ activeTab, setActiveTab }) => {
   
   const handleTabClick = (tab) => {
     if (tab === 'floorPlan') {
-      navigate('/floorplan-generation');
+      navigate('/floor-plan/generate');
     } else {
       setActiveTab(tab);
     }

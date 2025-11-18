@@ -24,6 +24,7 @@ const Advertisement = () => {
   const [societyLoading, setSocietyLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     const loadSociety = async () => {
@@ -74,11 +75,16 @@ const Advertisement = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    setShowConfirmDialog(true);
+  };
+
+  const confirmSubmit = async () => {
     setLoading(true);
     setError("");
     setSuccess("");
+    setShowConfirmDialog(false);
 
     try {
       const payload = {
@@ -292,12 +298,50 @@ const Advertisement = () => {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#2F3D57] hover:bg-[#1E2A3B] disabled:opacity-50 transition-colors"
           >
             {loading ? "Submitting..." : "Submit Advertisement Request"}
           </button>
         </div>
       </form>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-100 to-blue-200">
+              <svg className="w-8 h-8 text-[#2F3D57]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+              Submit Advertisement Request?
+            </h3>
+            
+            <p className="text-gray-600 text-center mb-6">
+              Are you sure you want to submit this advertisement request? The admin will review and approve it before it becomes visible.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="flex-1 px-4 py-3 rounded-lg font-medium text-white transition-colors bg-[#2F3D57] hover:bg-[#1E2A3B]"
+                disabled={loading}
+              >
+                {loading ? "Submitting..." : "Yes, Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   </div>
   );

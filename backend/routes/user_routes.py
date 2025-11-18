@@ -226,24 +226,268 @@ def check_email():
     except Exception as e:
         return jsonify({"error": f"Failed to check email: {str(e)}"}), 500
 
+# Society signup route has been moved to registration_form_routes.py
+
+# ============================================================
+# EMAIL VERIFICATION ROUTES
+# ============================================================
+
 @user_bp.route('/signup', methods=['POST'])
 def signup():
-    data = request.json
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-    role = data.get('role', 'user')
+    """
+    User signup with email verification
+    Step 1: User signs up (Collect info)
+    Step 2: Generate token (Secure identifier) 
+    Step 3: Send verification email (Confirm email ownership)
+    """
+    try:
+        data = request.json
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            return jsonify({
+                "success": False,
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
+            }), 400
+        
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        role = data.get('role', 'user')
+        society_id = data.get('society_id')
+        
+        # Validate email domain (only Gmail for this requirement)
+        if not email.lower().endswith('@gmail.com'):
+            return jsonify({
+                "success": False,
+                "error": "Only Gmail addresses are allowed for registration"
+            }), 400
+        
+        print(f"[SIGNUP API] Processing signup for {email}")
+        
+        # Call controller to create user and send verification email
+        success, message, info = UserController.signup_user(
+            username, email, password, role, society_id
+        )
+        
+        if success:
+            return jsonify({
+                "success": True,
+                "message": message,
+                "user_id": info.get('user_id'),
+                "email_sent": info.get('email_sent', False)
+            }), 201
+        else:
+            return jsonify({
+                "success": False,
+                "error": message
+            }), 400
+            
+    except Exception as e:
+        print(f"[SIGNUP API ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Signup failed: {str(e)}"
+        }), 500
 
-    if not all([username, email, password]):
-        return jsonify({"error": "All fields are required"}), 400
+@user_bp.route('/verify-email', methods=['POST', 'GET'])
+def verify_email_route():
+    """
+    Verify user's email using 6-digit code
+    Step 4: Verify code (Activate account)
+    Step 5: Delete/expire code (Security)
+    
+    Supports both:
+    - POST with code in body
+    - GET with code in query parameter
+    """
+    try:
+        # Get code from either POST body or GET query parameter
+        if request.method == 'POST':
+            data = request.json or {}
+            code = data.get('code')
+        else:  # GET
+            code = request.args.get('code')
+        
+        if not code:
+            return jsonify({
+                "success": False,
+                "error": "Verification code is required",
+                "message": "Please provide a valid 6-digit verification code"
+            }), 400
+        
+        print(f"[VERIFY EMAIL API] Processing verification for code: {code}")
+        
+        # Call controller to verify email
+        success, message = UserController.verify_email(code)
+        
+        if success:
+            return jsonify({
+                "success": True,
+                "message": message
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": message
+            }), 400
+            
+    except Exception as e:
+        print(f"[VERIFY EMAIL API ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Verification failed: {str(e)}"
+        }), 500
 
-    user_id, message = UserController.create_user(username, email, password, role)
-    if not user_id:
-        return jsonify({"error": message}), 400
+@user_bp.route('/resend-verification-email', methods=['POST'])
+def resend_verification_email_route():
+    """
+    Resend verification email to user
+    """
+    try:
+        data = request.json
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({
+                "success": False,
+                "error": "Email is required"
+            }), 400
+        
+        print(f"[RESEND API] Processing resend for {email}")
+        
+        # Call controller to resend verification email
+        success, message = UserController.resend_verification_email(email)
+        
+        if success:
+            return jsonify({
+                "success": True,
+                "message": message
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": message
+            }), 400
+            
+    except Exception as e:
+        print(f"[RESEND API ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Failed to resend email: {str(e)}"
+        }), 500
 
-    return jsonify({"message": message, "user_id": user_id}), 201
+@user_bp.route('/check-verification-status', methods=['POST'])
+def check_verification_status():
+    """
+    Check if a user's email is verified
+    """
+    try:
+        data = request.json
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({
+                "success": False,
+                "error": "Email is required"
+            }), 400
+        
+        db = get_db()
+        users = user_collection(db)
+        user = users.find_one({'email': email})
+        
+        if not user:
+            return jsonify({
+                "success": False,
+                "error": "User not found"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "email": email,
+            "is_verified": user.get('is_verified', False),
+            "username": user.get('username'),
+            "message": "Verified" if user.get('is_verified') else "Not verified"
+        }), 200
+        
+    except Exception as e:
+        print(f"[CHECK STATUS ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Failed to check status: {str(e)}"
+        }), 500
 
-# Society signup route has been moved to registration_form_routes.py
+@user_bp.route('/manual-verify-email', methods=['POST'])
+def manual_verify_email():
+    """
+    Manually verify a user's email (useful for testing or admin purposes)
+    This can be used if email system fails or for quick verification
+    """
+    try:
+        data = request.json
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({
+                "success": False,
+                "error": "Email is required"
+            }), 400
+        
+        db = get_db()
+        users = user_collection(db)
+        
+        # Find user
+        user = users.find_one({'email': email})
+        if not user:
+            return jsonify({
+                "success": False,
+                "error": "User not found"
+            }), 404
+        
+        # Check if already verified
+        if user.get('is_verified', False):
+            return jsonify({
+                "success": True,
+                "message": "Email is already verified",
+                "already_verified": True
+            }), 200
+        
+        # Verify the user
+        result = users.update_one(
+            {'email': email},
+            {'$set': {'is_verified': True}}
+        )
+        
+        if result.modified_count > 0:
+            # Clean up verification tokens
+            from models.email_verification import email_verification_collection
+            email_verification_collection(db).delete_many({'email': email})
+            
+            print(f"[MANUAL VERIFY] ✅ Email {email} verified manually")
+            return jsonify({
+                "success": True,
+                "message": f"Email verified successfully! You can now log in.",
+                "email": email
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Failed to verify email"
+            }), 500
+            
+    except Exception as e:
+        print(f"[MANUAL VERIFY ERROR] {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Verification failed: {str(e)}"
+        }), 500
+
+# ============================================================
+# LOGIN ROUTE (NOW REQUIRES EMAIL VERIFICATION)
+# ============================================================
 
 @user_bp.route('/login', methods=['POST'])
 def login():
@@ -264,6 +508,15 @@ def login():
     if not user:
         print(f"[LOGIN] Authentication failed for email: {email}")
         return jsonify({"error": "Invalid email or password"}), 401
+    
+    # Check if user is blocked due to unverified email
+    if isinstance(user, dict) and user.get('error') == 'email_not_verified':
+        print(f"[LOGIN] Email not verified for: {email}")
+        return jsonify({
+            "success": False,
+            "error": "email_not_verified",
+            "message": user.get('message', 'Please verify your email before logging in')
+        }), 403
 
     # Quick society status check only for society users (optimized)
     if user['role'] == 'society':
@@ -296,11 +549,12 @@ def login():
     
     print(f"[LOGIN] Success for {email} with role {user['role']}")
     
-    # Simplified response
+    # Simplified response with user_id
     response_data = {
         "success": True,
         "access_token": access_token, 
         "user": {
+            "id": user.get('_id'),  # Include user ID
             "email": email,
             "role": user['role'],
             "username": user.get('username', ''),
@@ -314,15 +568,12 @@ def login():
             db = get_db()
             profiles = society_profile_collection(db)
             
-            # Fetch the society profile for this user to get its _id
-            profile = profiles.find_one({'user_email': email}, {'_id': 1})
-            profile_exists = profile is not None
-            society_id = str(profile['_id']) if profile else None
+            # Quick check if profile exists (only _id field)
+            profile_exists = profiles.find_one({'user_email': email}, {'_id': 1}) is not None
             
             response_data.update({
                 "profile_exists": profile_exists,
-                "profile_complete": profile_exists,  # Simplified check
-                "societyId": society_id,
+                "profile_complete": profile_exists  # Simplified check
             })
             
         except Exception as e:
@@ -330,8 +581,7 @@ def login():
             # Don't fail login for profile issues
             response_data.update({
                 "profile_exists": False,
-                "profile_complete": False,
-                "societyId": None,
+                "profile_complete": False
             })
     
     return jsonify(response_data), 200

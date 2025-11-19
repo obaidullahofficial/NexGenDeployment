@@ -511,6 +511,7 @@ def get_all_society_profiles():
         return jsonify({
             "success": True,
             "data": all_profiles,
+            "societies": all_profiles,  # For backward compatibility
             "count": len(all_profiles),
             "message": f"Retrieved {len(all_profiles)} society profiles"
         }), 200

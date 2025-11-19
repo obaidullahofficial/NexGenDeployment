@@ -1,10 +1,11 @@
 // src/pages/user/SocietyPlots.jsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import { FaMapMarkerAlt, FaStar, FaHome } from 'react-icons/fa';
+import userProfileAPI from '../../services/userProfileAPI';
 
 // Import society images to use in the hero section
 import bahria from '../../assets/bahria.png';
@@ -14,47 +15,56 @@ import ghauri from '../../assets/Ghauri.png';
 const SocietyPlots = () => {
     const { societyId } = useParams();
     const navigate = useNavigate();
+    const [plots, setPlots] = useState([]);
+    const [currentSociety, setCurrentSociety] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Replicate the societies data to find the matching society
-    const societiesData = [
-        {
-            id: '1',
-            name: 'Bahria Town',
-            description: 'Bahria Town develops to be the greatest practical real estate developer of all times, with pioneer interest for aviation and engineering, at major business with small-scale amenities.',
-            image: bahria,
-            rating: 4.8,
-            location: 'Rawalpindi/Lahore',
-            availablePlots: 85,
-        },
-        {
-            id: '2',
-            name: 'CDA',
-            description: 'Capital Development Authority: A cornerstone of modern business culture, offering prime locations, advanced operations, and catering to diverse needs with excellence.',
-            image: cda,
-            rating: 4.6,
-            location: 'Islamabad',
-            availablePlots: 45,
-        },
-        {
-            id: '3',
-            name: 'Ghauri Town',
-            description: 'Ghauri Town offers affordable housing with easy accessibility, continuous innovation in infrastructure, and essential amenities for residents.',
-            image: ghauri,
-            rating: 4.3,
-            location: 'Islamabad',
-            availablePlots: 120,
-        },
-    ];
+    // Fetch society and plots data from backend
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                
+                // Fetch all societies to find current one
+                const societiesResponse = await userProfileAPI.getSocieties();
+                const society = societiesResponse.societies?.find(s => s._id === societyId);
+                
+                if (society) {
+                    setCurrentSociety({
+                        id: society._id,
+                        name: society.society_name,
+                        description: society.description,
+                        image: society.logo || bahria, // Use society logo or default
+                        rating: society.rating || 4.5,
+                        location: society.location,
+                        availablePlots: 0, // Will be calculated from plots
+                    });
+                    
+                    // Fetch plots for this society - backend returns array directly
+                    const plotsData = await userProfileAPI.getPlotsBySociety(societyId);
+                    // plotsData is an array of plots
+                    if (Array.isArray(plotsData)) {
+                        setPlots(plotsData);
+                        // Update available plots count
+                        const availableCount = plotsData.filter(p => p.status?.toLowerCase() === 'available').length;
+                        setCurrentSociety(prev => ({ ...prev, availablePlots: availableCount }));
+                    } else {
+                        setPlots([]);
+                    }
+                } else {
+                    setError('Society not found');
+                }
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                setError(err.message || 'Failed to load data');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const currentSociety = societiesData.find(s => s.id === societyId);
-
-    // Sample plot data - replace with API call
-    const plots = [
-        { id: 'A-101', number: 'A-101', status: 'Available', dimensions: '30 × 60', area: '1,800 sq ft', price: 'PKR 50 Lakh', description: 'Corner plot with park view' },
-        { id: 'A-102', number: 'A-102', status: 'Sold', dimensions: '25 × 50', area: '1,250 sq ft', price: 'PKR 45 Lakh', description: 'Main road facing' },
-        { id: 'A-104', number: 'A-104', status: 'Sold', dimensions: '25 × 70', area: '1,650 sq ft', price: 'PKR 35 Lakh', description: 'Middle road facing' },
-        { id: 'A-105', number: 'A-105', status: 'Available', dimensions: '25 × 70', area: '1,650 sq ft', price: 'PKR 35 Lakh', description: 'Middle road facing' }
-    ];
+        fetchData();
+    }, [societyId]);
 
     // Sample reviews data - THIS WAS MISSING
     const reviews = [
@@ -81,6 +91,40 @@ const SocietyPlots = () => {
         },
     ];
 
+    // Handle loading state
+    if (loading) {
+        return (
+            <div className="bg-white min-h-screen">
+                <Navbar />
+                <div className="container mx-auto px-4 py-16 text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#ED7600]"></div>
+                    <p className="mt-4 text-lg text-gray-600">Loading plots...</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    // Handle error state
+    if (error) {
+        return (
+            <div className="bg-white min-h-screen">
+                <Navbar />
+                <div className="container mx-auto px-4 py-16 text-center">
+                    <h1 className="text-4xl font-bold text-red-600">Error Loading Plots</h1>
+                    <p className="mt-4 text-lg text-gray-600">{error}</p>
+                    <button
+                        onClick={() => navigate('/societies')}
+                        className="mt-6 px-6 py-3 bg-[#ED7600] text-white rounded-lg hover:bg-[#D56900] transition"
+                    >
+                        Back to Societies
+                    </button>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
     // Handle case where society is not found
     if (!currentSociety) {
         return (
@@ -89,6 +133,12 @@ const SocietyPlots = () => {
                 <div className="container mx-auto px-4 py-16 text-center">
                     <h1 className="text-4xl font-bold text-gray-800">Society Not Found</h1>
                     <p className="mt-4 text-lg text-gray-600">The society you are looking for does not exist.</p>
+                    <button
+                        onClick={() => navigate('/societies')}
+                        className="mt-6 px-6 py-3 bg-[#ED7600] text-white rounded-lg hover:bg-[#D56900] transition"
+                    >
+                        Back to Societies
+                    </button>
                 </div>
                 <Footer />
             </div>
@@ -149,43 +199,61 @@ const SocietyPlots = () => {
                     <h2 className="text-3xl font-bold text-[#2F3D57] mb-6">
                         Available Plots
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {plots.map((plot) => (
-                            <div key={plot.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-                                <div className="p-6">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-xl font-bold text-[#ED7600]">Plot {plot.number}</h3>
-                                        <span className={`px-3 py-1 rounded-full text-xs ${
-                                            plot.status.trim() === 'Available' ? 'bg-green-100 text-green-800' :
-                                            plot.status.trim() === 'Sold' ? 'bg-red-100 text-red-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {plot.status}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="space-y-2 mb-4">
-                                        <p><span className="font-medium">Dimensions:</span> {plot.dimensions}</p>
-                                        <p><span className="font-medium">Area:</span> {plot.area}</p>
-                                        <p><span className="font-medium">Price:</span> {plot.price}</p>
-                                        <p className="text-gray-600">{plot.description}</p>
-                                    </div>
+                    {plots.length === 0 ? (
+                        <div className="col-span-full text-center py-12">
+                            <p className="text-gray-600 text-lg">No plots available for this society yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {plots.map((plot) => (
+                                <div key={plot.plot_id || plot._id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="text-xl font-bold text-[#ED7600]">Plot {plot.plot_number}</h3>
+                                            <span className={`px-3 py-1 rounded-full text-xs ${
+                                                plot.status?.toLowerCase() === 'available' ? 'bg-green-100 text-green-800' :
+                                                plot.status?.toLowerCase() === 'sold' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                                {plot.status}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="space-y-2 mb-4">
+                                            {plot.dimension_x && plot.dimension_y && (
+                                                <p><span className="font-medium">Dimensions:</span> {plot.dimension_x} × {plot.dimension_y}</p>
+                                            )}
+                                            {plot.area && (
+                                                <p><span className="font-medium">Area:</span> {plot.area}</p>
+                                            )}
+                                            <p><span className="font-medium">Price:</span> PKR {plot.price}</p>
+                                            {plot.type && (
+                                                <p><span className="font-medium">Type:</span> {plot.type}</p>
+                                            )}
+                                            {plot.location && (
+                                                <p className="text-gray-600">{plot.location}</p>
+                                            )}
+                                            {plot.description && Array.isArray(plot.description) && plot.description.length > 0 && (
+                                                <p className="text-gray-600">{plot.description[0]}</p>
+                                            )}
+                                        </div>
                                     
                                     <button
-                                        onClick={() => handleViewPlotDetail(plot.id)}
-                                        disabled={plot.status.trim() === 'Sold'}
+                                        onClick={() => handleViewPlotDetail(plot.plot_id || plot._id)}
+                                        disabled={plot.status?.toLowerCase() === 'sold'}
                                         className={`w-full py-2 px-4 rounded-md font-medium ${
-                                            plot.status.trim() === 'Available'
+                                            plot.status?.toLowerCase() === 'available'
                                                 ? 'bg-[#ED7600] hover:bg-[#d96b00] text-white'
                                                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                         }`}
                                     >
-                                        {plot.status.trim() === 'Available' ? 'View Plot Detail' : 'Plot Sold'}
+                                        {plot.status?.toLowerCase() === 'available' ? 'View Plot Detail' : 'Plot Sold'}
                                     </button>
                                 </div>
                             </div>
                         ))}
                     </div>
+                    )}
                 </section>
 
                 {/* Reviews Section */}

@@ -221,26 +221,49 @@ const Login = () => {
         
         try {
             if (type === 'society') {
-                // First check if email already exists
-                try {
-                    const emailCheck = await checkEmail(signupForm.email);
+                // Call backend API for society signup with email verification
+                const result = await signupUser({
+                    username: signupForm.name,
+                    email: signupForm.email,
+                    password: signupForm.password,
+                    role: 'society'
+                });
+                
+                if (result.user_id) {
+                    const handleSocietySignupSuccess = () => {
+                        setSignupForm({ name: '', email: '', password: '', confirmPassword: '' });
+                        setSignupError('');
+                        // Redirect to email verification page with society user's email
+                        navigate('/verify-email', { 
+                            state: { 
+                                email: signupForm.email,
+                                isSociety: true,
+                                userName: signupForm.name,
+                                userPassword: signupForm.password
+                            } 
+                        });
+                    };
                     
-                    if (emailCheck.exists) {
-                        setSignupError('Email already exists. Please use a different email address.');
-                        return;
+                    showPopup(
+                        'Check Your Email!',
+                        'We sent a 6-digit verification code to your email. Please verify your email first, then you can complete your society registration.',
+                        'success',
+                        handleSocietySignupSuccess
+                    );
+                } else {
+                    // Display clear error message for duplicate email
+                    const errorMessage = result.error || result.message || 'Signup failed. Please try again.';
+                    setSignupError(errorMessage);
+                    
+                    // Show popup for email already exists
+                    if (errorMessage.includes('already registered') || errorMessage.includes('already exists')) {
+                        showPopup(
+                            'Email Already Exists',
+                            errorMessage,
+                            'error',
+                            null
+                        );
                     }
-                    
-                    // Email is available, proceed to registration form
-                    navigate('/registration-form', {
-                        state: {
-                            userEmail: signupForm.email,
-                            userName: signupForm.name,
-                            userPassword: signupForm.password
-                        }
-                    });
-                } catch (error) {
-                    console.error('Email check error:', error);
-                    setSignupError('Failed to verify email. Please try again.');
                 }
             } else {
                 // Call backend API for user signup
@@ -283,7 +306,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error('Signup error:', error);
-            setSignupError('An unexpected error occurred. Please try again.');
+            setSignupError('Email already exists. Please use a different email address.');
         } finally {
             setIsLoading(false);
         }

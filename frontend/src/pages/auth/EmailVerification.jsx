@@ -12,6 +12,9 @@ const EmailVerification = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [verified, setVerified] = useState(false);
+  const isSociety = location.state?.isSociety || false;
+  const userName = location.state?.userName || '';
+  const userPassword = location.state?.userPassword || '';
 
   const verifyWithCode = async (codeToVerify) => {
     setVerifying(true);
@@ -27,10 +30,25 @@ const EmailVerification = () => {
         setVerified(true);
         setMessage(response.data.message || 'Email verified successfully!');
         
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/login', { state: { verified: true } });
-        }, 3000);
+        // Check if this is a society user
+        if (isSociety) {
+          // Redirect to registration form for society after verification
+          setTimeout(() => {
+            navigate('/registration-form', {
+              state: {
+                userEmail: email,
+                userName: userName,
+                userPassword: userPassword,
+                verified: true
+              }
+            });
+          }, 3000);
+        } else {
+          // Redirect regular users to login after 3 seconds
+          setTimeout(() => {
+            navigate('/login', { state: { verified: true } });
+          }, 3000);
+        }
       }
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'Verification failed';
@@ -97,12 +115,20 @@ const EmailVerification = () => {
           <div style={styles.successIcon}>✅</div>
           <h2 style={styles.title}>Email Verified Successfully!</h2>
           <p style={styles.successText}>{message}</p>
-          <p style={styles.text}>Redirecting to login page...</p>
+          <p style={styles.text}>
+            {isSociety 
+              ? 'Redirecting to society registration form...' 
+              : 'Redirecting to login page...'}
+          </p>
           <button 
-            onClick={() => navigate('/login')}
+            onClick={() => isSociety 
+              ? navigate('/registration-form', { 
+                  state: { userEmail: email, userName, userPassword, verified: true } 
+                }) 
+              : navigate('/login')}
             style={styles.button}
           >
-            Go to Login
+            {isSociety ? 'Go to Registration Form' : 'Go to Login'}
           </button>
         </div>
       </div>

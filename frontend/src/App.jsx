@@ -12,6 +12,7 @@ import PlotManager from './pages/subadmin/PlotManager';
 import Approvals from './pages/subadmin/Approvals';
 import ComplianceManagement from './pages/subadmin/ComplianceManagement';
 import FloorPlanGenerator from './pages/subadmin/FloorPlanGenerator';
+import Advertisement from './pages/subadmin/Advertisement';
 import ProtectedSubAdminRoute from './components/common/ProtectedSubAdminRoute';
 import ProtectedAdminRoute from './components/common/ProtectedAdminRoute';
 
@@ -93,6 +94,7 @@ function App() {
             <Route path="floorPlan" element={<FloorPlanGenerator />} /> 
             <Route path="approvals" element={<Approvals />} />
             <Route path="compliance" element={<ComplianceManagement />} />
+            <Route path="advertisement" element={<Advertisement />} />
             <Route path="society-profile" element={<SocietyProfile />} />
           </Route>
 

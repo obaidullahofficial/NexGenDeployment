@@ -4,7 +4,8 @@ import {
   FiCheckSquare,
   FiShield,
   FiUsers,
-  FiLogOut
+  FiLogOut,
+  FiFlag
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -42,7 +43,6 @@ const SubAdminPanel = ({ activeTab, setActiveTab }) => {
           <img src={logo} alt="Logo" className="h-8 w-8" />
           <div className="text-xl font-bold text-white">NextGenArchitect</div>
         </div>
-        <div className="text-sm text-gray-300 mt-2">Societies Dashboard</div>
       </div>
   <nav className="flex flex-col mt-6 space-y-1 flex-grow">
         <button
@@ -89,6 +89,15 @@ const SubAdminPanel = ({ activeTab, setActiveTab }) => {
         >
           <FiShield className="mr-3 text-lg" />
           Compliance Management
+        </button>
+        <button
+          onClick={() => handleTabClick('advertisement')}
+          className={`flex items-center px-6 py-3 text-left w-full hover:bg-[#ED7600] hover:text-white transition-colors ${
+            activeTab === 'advertisement' ? 'bg-[#ED7600] text-white font-semibold' : 'text-gray-300'
+          }`}
+        >
+          <FiFlag className="mr-3 text-lg" />
+          Advertisements
         </button>
         
         {/* Bottom-aligned items */}

@@ -491,7 +491,7 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#2F3D57] via-[#3a4b66] to-[#2F3D57] flex items-center justify-center p-3 sm:p-4 lg:p-6">
-            <div className='w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl transform hover:scale-[1.01] transition-all duration-300'>
+            <div className={`w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-2xl transform hover:scale-[1.01] transition-all duration-300 ${showSignupType ? 'invisible' : ''}`}>
                 {/* Logo and Company Name */}
                 <div className='flex flex-col items-center mb-4 sm:mb-6 space-y-2 sm:space-y-3'>
                     <div className='w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32'>
@@ -728,57 +728,58 @@ const Login = () => {
                         </p>
                     </div>
                 </form>
-
-                {/* Signup Type Modal */}
-                {showSignupType && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 flex flex-col items-center animate-fadeIn max-w-sm sm:max-w-md w-full mx-4" style={{ position: 'relative' }}>
+            </div>
+            
+            {/* Signup Type Modal */}
+            {showSignupType && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-gradient-to-br from-[#2F3D57] via-[#3a4b66] to-[#2F3D57]">
+                    <div className="bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center animate-fadeIn" style={{ position: 'relative', width: '500px', height: '500px', padding: '3rem' }}>
                             <button 
-                                className="absolute top-3 right-4 text-gray-400 hover:text-[#ED7600] text-xl font-bold transition-colors duration-200" 
+                                className="absolute top-4 right-6 text-gray-400 hover:text-[#ED7600] text-2xl font-bold transition-colors duration-200" 
                                 onClick={() => setShowSignupType(false)} 
                                 disabled={isLoading}
                                 title="Close"
                             >
                                 ×
                             </button>
-                            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-[#2F3D57] tracking-wide text-center">Choose Account Type</h2>
-                            <p className="text-xs sm:text-sm text-gray-600 text-center mb-6 max-w-xs">
+                            <h2 className="text-4xl font-bold mb-6 text-[#2F3D57] tracking-wide text-center">Choose Account Type</h2>
+                            <p className="text-lg text-gray-600 text-center mb-10">
                                 Select the type of account you want to create
                             </p>
                             
                             {/* Loading Indicator */}
                             {isLoading && (
-                                <div className="flex items-center justify-center mb-4">
-                                    <svg className="animate-spin h-5 w-5 text-[#ED7600] mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <div className="flex items-center justify-center mb-6">
+                                    <svg className="animate-spin h-6 w-6 text-[#ED7600] mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <span className="text-sm text-gray-600">Processing...</span>
+                                    <span className="text-base text-gray-600">Processing...</span>
                                 </div>
                             )}
                             
-                            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6 w-full">
+                            <div className="flex flex-row gap-6 mb-8 w-full">
                                 <button 
-                                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#ED7600] to-[#2F3D57] text-white rounded-xl font-semibold text-sm sm:text-lg shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center" 
+                                    className="flex-1 px-8 py-6 bg-gradient-to-r from-[#ED7600] to-[#2F3D57] text-white rounded-xl font-semibold text-xl shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center" 
                                     onClick={() => handleSignupType('society')}
                                     disabled={isLoading}
                                 >
-                                    <span role="img" aria-label="Society" className="mr-2 text-base sm:text-lg">🏢</span>
+                                    <span role="img" aria-label="Society" className="mr-3 text-2xl">🏢</span>
                                     <span>Society</span>
                                 </button>
                                 <button 
-                                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#2F3D57] to-[#ED7600] text-white rounded-xl font-semibold text-sm sm:text-lg shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center" 
+                                    className="flex-1 px-8 py-6 bg-gradient-to-r from-[#2F3D57] to-[#ED7600] text-white rounded-xl font-semibold text-xl shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center" 
                                     onClick={() => handleSignupType('user')}
                                     disabled={isLoading}
                                 >
-                                    <span role="img" aria-label="User" className="mr-2 text-base sm:text-lg">👤</span>
+                                    <span role="img" aria-label="User" className="mr-3 text-2xl">👤</span>
                                     <span>User</span>
                                 </button>
                             </div>
                             
-                            <div className="text-xs text-gray-500 text-center max-w-xs">
-                                <p><strong>Society:</strong> For housing societies and property developers</p>
-                                <p><strong>User:</strong> For individual homeowners and buyers</p>
+                            <div className="text-sm text-gray-600 text-center">
+                                <p className="mb-3"><strong className="text-[#2F3D57]">Society:</strong> For housing societies and property developers</p>
+                                <p><strong className="text-[#2F3D57]">User:</strong> For individual homeowners and buyers</p>
                             </div>
                         </div>
                         <style>{`
@@ -788,9 +789,8 @@ const Login = () => {
                             }
                             .animate-fadeIn { animation: fadeIn 0.3s ease; }
                         `}</style>
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
             
             {/* Popup Modal */}
             <PopupModal 

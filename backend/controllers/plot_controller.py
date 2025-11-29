@@ -52,7 +52,6 @@ class PlotController:
                     'type': request.form.get('type', 'Residential'),
                     'price': request.form.get('price', ''),
                     'status': request.form.get('status', 'Available'),
-                    'location': request.form.get('location', ''),
                 }
                 
                 # Convert dimensions to integers
@@ -65,24 +64,6 @@ class PlotController:
                 
                 # Handle nested array fields from form data
                 data['description'] = [request.form.get(f'description[{i}]') for i in range(len(request.form.getlist('description[]')))]
-                # Collect all amenities from amenities[0], amenities[1], etc.
-                amenities_list = []
-                i = 0
-                while f'amenities[{i}]' in request.form:
-                    amenity = request.form.get(f'amenities[{i}]')
-                    if amenity and amenity.strip():  # Filter out empty strings
-                        amenities_list.append(amenity)
-                    i += 1
-                data['amenities'] = amenities_list
-                print(f"[DEBUG] Parsed amenities: {data['amenities']}")
-                
-                # Handle nested object field from form data
-                seller = {}
-                for key in request.form.keys():
-                    if key.startswith('seller['):
-                        field = key[len('seller['):-1]
-                        seller[field] = request.form.get(key)
-                data['seller'] = seller
                 
                 # Process image file upload, convert to base64
                 if 'plot_image' in request.files:
@@ -137,10 +118,7 @@ class PlotController:
                 area=data.get('area', ''),
                 dimension_x=data.get('dimension_x', 0),
                 dimension_y=data.get('dimension_y', 0),
-                location=data.get('location', ''),
-                description=data.get('description', []),
-                seller=data.get('seller', {}),
-                amenities=data.get('amenities', [])
+                description=data.get('description', [])
             )
             
             plot_dict = plot.to_dict()
@@ -243,22 +221,6 @@ class PlotController:
                 
                 # Handle nested array and object fields
                 data['description'] = [request.form.get(f'description[{i}]') for i in range(len(request.form.getlist('description[]')))]
-                # Collect all amenities from amenities[0], amenities[1], etc.
-                amenities_list = []
-                i = 0
-                while f'amenities[{i}]' in request.form:
-                    amenity = request.form.get(f'amenities[{i}]')
-                    if amenity and amenity.strip():  # Filter out empty strings
-                        amenities_list.append(amenity)
-                    i += 1
-                data['amenities'] = amenities_list
-                print(f"[DEBUG UPDATE] Parsed amenities: {data['amenities']}")
-                seller = {}
-                for key in request.form.keys():
-                    if key.startswith('seller['):
-                        field = key[len('seller['):-1]
-                        seller[field] = request.form.get(key)
-                data['seller'] = seller
 
                 # Handle image file upload for update
                 if 'plot_image' in request.files:

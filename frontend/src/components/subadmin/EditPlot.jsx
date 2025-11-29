@@ -12,73 +12,20 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
     area: "",
     dimension_x: "",
     dimension_y: "",
-    location: "",
     description: [""],
-    contactName: "",
-    contactPhone: "",
-    images: [],
-    amenities: {
-      gatedCommunity: false,
-      security: false,
-      electricity: false,
-      waterSupply: false,
-      parks: false,
-      mosque: false
-    }
+    images: []
   });
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
   const [imageError, setImageError] = useState(false); // Track image validation error
-  const [phoneError, setPhoneError] = useState('');
   const [plotNumberError, setPlotNumberError] = useState('');
   const { alertState, showError } = useAlert();
-
-  const areaOptions = ["5 Marla", "7 Marla", "10 Marla", "1 Kanal"];
-
-  // Map internal amenity keys to human-readable labels used in FormData (same as AddPlot submission)
-  const amenityMap = {
-    gatedCommunity: "Gated Community",
-    security: "Security",
-    electricity: "Electricity",
-    waterSupply: "Water Supply",
-    parks: "Parks",
-    mosque: "Mosque"
-  };
-
-  // Support multiple possible stored labels coming back from backend
-  // so old data and new data both map correctly to checkboxes
-  const amenityStorageAliases = {
-    gatedCommunity: ["Gated Community"],
-    security: ["Security", "24/7 Security"],
-    electricity: ["Electricity", "Underground Electricity"],
-    waterSupply: ["Water Supply"],
-    parks: ["Parks", "Green Parks"],
-    mosque: ["Mosque", "Mosque Nearby"]
-  };
-
-  const hasStoredAmenity = (plotAmenities, key) => {
-    if (!Array.isArray(plotAmenities)) return false;
-    const aliases = amenityStorageAliases[key] || [];
-    return aliases.some((label) => plotAmenities.includes(label));
-  };
 
   useEffect(() => {
     if (plot) {
       console.log('EditPlot - FULL plot data received:', JSON.stringify(plot, null, 2));
       console.log('EditPlot - plot.image field:', plot.image);
       console.log('EditPlot - plot.images field:', plot.images);
-      
-      // Format phone number if it exists and starts with +92
-      let formattedPhone = plot.seller?.phone || plot.contactPhone || "";
-      if (formattedPhone.startsWith('+92')) {
-        // Remove +92 and format the remaining 10 digits
-        const digits = formattedPhone.substring(3).replace(/\D/g, '');
-        if (digits.length >= 3) {
-          formattedPhone = digits.substring(0, 3) + '-' + digits.substring(3);
-        } else {
-          formattedPhone = digits;
-        }
-      }
       
       setForm({
         plot_number: plot.plot_number || "",
@@ -88,20 +35,8 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
         area: plot.area || "",
         dimension_x: plot.dimension_x || "",
         dimension_y: plot.dimension_y || "",
-        location: plot.location || "",
-        description: Array.isArray(plot.description) && plot.description.length > 0 ? plot.description : [""],
-        contactName: plot.seller?.name || plot.contactName || "",
-        contactPhone: formattedPhone,
-        images: [],
-        amenities: {
-          // Check for all known label variants stored in backend
-          gatedCommunity: hasStoredAmenity(plot.amenities, 'gatedCommunity'),
-          security: hasStoredAmenity(plot.amenities, 'security'),
-          electricity: hasStoredAmenity(plot.amenities, 'electricity'),
-          waterSupply: hasStoredAmenity(plot.amenities, 'waterSupply'),
-          parks: hasStoredAmenity(plot.amenities, 'parks'),
-          mosque: hasStoredAmenity(plot.amenities, 'mosque')
-        }
+        description: Array.isArray(plot.description) ? plot.description : (plot.description ? [plot.description] : [""]),
+        images: []
       });
       
       // Handle existing images with multiple URL patterns and better error handling
@@ -194,33 +129,8 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Phone number validation and formatting
-    if (name === 'contactPhone') {
-      // Remove all non-digit characters
-      const cleaned = value.replace(/\D/g, '');
-      
-      // Limit to 10 digits
-      const limited = cleaned.substring(0, 10);
-      
-      // Format with dashes: XXX-XXXXXXX
-      let formatted = limited;
-      if (limited.length > 3) {
-        formatted = limited.substring(0, 3) + '-' + limited.substring(3);
-      }
-      
-      // Validate phone number length
-      if (limited.length > 0 && limited.length < 10) {
-        setPhoneError('Phone number must be 10 digits');
-      } else if (limited.length === 10) {
-        setPhoneError('');
-      } else if (limited.length === 0) {
-        setPhoneError('');
-      }
-      
-      setForm({ ...form, [name]: formatted });
-    }
     // Plot number validation - only numbers allowed
-    else if (name === 'plot_number') {
+    if (name === 'plot_number') {
       // Remove all non-digit characters
       const cleaned = value.replace(/\D/g, '');
       
@@ -232,6 +142,21 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
       
       setForm({ ...form, [name]: cleaned });
     }
+    // Auto-calculate area when dimension_x or dimension_y changes
+    else if (name === 'dimension_x' || name === 'dimension_y') {
+      const newForm = { ...form, [name]: value };
+      
+      // Calculate area if both dimensions are available
+      if (name === 'dimension_x' && newForm.dimension_y) {
+        const area = parseFloat(value) * parseFloat(newForm.dimension_y);
+        newForm.area = area ? `${area.toFixed(2)} sq ft` : '';
+      } else if (name === 'dimension_y' && newForm.dimension_x) {
+        const area = parseFloat(newForm.dimension_x) * parseFloat(value);
+        newForm.area = area ? `${area.toFixed(2)} sq ft` : '';
+      }
+      
+      setForm(newForm);
+    }
     else {
       setForm({ ...form, [name]: value });
     }
@@ -241,25 +166,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
     const newDescription = [...form.description];
     newDescription[index] = value;
     setForm({ ...form, description: newDescription });
-  };
-
-  const addDescriptionItem = () => {
-    setForm({ ...form, description: [...form.description, ""] });
-  };
-
-  const removeDescriptionItem = (index) => {
-    const newDescription = form.description.filter((item, i) => i !== index);
-    setForm({ ...form, description: newDescription });
-  };
-
-  const handleAmenityChange = (amenity) => {
-    setForm({
-      ...form,
-      amenities: {
-        ...form.amenities,
-        [amenity]: !form.amenities[amenity]
-      }
-    });
   };
 
   const handleImageUpload = (e) => {
@@ -308,11 +214,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
     setImagePreviews(newPreviews);
   };
 
-  const getSelectedAmenities = (amenitiesObj) =>
-    Object.entries(amenitiesObj)
-      .filter((entry) => entry[1])
-      .map(([key]) => amenityMap[key] || key);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -325,21 +226,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
     setIsSubmitting(true);
     
     try {
-      // Validate phone number before submission
-      if (phoneError) {
-        setIsSubmitting(false);
-        alert('Please enter a valid phone number (10 digits required)');
-        return;
-      }
-
-      // Check if phone number has correct length
-      const phoneDigits = form.contactPhone.replace(/\D/g, '');
-      if (phoneDigits.length !== 10) {
-        setIsSubmitting(false);
-        alert('Phone number must be exactly 10 digits');
-        return;
-      }
-      
       // Validate plot number
       if (plotNumberError) {
         setIsSubmitting(false);
@@ -356,7 +242,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
       formData.append('area', form.area);
       formData.append('dimension_x', Number(form.dimension_x));
       formData.append('dimension_y', Number(form.dimension_y));
-      formData.append('location', form.location);
       
       // Add description array - ensure we append description[] array
       const descriptions = form.description.filter(d => d.trim() !== '');
@@ -369,27 +254,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
       // Then append each description item with index
       descriptions.forEach((desc, index) => {
         formData.append(`description[${index}]`, desc);
-      });
-      
-      // Add seller info with country code prefix to phone
-      formData.append('seller[name]', form.contactName);
-      formData.append('seller[phone]', '+92' + phoneDigits);
-      
-      // Add amenities - ensure we append amenities[] array
-      const amenities = getSelectedAmenities(form.amenities);
-      
-      console.log('[EditPlot DEBUG] Selected amenities:', amenities);
-      console.log('[EditPlot DEBUG] Form amenities object:', form.amenities);
-      
-      // First, append empty array marker for Flask to detect
-      if (amenities.length > 0) {
-        formData.append('amenities[]', '');
-      }
-      
-      // Then append each amenity with index
-      amenities.forEach((amenity, index) => {
-        console.log(`[EditPlot DEBUG] Appending amenities[${index}] = ${amenity}`);
-        formData.append(`amenities[${index}]`, amenity);
       });
       
       // Check if we have either new image or existing image
@@ -506,21 +370,19 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Area</label>
-                <select
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Area <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
                   name="area"
                   value={form.area}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Area</option>
-                  {areaOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  disabled
+                  className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-600 cursor-not-allowed"
+                  placeholder="Auto-calculated"
+                />
+                <p className="text-gray-500 text-xs mt-1">Auto-calculated from X × Y</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dimension X (ft)</label>
@@ -545,17 +407,6 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                required
-              />
-            </div>
           </div>
           {/* Right Column */}
           <div className="space-y-4">
@@ -571,58 +422,9 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
                       onChange={(e) => handleDescriptionChange(index, e.target.value)}
                       className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeDescriptionItem(index)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={addDescriptionItem}
-                  className="mt-2 text-[#ED7600] hover:text-[#D56900] text-sm flex items-center"
-                >
-                  + Add another description point
-                </button>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-              <input
-                type="text"
-                name="contactName"
-                value={form.contactName}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center bg-gray-100 px-3 py-2 rounded-md border border-gray-300">
-                  <span className="text-lg mr-1">🇵🇰</span>
-                  <span className="text-gray-700 font-medium">+92</span>
-                </div>
-                <input
-                  type="text"
-                  name="contactPhone"
-                  value={form.contactPhone}
-                  onChange={handleChange}
-                  placeholder="3XX-XXXXXXX"
-                  className={`flex-1 border rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent ${
-                    phoneError ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  required
-                />
-              </div>
-              {phoneError && (
-                <p className="text-red-500 text-sm mt-1">{phoneError}</p>
-              )}
-              <p className="text-gray-500 text-xs mt-1">Enter 10 digits (e.g., 300-1234567)</p>
             </div>
             {/* Image Upload Section */}
             <div className={`${imageError ? 'border-2 border-red-500 rounded-lg p-4 bg-red-50' : ''}`}>
@@ -779,44 +581,7 @@ const EditPlotForm = ({ plot, onSubmit, onCancel }) => {
             </div>
           </div>
         </div>
-        {/* Amenities Section */}
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { id: "gatedCommunity", label: "Gated Community" },
-              { id: "security", label: "Security" },
-              { id: "electricity", label: "Electricity" },
-              { id: "waterSupply", label: "Water Supply" },
-              { id: "parks", label: "Parks" },
-              { id: "mosque", label: "Mosque" }
-            ].map((amenity) => (
-              <label 
-                key={amenity.id} 
-                className={`flex items-center p-2 rounded-md transition-colors ${
-                  form.amenities[amenity.id] 
-                    ? 'bg-orange-50 border border-[#ED7600]' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={form.amenities[amenity.id]}
-                  onChange={() => handleAmenityChange(amenity.id)}
-                  className="mr-2 text-[#ED7600] focus:ring-[#ED7600]"
-                />
-                <span className={form.amenities[amenity.id] ? 'font-medium text-[#ED7600]' : ''}>
-                  {amenity.label}
-                </span>
-                {form.amenities[amenity.id] && (
-                  <svg className="ml-auto h-5 w-5 text-[#ED7600]" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </label>
-            ))}
-          </div>
-        </div>
+
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center">
           <div className="text-sm text-gray-500" />

@@ -3,7 +3,8 @@ from bson import ObjectId
 
 class SocietyProfile:
     def __init__(self, user_id, name, description, location, 
-                 available_plots, price_range, society_logo=None, 
+                 available_plots, price_range, society_logo=None, amenities=None,
+                 contact_number=None, contact_name=None, head_office_address=None,
                  is_complete=False, created_at=None, updated_at=None):
         
         self.user_id = user_id
@@ -15,8 +16,16 @@ class SocietyProfile:
         self.available_plots = available_plots
         self.price_range = price_range
         
+        # Contact Information
+        self.contact_number = contact_number
+        self.contact_name = contact_name
+        self.head_office_address = head_office_address
+        
         # Media
         self.society_logo = society_logo
+        
+        # Amenities
+        self.amenities = amenities or []
         
         # Status
         self.is_complete = is_complete
@@ -31,7 +40,11 @@ class SocietyProfile:
             "location": self.location,
             "available_plots": self.available_plots,
             "price_range": self.price_range,
+            "contact_number": self.contact_number,
+            "contact_name": self.contact_name,
+            "head_office_address": self.head_office_address,
             "society_logo": self.society_logo,
+            "amenities": self.amenities,
             "is_complete": self.is_complete,
             "created_at": self.created_at,
             "updated_at": self.updated_at
@@ -64,7 +77,7 @@ class SocietyProfile:
             user_email=user_email,
             name=registration_data.get('name', ''),
             description='',  # To be filled later
-            location='',  # To be filled later
+            location=registration_data.get('city', ''),  # Hardcoded from registration form
             available_plots='',  # To be filled later
             price_range='',  # To be filled later
             society_logo=None,  # To be uploaded later

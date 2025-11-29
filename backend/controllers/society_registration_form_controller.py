@@ -19,7 +19,7 @@ class SocietyRegistrationFormController:
         Handles the registration of a new society.
         """
         try:
-            required_fields = ['name', 'type', 'regNo', 'established', 'authority', 'contact', 'website', 'plots']
+            required_fields = ['name', 'type', 'regNo', 'established', 'authority', 'contact', 'website', 'city', 'land_acquisition_status', 'procurement_status']
             if not all(field in data and data[field] for field in required_fields):
                 return None, "All fields are required"
             

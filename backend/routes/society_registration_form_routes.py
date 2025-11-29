@@ -72,7 +72,8 @@ def signup_society():
         'authority': data.get('authority'),
         'contact': data.get('contact'),
         'website': data.get('website'),
-        'plots': data.get('plots')
+        'city': data.get('city'),
+        'noc_issued': data.get('noc_issued', False)
     }
     
     # Validate required fields
@@ -87,7 +88,7 @@ def signup_society():
         society_data['authority'], 
         society_data['contact'], 
         society_data['website'], 
-        society_data['plots']
+        society_data['city']
     ]
     
     if not all(society_required):

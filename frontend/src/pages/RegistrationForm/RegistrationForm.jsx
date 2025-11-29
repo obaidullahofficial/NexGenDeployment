@@ -1,11 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { Box, Grid, TextField, Button, MenuItem, Typography, Alert, Paper, Divider, Card, CardContent, InputAdornment } from "@mui/material";
+import { Box, Grid, TextField, Button, MenuItem, Typography, Alert, Paper, Divider, Card, CardContent, InputAdornment, FormControlLabel, Checkbox } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import PopupModal from '../../components/common/PopupModal';
 import { societySignup } from '../../services/authService.js';
 import { useAuth } from '../../context/AuthContext';
 
-const authorityOptions = ["LDA", "CDA", "Bahria Group"];
+const authorityOptions = [
+  "CDA (Capital Development Authority)",
+  "LDA (Lahore Development Authority)",
+  "RDA (Rawalpindi Development Authority)",
+  "KDA (Karachi Development Authority)",
+  "SBCA (Sindh Building Control Authority)",
+  "PDA (Peshawar Development Authority)",
+  "FGEHA (Federal Government Employees Housing Authority)",
+  "Cantonment Boards (CBs)",
+  "DHA (Defence Housing Authority)",
+  "Bahria Group"
+];
+
+const cityOptions = [
+  "Karachi",
+  "Lahore",
+  "Islamabad",
+  "Rawalpindi",
+  "Faisalabad",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Sialkot",
+  "Gujranwala",
+  "Hyderabad",
+  "Abbottabad",
+  "Sargodha",
+  "Bahawalpur",
+  "Sukkur",
+  "Other"
+];
+
 const typeOptions = ["Private", "Public"];
 
 const RegistrationForm = () => {
@@ -28,7 +59,11 @@ const RegistrationForm = () => {
     authority: "",
     contact: "",
     website: "",
-    plots: ""
+    city: "",
+    customCity: "",
+    noc_issued: false,
+    land_acquisition_status: "",
+    procurement_status: ""
   });
 
   const [message, setMessage] = useState(null);
@@ -185,6 +220,8 @@ const RegistrationForm = () => {
         userPassword: userData.userPassword,
         // Society information
         ...form,
+        // Use customCity if 'Other' is selected, otherwise use selected city
+        city: form.city === 'Other' ? form.customCity : form.city,
         // Add country code to contact number
         contact: '+92' + phoneDigits
       };
@@ -377,10 +414,10 @@ const RegistrationForm = () => {
                   </Box>
                   <Box sx={{ mb: 1.5 }}>
                     <Typography sx={{ color: '#2F3D57', fontSize: 14, fontWeight: 600, mb: 0.5 }}>
-                      🏡 Available Plots
+                      🏙️ City Location
                     </Typography>
                     <Typography sx={{ color: '#666', fontSize: 13, pl: 2.5 }}>
-                      List plot sizes (e.g., 5 Marla, 10 Marla, 1 Kanal)
+                      Select the city where society is located
                     </Typography>
                   </Box>
                 </Grid>
@@ -425,7 +462,66 @@ const RegistrationForm = () => {
                 />
               </Grid>
 
-              {/* Type and Authority */}
+              {/* Registration Number */}
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                  Registration Number <span style={{ color: '#ED7600' }}>*</span>
+                </Typography>
+                <TextField 
+                  name="regNo"
+                  placeholder="e.g., REG-2024-12345"
+                  value={form.regNo} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 56,
+                      background: '#fff',
+                      '&:hover fieldset': {
+                        borderColor: '#ED7600',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#ED7600',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Established Date */}
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                  Established Date <span style={{ color: '#ED7600' }}>*</span>
+                </Typography>
+                <TextField 
+                  name="established" 
+                  type="date" 
+                  value={form.established} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  required 
+                  InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 56,
+                      background: '#fff',
+                      '&:hover fieldset': {
+                        borderColor: '#ED7600',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#ED7600',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Society Type */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Society Type <span style={{ color: '#ED7600' }}>*</span>
@@ -457,6 +553,70 @@ const RegistrationForm = () => {
                 </TextField>
               </Grid>
 
+              {/* City Location */}
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                  City <span style={{ color: '#ED7600' }}>*</span>
+                </Typography>
+                <TextField 
+                  select
+                  name="city"
+                  value={form.city} 
+                  onChange={handleChange} 
+                  fullWidth 
+                  required
+                  placeholder="Select city"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      height: 56,
+                      background: '#fff',
+                      '&:hover fieldset': {
+                        borderColor: '#ED7600',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#ED7600',
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                >
+                  {cityOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+                </TextField>
+              </Grid>
+
+              {/* Custom City Name (shown when Other is selected) */}
+              {form.city === 'Other' && (
+                <Grid item xs={12}>
+                  <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                    City Name <span style={{ color: '#ED7600' }}>*</span>
+                  </Typography>
+                  <TextField 
+                    name="customCity"
+                    placeholder="Enter city name"
+                    value={form.customCity} 
+                    onChange={handleChange} 
+                    fullWidth 
+                    required
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        height: 56,
+                        background: '#fff',
+                        '&:hover fieldset': {
+                          borderColor: '#ED7600',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#ED7600',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
+
+              {/* Regulatory Authority */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Regulatory Authority <span style={{ color: '#ED7600' }}>*</span>
@@ -488,15 +648,54 @@ const RegistrationForm = () => {
                 </TextField>
               </Grid>
 
-              {/* Registration No and Established */}
+              {/* NOC Issued Checkbox */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
-                  Registration Number <span style={{ color: '#ED7600' }}>*</span>
+                  NOC Status
+                </Typography>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  height: 56,
+                  background: '#fff',
+                  borderRadius: 2,
+                  border: '1px solid rgba(0, 0, 0, 0.23)',
+                  px: 2,
+                  '&:hover': {
+                    borderColor: '#ED7600',
+                  }
+                }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={form.noc_issued}
+                        onChange={(e) => setForm({ ...form, noc_issued: e.target.checked })}
+                        sx={{
+                          color: '#2F3D57',
+                          '&.Mui-checked': {
+                            color: '#ED7600',
+                          },
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography sx={{ color: '#2F3D57', fontWeight: 500, fontSize: 15 }}>
+                        NOC Issued by Authority
+                      </Typography>
+                    }
+                  />
+                </Box>
+              </Grid>
+
+              {/* Land Acquisition Status */}
+              <Grid item xs={12} sm={6}>
+                <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                  Land Acquisition Status <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
                 <TextField 
-                  name="regNo"
-                  placeholder="e.g., REG-2024-12345"
-                  value={form.regNo} 
+                  select 
+                  name="land_acquisition_status" 
+                  value={form.land_acquisition_status} 
                   onChange={handleChange} 
                   fullWidth 
                   required
@@ -514,21 +713,27 @@ const RegistrationForm = () => {
                       },
                     },
                   }}
-                />
+                >
+                  <MenuItem value="">Select Status</MenuItem>
+                  <MenuItem value="not_started">Not Started</MenuItem>
+                  <MenuItem value="in_progress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="not_applicable">Not Applicable</MenuItem>
+                </TextField>
               </Grid>
 
+              {/* Procurement Status */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
-                  Established Date <span style={{ color: '#ED7600' }}>*</span>
+                  Procurement Status <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
                 <TextField 
-                  name="established" 
-                  type="date" 
-                  value={form.established} 
+                  select 
+                  name="procurement_status" 
+                  value={form.procurement_status} 
                   onChange={handleChange} 
                   fullWidth 
-                  required 
-                  InputLabelProps={{ shrink: true }}
+                  required
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
@@ -543,10 +748,16 @@ const RegistrationForm = () => {
                       },
                     },
                   }}
-                />
+                >
+                  <MenuItem value="">Select Status</MenuItem>
+                  <MenuItem value="not_started">Not Started</MenuItem>
+                  <MenuItem value="in_progress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="not_applicable">Not Applicable</MenuItem>
+                </TextField>
               </Grid>
 
-              {/* Contact and Website */}
+              {/* Contact Number */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Contact Number <span style={{ color: '#ED7600' }}>*</span>
@@ -610,6 +821,7 @@ const RegistrationForm = () => {
                 />
               </Grid>
 
+              {/* Website URL */}
               <Grid item xs={12} sm={6}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Website URL <span style={{ color: '#ED7600' }}>*</span>
@@ -642,36 +854,6 @@ const RegistrationForm = () => {
                     '& .MuiFormHelperText-root': {
                       fontSize: 12,
                       mt: 0.5,
-                    },
-                  }}
-                />
-              </Grid>
-
-              {/* Available Plots */}
-              <Grid item xs={12}>
-                <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
-                  Available Plot Sizes <span style={{ color: '#ED7600' }}>*</span>
-                </Typography>
-                <TextField 
-                  name="plots"
-                  placeholder="e.g., 5 Marla, 10 Marla, 1 Kanal, 2 Kanal"
-                  value={form.plots} 
-                  onChange={handleChange} 
-                  fullWidth 
-                  required
-                  multiline
-                  rows={2}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      background: '#fff',
-                      '&:hover fieldset': {
-                        borderColor: '#ED7600',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#ED7600',
-                        borderWidth: 2,
-                      },
                     },
                   }}
                 />

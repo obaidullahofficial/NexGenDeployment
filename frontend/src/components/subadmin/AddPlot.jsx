@@ -13,19 +13,8 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     area: "",
     dimension_x: "",
     dimension_y: "",
-    location: "",
     description: [""],
-    contactName: "",
-    contactPhone: "",
-    images: [], // New field for storing images
-    amenities: {
-      gatedCommunity: false,
-      security: false,
-      electricity: false,
-      waterSupply: false,
-      parks: false,
-      mosque: false
-    }
+    images: [] // New field for storing images
   });
 
   const [imagePreviews, setImagePreviews] = useState([]); // For displaying previews
@@ -33,42 +22,14 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
   const [imageError, setImageError] = useState(false); // Track image validation error
-  const [phoneError, setPhoneError] = useState('');
   const [plotNumberError, setPlotNumberError] = useState('');
   const { alertState, showError, showWarning, showSuccess } = useAlert();
-
-  const areaOptions = ["5 Marla", "7 Marla", "10 Marla", "1 Kanal"];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Phone number validation and formatting
-    if (name === 'contactPhone') {
-      // Remove all non-digit characters
-      const cleaned = value.replace(/\D/g, '');
-      
-      // Limit to 10 digits
-      const limited = cleaned.substring(0, 10);
-      
-      // Format with dashes: XXX-XXXXXXX
-      let formatted = limited;
-      if (limited.length > 3) {
-        formatted = limited.substring(0, 3) + '-' + limited.substring(3);
-      }
-      
-      // Validate phone number length
-      if (limited.length > 0 && limited.length < 10) {
-        setPhoneError('Phone number must be 10 digits');
-      } else if (limited.length === 10) {
-        setPhoneError('');
-      } else if (limited.length === 0) {
-        setPhoneError('');
-      }
-      
-      setForm({ ...form, [name]: formatted });
-    }
     // Plot number validation - only numbers allowed
-    else if (name === 'plot_number') {
+    if (name === 'plot_number') {
       // Remove all non-digit characters
       const cleaned = value.replace(/\D/g, '');
       
@@ -80,6 +41,21 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
       
       setForm({ ...form, [name]: cleaned });
     }
+    // Auto-calculate area when dimension_x or dimension_y changes
+    else if (name === 'dimension_x' || name === 'dimension_y') {
+      const newForm = { ...form, [name]: value };
+      
+      // Calculate area if both dimensions are available
+      if (name === 'dimension_x' && newForm.dimension_y) {
+        const area = parseFloat(value) * parseFloat(newForm.dimension_y);
+        newForm.area = area ? `${area.toFixed(2)} sq ft` : '';
+      } else if (name === 'dimension_y' && newForm.dimension_x) {
+        const area = parseFloat(newForm.dimension_x) * parseFloat(value);
+        newForm.area = area ? `${area.toFixed(2)} sq ft` : '';
+      }
+      
+      setForm(newForm);
+    }
     else {
       setForm({ ...form, [name]: value });
     }
@@ -89,25 +65,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     const newDescription = [...form.description];
     newDescription[index] = value;
     setForm({ ...form, description: newDescription });
-  };
-
-  const addDescriptionItem = () => {
-    setForm({ ...form, description: [...form.description, ""] });
-  };
-
-  const removeDescriptionItem = (index) => {
-    const newDescription = form.description.filter((_, i) => i !== index);
-    setForm({ ...form, description: newDescription });
-  };
-
-  const handleAmenityChange = (amenity) => {
-    setForm({
-      ...form,
-      amenities: {
-        ...form.amenities,
-        [amenity]: !form.amenities[amenity]
-      }
-    });
   };
 
   // Handle plot image selection (similar to society profile)
@@ -156,22 +113,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     setImagePreviews([]);
   };
 
-  // Helper to convert amenities object to array of human-readable enabled amenities
-  const getSelectedAmenities = (amenitiesObj) => {
-    const amenityMap = {
-      gatedCommunity: "Gated Community",
-      security: "Security",
-      electricity: "Electricity",
-      waterSupply: "Water Supply",
-      parks: "Parks",
-      mosque: "Mosque"
-    };
-    
-    return Object.entries(amenitiesObj)
-      .filter((entry) => entry[1]) // Only include true values
-      .map(([key]) => amenityMap[key] || key); // Use human-readable name if available
-  };
-
   // API integration for Add Plot using FormData (like society profile)
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -187,7 +128,7 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
 
     try {
       // Simple validation - reset states immediately on validation failure
-      const requiredFields = ['plot_number', 'price', 'area', 'dimension_x', 'dimension_y', 'location', 'contactName', 'contactPhone'];
+      const requiredFields = ['plot_number', 'price', 'area', 'dimension_x', 'dimension_y'];
       for (let field of requiredFields) {
         if (!form[field] || form[field].toString().trim() === '') {
           // Reset states before showing alert so button becomes available again after user clicks OK
@@ -196,23 +137,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
           await showWarning('Missing Information', `Please fill in ${field.replace('_', ' ')}.`);
           return;
         }
-      }
-      
-      // Validate phone number before submission
-      if (phoneError) {
-        setLoading(false);
-        setIsSubmitting(false);
-        await showWarning('Validation Error', 'Please enter a valid phone number (10 digits required)');
-        return;
-      }
-
-      // Check if phone number has correct length
-      const phoneDigits = form.contactPhone.replace(/\D/g, '');
-      if (phoneDigits.length !== 10) {
-        setLoading(false);
-        setIsSubmitting(false);
-        await showWarning('Validation Error', 'Phone number must be exactly 10 digits');
-        return;
       }
       
       // Validate plot number
@@ -259,27 +183,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
         formData.append(`description[${index}]`, desc);
       });
       
-      // Add seller info with country code prefix to phone
-      formData.append('seller[name]', form.contactName);
-      formData.append('seller[phone]', '+92' + phoneDigits);
-      
-      // Add amenities - ensure we append amenities[] array
-      const amenities = getSelectedAmenities(form.amenities);
-      
-      console.log('[AddPlot DEBUG] Selected amenities:', amenities);
-      console.log('[AddPlot DEBUG] Form amenities object:', form.amenities);
-      
-      // First, append empty array marker for Flask to detect
-      if (amenities.length > 0) {
-        formData.append('amenities[]', '');
-      }
-      
-      // Then append each amenity with index
-      amenities.forEach((amenity, index) => {
-        console.log(`[AddPlot DEBUG] Appending amenities[${index}] = ${amenity}`);
-        formData.append(`amenities[${index}]`, amenity);
-      });
-      
       // Add plot image (matching backend expectation)
       if (plotImage) {
         console.log('[AddPlot] Adding plot image to FormData:', plotImage.name, plotImage.type, plotImage.size);
@@ -316,19 +219,8 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
           area: "",
           dimension_x: "",
           dimension_y: "",
-          location: "",
           description: [""],
-          contactName: "",
-          contactPhone: "",
-          images: [],
-          amenities: {
-            gatedCommunity: false,
-            security: false,
-            electricity: false,
-            waterSupply: false,
-            parks: false,
-            mosque: false
-          }
+          images: []
         });
         setPlotImage(null);
         setImagePreviews([]);
@@ -414,20 +306,16 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Area <span className="text-red-600">*</span>
                 </label>
-                <select
+                <input
+                  type="text"
                   name="area"
                   value={form.area}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Area</option>
-                  {areaOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  disabled
+                  className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-600 cursor-not-allowed"
+                  placeholder="Auto-calculated"
+                />
+                <p className="text-gray-500 text-xs mt-1">Auto-calculated from X × Y</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dimension X (ft)</label>
@@ -452,18 +340,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-              <input
-                type="text"
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                required
-              />
-            </div>
           </div>
 
           {/* Right Column */}
@@ -480,60 +356,9 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                       onChange={(e) => handleDescriptionChange(index, e.target.value)}
                       className="flex-1 border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeDescriptionItem(index)}
-                      className="ml-2 text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={addDescriptionItem}
-                  className="mt-2 text-[#ED7600] hover:text-[#D56900] text-sm flex items-center"
-                >
-                  + Add another description point
-                </button>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-              <input
-                type="text"
-                name="contactName"
-                value={form.contactName}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact Phone <span className="text-red-600">*</span>
-              </label>
-              <div className="flex items-center">
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 border border-gray-300 rounded-l-md border-r-0">
-                  <span className="text-lg">🇵🇰</span>
-                  <span className="font-semibold text-gray-700">+92</span>
-                </div>
-                <input
-                  type="text"
-                  name="contactPhone"
-                  value={form.contactPhone}
-                  onChange={handleChange}
-                  placeholder="3XX-XXXXXXX"
-                  className={`flex-1 border ${phoneError ? 'border-red-500' : 'border-gray-300'} rounded-r-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent`}
-                  required
-                />
-              </div>
-              {phoneError && (
-                <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-              )}
-              <p className="text-gray-500 text-xs mt-1">Enter 10 digits (e.g., 300-1234567)</p>
             </div>
 
             {/* Image Upload Section - Society Profile Style */}
@@ -613,31 +438,6 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Amenities Section */}
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { id: "gatedCommunity", label: "Gated Community" },
-              { id: "security", label: "Security" },
-              { id: "electricity", label: "Electricity" },
-              { id: "waterSupply", label: "Water Supply" },
-              { id: "parks", label: "Parks" },
-              { id: "mosque", label: "Mosque" }
-            ].map((amenity) => (
-              <label key={amenity.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={form.amenities[amenity.id]}
-                  onChange={() => handleAmenityChange(amenity.id)}
-                  className="mr-2 text-[#ED7600] focus:ring-[#ED7600]"
-                />
-                <span>{amenity.label}</span>
-              </label>
-            ))}
           </div>
         </div>
 

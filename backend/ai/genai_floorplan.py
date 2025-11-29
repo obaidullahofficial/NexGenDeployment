@@ -243,7 +243,7 @@ def _calculate_fitness(inputG: Dict[str, Any], maps_data: List, rooms_data: List
         return 0
 
 
-def genai_generate_floorplans(inputG: Dict[str, Any], n: int = 4, model: str = "gemini-2.0-flash-exp", max_retries: int = 3) -> Dict[str, Any]:
+def genai_generate_floorplans(inputG: Dict[str, Any], n: int = 4, model: str = "gemini-2.5-flash", max_retries: int = 3) -> Dict[str, Any]:
     """
     Main function: Generates floor plans using Google Gemini AI.
     
@@ -263,7 +263,7 @@ def genai_generate_floorplans(inputG: Dict[str, Any], n: int = 4, model: str = "
             - percents: Target area percentages
             - proportions: Target aspect ratios
         n: Number of floor plans to generate (default: 4)
-        model: Gemini model to use (default: "gemini-2.0-flash-exp")
+        model: Gemini model to use (default: "gemini-2.5-flash")
         max_retries: Number of retry attempts for API errors (default: 3)
     
     Returns:
@@ -363,6 +363,12 @@ def genai_generate_floorplans(inputG: Dict[str, Any], n: int = 4, model: str = "
         except Exception as e:
             last_error = str(e)
             print(f"❌ Attempt {attempt + 1} failed: {last_error}")
+            
+            # Check for quota exceeded errors
+            if "quota" in last_error.lower() or "resource_exhausted" in last_error.lower() or "resourceexhausted" in last_error.lower():
+                error_msg = "Gemini API quota exceeded. Please try again later or check your API quota limits."
+                print(f"🚫 {error_msg}")
+                return {"error": error_msg}
             
             # Check for retryable errors
             if "503" in last_error or "429" in last_error or "UNAVAILABLE" in last_error or "overloaded" in last_error.lower():

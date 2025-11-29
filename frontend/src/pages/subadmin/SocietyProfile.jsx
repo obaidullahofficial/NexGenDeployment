@@ -193,6 +193,9 @@ const SocietyProfile = () => {
                     <Typography variant="body1" sx={{ color: '#666', fontSize: '18px', mb: 2 }}>
                       {profile.name || 'Not specified'}
                     </Typography>
+                    <Typography variant="caption" sx={{ color: '#999', fontSize: '12px', fontStyle: 'italic' }}>
+                      From registration - cannot be changed
+                    </Typography>
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
@@ -202,15 +205,39 @@ const SocietyProfile = () => {
                     <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
                       {profile.location || 'Not specified'}
                     </Typography>
+                    <Typography variant="caption" sx={{ color: '#999', fontSize: '12px', fontStyle: 'italic' }}>
+                      From registration - cannot be changed
+                    </Typography>
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
                     <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
                       Available Plots
                     </Typography>
-                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
-                      {profile.available_plots || 'Not specified'}
-                    </Typography>
+                    {Array.isArray(profile.available_plots) && profile.available_plots.length > 0 ? (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {profile.available_plots.map((plotSize, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              px: 2,
+                              py: 0.5,
+                              backgroundColor: '#ED7600',
+                              color: 'white',
+                              borderRadius: 1,
+                              fontSize: '14px',
+                              fontWeight: 500
+                            }}
+                          >
+                            {plotSize}
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                        {profile.available_plots || 'Not specified'}
+                      </Typography>
+                    )}
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
@@ -219,6 +246,24 @@ const SocietyProfile = () => {
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
                       {profile.price_range || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Contact Number
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.contact_number || 'Not specified'}
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                      Head Office Address
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#666', fontSize: '16px' }}>
+                      {profile.head_office_address || 'Not specified'}
                     </Typography>
                   </Grid>
                   
@@ -241,6 +286,43 @@ const SocietyProfile = () => {
                     <Typography variant="body1" sx={{ color: '#666', fontSize: '16px', lineHeight: 1.6 }}>
                       {profile.description || 'No description provided'}
                     </Typography>
+                  </Grid>
+
+                  {/* Amenities Section */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ color: '#2F3D57', fontWeight: 600, mb: 2 }}>
+                      Society Amenities
+                    </Typography>
+                    {profile.amenities && profile.amenities.length > 0 ? (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                        {profile.amenities.map((amenity, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              px: 2,
+                              py: 1,
+                              borderRadius: 2,
+                              border: '2px solid #ED7600',
+                              backgroundColor: '#fff5ed',
+                              color: '#ED7600',
+                              fontWeight: 600
+                            }}
+                          >
+                            <span style={{ fontSize: '18px' }}>✓</span>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#ED7600' }}>
+                              {amenity}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : (
+                      <Typography variant="body1" sx={{ color: '#999', fontSize: '16px', fontStyle: 'italic' }}>
+                        No amenities specified
+                      </Typography>
+                    )}
                   </Grid>
                 </Grid>
               </Grid>

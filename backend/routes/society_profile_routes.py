@@ -40,15 +40,18 @@ def get_society_profile():
             registration = reg_forms.find_one({'user_id': user_id, 'status': 'approved'})
             
             if registration and registration.get('name'):
-                # Create new profile with society name from registration
+                # Create new profile with society name and location from registration
                 new_profile = {
                     'user_id': user_id,
                     'name': registration['name'],
                     'registered_society_name': registration['name'],
                     'description': '',
-                    'location': '',
-                    'available_plots': '',
+                    'location': registration.get('city', ''),
+                    'available_plots': [],
                     'price_range': '',
+                    'contact_number': '',
+                    'contact_name': '',
+                    'head_office_address': '',
                     'society_logo': '',
                     'is_complete': False,
                     'created_at': datetime.utcnow(),
@@ -70,32 +73,42 @@ def get_society_profile():
             else:
                 return jsonify({"error": "Registration not found or not approved"}), 404
         
-        # If profile exists but doesn't have registered_society_name, add it from registration
-        if not profile.get('registered_society_name'):
+        # If profile exists but doesn't have registered_society_name or location, add them from registration
+        needs_update = False
+        update_fields = {'updated_at': datetime.utcnow()}
+        
+        if not profile.get('registered_society_name') or not profile.get('location'):
             from models.society_registration_form import society_registration_form_collection
             reg_forms = society_registration_form_collection(db)
             registration = reg_forms.find_one({'user_id': user_id, 'status': 'approved'})
             
-            if registration and registration.get('name'):
-                # Update profile to include registered society name
-                profiles.update_one(
-                    {'user_id': user_id},
-                    {'$set': {
-                        'name': registration['name'],
-                        'registered_society_name': registration['name'],
-                        'updated_at': datetime.utcnow()
-                    }}
-                )
-                profile['name'] = registration['name']
-                profile['registered_society_name'] = registration['name']
+            if registration:
+                if not profile.get('registered_society_name') and registration.get('name'):
+                    update_fields['name'] = registration['name']
+                    update_fields['registered_society_name'] = registration['name']
+                    profile['name'] = registration['name']
+                    profile['registered_society_name'] = registration['name']
+                    needs_update = True
                 
-                print(f"[GET PROFILE] Updated profile with hardcoded name: {registration['name']}")
+                if not profile.get('location') and registration.get('city'):
+                    update_fields['location'] = registration['city']
+                    profile['location'] = registration['city']
+                    needs_update = True
+                
+                if needs_update:
+                    profiles.update_one(
+                        {'user_id': user_id},
+                        {'$set': update_fields}
+                    )
+                    print(f"[GET PROFILE] Updated profile - Name: {registration.get('name', 'N/A')}, Location: {registration.get('city', 'N/A')}")
         
         # Convert ObjectId to string for JSON
         profile['_id'] = str(profile['_id'])
         
         # Add email from user table to response (not stored in profile)
         profile['email'] = user_email
+        
+        print(f"[GET PROFILE] Returning profile - Name: {profile.get('name')}, Location: {profile.get('location')}")
         
         return jsonify({
             "success": True,
@@ -140,9 +153,33 @@ def create_or_update_society_profile():
                     'name': request.form.get('name', '').strip(),
                     'description': request.form.get('description', '').strip(),
                     'location': request.form.get('location', '').strip(),
-                    'available_plots': request.form.get('available_plots', '').strip(),
                     'price_range': request.form.get('price_range', '').strip(),
+                    'contact_number': request.form.get('contact_number', '').strip(),
+                    'contact_name': request.form.get('contact_name', '').strip(),
+                    'head_office_address': request.form.get('head_office_address', '').strip(),
                 }
+                
+                # Handle available_plots array
+                available_plots_list = []
+                i = 0
+                while f'available_plots[{i}]' in request.form:
+                    plot_size = request.form.get(f'available_plots[{i}]')
+                    if plot_size and plot_size.strip():
+                        available_plots_list.append(plot_size)
+                    i += 1
+                if available_plots_list:
+                    profile_data['available_plots'] = available_plots_list
+                
+                # Handle amenities array from form data
+                amenities_list = []
+                i = 0
+                while f'amenities[{i}]' in request.form:
+                    amenity = request.form.get(f'amenities[{i}]')
+                    if amenity and amenity.strip():
+                        amenities_list.append(amenity)
+                    i += 1
+                if amenities_list:
+                    profile_data['amenities'] = amenities_list
                 
                 # Handle logo upload if present
                 if 'society_logo' in request.files:
@@ -174,9 +211,22 @@ def create_or_update_society_profile():
                     'name': json_data.get('name', '').strip(),
                     'description': json_data.get('description', '').strip(),
                     'location': json_data.get('location', '').strip(),
-                    'available_plots': json_data.get('available_plots', '').strip(),
                     'price_range': json_data.get('price_range', '').strip(),
+                    'contact_number': json_data.get('contact_number', '').strip(),
+                    'contact_name': json_data.get('contact_name', '').strip(),
+                    'head_office_address': json_data.get('head_office_address', '').strip(),
                 }
+                
+                # Handle available_plots if provided in JSON
+                if 'available_plots' in json_data:
+                    if isinstance(json_data['available_plots'], list):
+                        profile_data['available_plots'] = json_data['available_plots']
+                    elif isinstance(json_data['available_plots'], str):
+                        profile_data['available_plots'] = json_data['available_plots'].strip()
+                
+                # Handle amenities if provided in JSON
+                if 'amenities' in json_data and isinstance(json_data['amenities'], list):
+                    profile_data['amenities'] = json_data['amenities']
                 
                 # Handle logo if provided in JSON
                 if 'society_logo' in json_data and json_data['society_logo']:
@@ -190,7 +240,10 @@ def create_or_update_society_profile():
             return jsonify({"error": "Failed to parse request data"}), 400
         
         # Validate that we have some data
-        if not any(profile_data.get(field, '').strip() for field in ['name', 'description', 'location', 'available_plots', 'price_range']):
+        has_available_plots = bool(profile_data.get('available_plots'))
+        has_other_fields = any(profile_data.get(field, '').strip() if isinstance(profile_data.get(field), str) else profile_data.get(field) for field in ['name', 'description', 'location', 'price_range'])
+        
+        if not has_available_plots and not has_other_fields:
             return jsonify({"error": "At least one field must be provided"}), 400
         
         # Get user_id from email
@@ -208,7 +261,7 @@ def create_or_update_society_profile():
         existing_profile = profiles.find_one({'user_id': user_id})
         
         # Add non-empty fields but EXCLUDE name if it's already registered
-        for field in ['name', 'description', 'location', 'available_plots', 'price_range', 'society_logo']:
+        for field in ['name', 'description', 'location', 'available_plots', 'price_range', 'contact_number', 'contact_name', 'head_office_address', 'society_logo', 'amenities']:
             if field in profile_data and profile_data[field]:
                 # Do not allow changing the society name if it's already set from registration
                 if field == 'name' and existing_profile and existing_profile.get('registered_society_name'):
@@ -217,11 +270,12 @@ def create_or_update_society_profile():
                 update_data[field] = profile_data[field]
         
         # Check completeness
-        required_fields = ['name', 'description', 'location', 'available_plots', 'price_range']
+        required_fields = ['name', 'description', 'location', 'price_range']
         complete_fields = [f for f in required_fields if update_data.get(f)]
         has_logo = 'society_logo' in update_data and update_data['society_logo']
+        has_plots = 'available_plots' in update_data and update_data['available_plots']
         
-        is_complete = len(complete_fields) == len(required_fields) and has_logo
+        is_complete = len(complete_fields) == len(required_fields) and has_logo and has_plots
         update_data['is_complete'] = is_complete
         
         print(f"[DEBUG] Updating fields: {list(update_data.keys())}")
@@ -263,9 +317,17 @@ def check_profile_completeness():
         user_email = get_jwt_identity()  # Now returns email directly
         
         db = get_db()
+        users = user_collection(db)
         profiles = society_profile_collection(db)
         
-        profile = profiles.find_one({'user_email': user_email})
+        # Get user_id from email
+        user = users.find_one({'email': user_email})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        user_id = str(user['_id'])
+        
+        profile = profiles.find_one({'user_id': user_id})
         
         if not profile:
             return jsonify({
@@ -275,14 +337,16 @@ def check_profile_completeness():
                 "message": "Profile not found"
             }), 200
         
-        # Check completeness
-        required_fields = ['name', 'description', 'location', 'available_plots', 'price_range']
+        # Check completeness - location is auto-populated, so don't require it to be filled manually
+        required_fields = ['name', 'description', 'available_plots', 'price_range']
         missing_fields = [f for f in required_fields if not profile.get(f)]
         
         if not profile.get('society_logo'):
             missing_fields.append('society_logo')
         
         is_complete = len(missing_fields) == 0
+        
+        print(f"[COMPLETENESS CHECK] Profile - Name: {profile.get('name')}, Location: {profile.get('location')}, Complete: {is_complete}, Missing: {missing_fields}")
         
         return jsonify({
             "success": True,

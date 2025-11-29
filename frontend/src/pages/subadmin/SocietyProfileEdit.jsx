@@ -12,7 +12,25 @@ const SocietyProfileEdit = () => {
     description: '',
     location: '',
     available_plots: '',
-    price_range: ''
+    price_range: '',
+    amenities: {
+      gatedCommunity: false,
+      security: false,
+      electricity: false,
+      waterSupply: false,
+      parks: false,
+      mosque: false,
+      gym: false,
+      swimmingPool: false,
+      communityCenter: false,
+      playground: false,
+      hospital: false,
+      school: false,
+      shoppingCenter: false,
+      restaurant: false,
+      cctv: false,
+      fireAlarm: false
+    }
   });
 
   const [logo, setLogo] = useState(null);
@@ -56,7 +74,25 @@ const SocietyProfileEdit = () => {
           description: result.profile.description || '',
           location: result.profile.location || '',
           available_plots: result.profile.available_plots || '',
-          price_range: result.profile.price_range || ''
+          price_range: result.profile.price_range || '',
+          amenities: {
+            gatedCommunity: result.profile.amenities?.includes('Gated Community') || false,
+            security: result.profile.amenities?.includes('Security') || false,
+            electricity: result.profile.amenities?.includes('Electricity') || false,
+            waterSupply: result.profile.amenities?.includes('Water Supply') || false,
+            parks: result.profile.amenities?.includes('Parks') || false,
+            mosque: result.profile.amenities?.includes('Mosque') || false,
+            gym: result.profile.amenities?.includes('Gym') || false,
+            swimmingPool: result.profile.amenities?.includes('Swimming Pool') || false,
+            communityCenter: result.profile.amenities?.includes('Community Center') || false,
+            playground: result.profile.amenities?.includes('Playground') || false,
+            hospital: result.profile.amenities?.includes('Hospital') || false,
+            school: result.profile.amenities?.includes('School') || false,
+            shoppingCenter: result.profile.amenities?.includes('Shopping Center') || false,
+            restaurant: result.profile.amenities?.includes('Restaurant') || false,
+            cctv: result.profile.amenities?.includes('CCTV') || false,
+            fireAlarm: result.profile.amenities?.includes('Fire Alarm') || false
+          }
         });
         
         // Set logo if exists
@@ -100,6 +136,41 @@ const SocietyProfileEdit = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleAmenityChange = (amenity) => {
+    setProfile(prev => ({
+      ...prev,
+      amenities: {
+        ...prev.amenities,
+        [amenity]: !prev.amenities[amenity]
+      }
+    }));
+  };
+
+  const getSelectedAmenities = () => {
+    const amenityMap = {
+      gatedCommunity: "Gated Community",
+      security: "Security",
+      electricity: "Electricity",
+      waterSupply: "Water Supply",
+      parks: "Parks",
+      mosque: "Mosque",
+      gym: "Gym",
+      swimmingPool: "Swimming Pool",
+      communityCenter: "Community Center",
+      playground: "Playground",
+      hospital: "Hospital",
+      school: "School",
+      shoppingCenter: "Shopping Center",
+      restaurant: "Restaurant",
+      cctv: "CCTV",
+      fireAlarm: "Fire Alarm"
+    };
+    
+    return Object.entries(profile.amenities)
+      .filter(([key, value]) => value)
+      .map(([key]) => amenityMap[key]);
   };
 
   // Handle logo file selection
@@ -166,7 +237,7 @@ const SocietyProfileEdit = () => {
       console.log('[PROFILE EDIT] Submitting profile updates...');
       
       // Simple validation
-      const requiredFields = ['name', 'description', 'location', 'available_plots', 'price_range'];
+      const requiredFields = ['name', 'description', 'available_plots', 'price_range'];
       for (let field of requiredFields) {
         if (!profile[field].trim()) {
           setMessage(`Please fill in ${field.replace('_', ' ')}`);
@@ -184,7 +255,18 @@ const SocietyProfileEdit = () => {
       // Create FormData
       const formData = new FormData();
       Object.keys(profile).forEach(key => {
-        formData.append(key, profile[key]);
+        if (key === 'amenities') {
+          // Handle amenities as array
+          const selectedAmenities = getSelectedAmenities();
+          if (selectedAmenities.length > 0) {
+            formData.append('amenities[]', '');
+            selectedAmenities.forEach((amenity, index) => {
+              formData.append(`amenities[${index}]`, amenity);
+            });
+          }
+        } else {
+          formData.append(key, profile[key]);
+        }
       });
       
       if (logo) {
@@ -341,24 +423,62 @@ const SocietyProfileEdit = () => {
                         <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Society Name</Typography>
                         <TextField
                           value={profile.name}
-                          onChange={(e) => handleInputChange('name', e.target.value)}
                           fullWidth
-                          required
-                          InputProps={{ style: { borderRadius: 12 } }}
-                          placeholder="Enter your society name"
+                          disabled
+                          variant="outlined"
+                          InputProps={{ 
+                            readOnly: true,
+                            style: { 
+                              borderRadius: 12,
+                              backgroundColor: '#f5f5f5',
+                              color: '#666'
+                            }
+                          }}
+                          sx={{
+                            '& .MuiInputBase-input.Mui-disabled': {
+                              WebkitTextFillColor: '#666',
+                              color: '#666'
+                            }
+                          }}
                         />
+                        <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
+                          From registration - cannot be changed
+                        </Typography>
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
                         <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Location</Typography>
                         <TextField
                           value={profile.location}
-                          onChange={(e) => handleInputChange('location', e.target.value)}
                           fullWidth
-                          required
-                          InputProps={{ style: { borderRadius: 12 } }}
-                          placeholder="e.g. Lahore, Karachi, Islamabad"
+                          disabled
+                          variant="outlined"
+                          InputProps={{ 
+                            readOnly: true,
+                            style: { 
+                              borderRadius: 12,
+                              backgroundColor: '#f5f5f5',
+                              color: '#666',
+                              cursor: 'not-allowed'
+                            }
+                          }}
+                          sx={{
+                            '& .MuiInputBase-root': {
+                              backgroundColor: '#f5f5f5'
+                            },
+                            '& .MuiInputBase-input.Mui-disabled': {
+                              WebkitTextFillColor: '#666',
+                              color: '#666',
+                              cursor: 'not-allowed'
+                            },
+                            '& .MuiOutlinedInput-root.Mui-disabled': {
+                              backgroundColor: '#f5f5f5'
+                            }
+                          }}
                         />
+                        <Typography variant="caption" sx={{ color: '#666', fontSize: '12px' }}>
+                          From registration - cannot be changed
+                        </Typography>
                       </Grid>
 
                       {/* Second Row - Available Plots and Price Range */}
@@ -377,13 +497,48 @@ const SocietyProfileEdit = () => {
                       <Grid item xs={12} sm={6}>
                         <Typography sx={{ mb: 0.5, color: '#2F3D57', fontWeight: 500, textAlign: 'left' }}>Price Range</Typography>
                         <TextField
+                          select
                           value={profile.price_range}
                           onChange={(e) => handleInputChange('price_range', e.target.value)}
                           fullWidth
                           required
-                          InputProps={{ style: { borderRadius: 12 } }}
-                          placeholder="e.g. 50L - 1Cr"
-                        />
+                          SelectProps={{
+                            displayEmpty: true,
+                            renderValue: (selected) => {
+                              if (!selected) {
+                                return <span style={{ color: '#999' }}>Select price range</span>;
+                              }
+                              return selected;
+                            }
+                          }}
+                          sx={{
+                            '& .MuiInputBase-root': {
+                              borderRadius: 3,
+                              height: 56,
+                              minWidth: '100%'
+                            },
+                            '& .MuiSelect-select': {
+                              height: '56px !important',
+                              display: 'flex',
+                              alignItems: 'center',
+                              paddingTop: '0 !important',
+                              paddingBottom: '0 !important'
+                            }
+                          }}
+                        >
+                          <MenuItem value="5 Lakh - 10 Lakh">PKR 5 Lakh - 10 Lakh</MenuItem>
+                          <MenuItem value="10 Lakh - 20 Lakh">PKR 10 Lakh - 20 Lakh</MenuItem>
+                          <MenuItem value="20 Lakh - 30 Lakh">PKR 20 Lakh - 30 Lakh</MenuItem>
+                          <MenuItem value="30 Lakh - 50 Lakh">PKR 30 Lakh - 50 Lakh</MenuItem>
+                          <MenuItem value="50 Lakh - 75 Lakh">PKR 50 Lakh - 75 Lakh</MenuItem>
+                          <MenuItem value="75 Lakh - 1 Crore">PKR 75 Lakh - 1 Crore</MenuItem>
+                          <MenuItem value="1 Crore - 1.5 Crore">PKR 1 Crore - 1.5 Crore</MenuItem>
+                          <MenuItem value="1.5 Crore - 2 Crore">PKR 1.5 Crore - 2 Crore</MenuItem>
+                          <MenuItem value="2 Crore - 3 Crore">PKR 2 Crore - 3 Crore</MenuItem>
+                          <MenuItem value="3 Crore - 5 Crore">PKR 3 Crore - 5 Crore</MenuItem>
+                          <MenuItem value="5 Crore - 10 Crore">PKR 5 Crore - 10 Crore</MenuItem>
+                          <MenuItem value="10 Crore+">PKR 10 Crore+</MenuItem>
+                        </TextField>
                       </Grid>
 
                       {/* Third Row - Description (Full Width) */}
@@ -401,6 +556,87 @@ const SocietyProfileEdit = () => {
                         />
                       </Grid>
                     </Grid>
+                    
+                    {/* Amenities Section */}
+                    <Box sx={{ mt: 4 }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          mb: 2,
+                          color: '#2F3D57',
+                          fontWeight: 600
+                        }}
+                      >
+                        Society Amenities
+                      </Typography>
+                      <Grid container spacing={2}>
+                        {[
+                          { id: "gatedCommunity", label: "Gated Community" },
+                          { id: "security", label: "Security" },
+                          { id: "cctv", label: "CCTV" },
+                          { id: "fireAlarm", label: "Fire Alarm" },
+                          { id: "electricity", label: "Electricity" },
+                          { id: "waterSupply", label: "Water Supply" },
+                          { id: "parks", label: "Parks" },
+                          { id: "playground", label: "Playground" },
+                          { id: "mosque", label: "Mosque" },
+                          { id: "gym", label: "Gym" },
+                          { id: "swimmingPool", label: "Swimming Pool" },
+                          { id: "communityCenter", label: "Community Center" },
+                          { id: "hospital", label: "Hospital" },
+                          { id: "school", label: "School" },
+                          { id: "shoppingCenter", label: "Shopping Center" },
+                          { id: "restaurant", label: "Restaurant" }
+                        ].map((amenity) => (
+                          <Grid item xs={12} sm={6} key={amenity.id}>
+                            <Box
+                              onClick={() => handleAmenityChange(amenity.id)}
+                              sx={{
+                                p: 2,
+                                border: `2px solid ${profile.amenities[amenity.id] ? '#ED7600' : '#e0e0e0'}`,
+                                borderRadius: 2,
+                                backgroundColor: profile.amenities[amenity.id] ? '#fff5ed' : 'white',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                '&:hover': {
+                                  borderColor: '#ED7600',
+                                  backgroundColor: '#fff5ed'
+                                }
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  border: `2px solid ${profile.amenities[amenity.id] ? '#ED7600' : '#bdbdbd'}`,
+                                  borderRadius: 1,
+                                  backgroundColor: profile.amenities[amenity.id] ? '#ED7600' : 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  mr: 2,
+                                  transition: 'all 0.3s ease'
+                                }}
+                              >
+                                {profile.amenities[amenity.id] && (
+                                  <Typography sx={{ color: 'white', fontSize: 18, fontWeight: 700 }}>✓</Typography>
+                                )}
+                              </Box>
+                              <Typography 
+                                sx={{ 
+                                  fontWeight: profile.amenities[amenity.id] ? 600 : 400,
+                                  color: profile.amenities[amenity.id] ? '#ED7600' : '#2F3D57'
+                                }}
+                              >
+                                {amenity.label}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
                   </Box>
                 </Grid>
 

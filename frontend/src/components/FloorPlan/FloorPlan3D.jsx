@@ -774,42 +774,65 @@ const analyzeFloorPlanData = (data) => {
   let walls = [];
   let doors = [];
   
-  // Check if data has mapData array (genetic algorithm output)
+  // First, check for direct rooms array (from 2D editor) - prioritize this
+  if (data && data.rooms && Array.isArray(data.rooms) && data.rooms.length > 0) {
+    console.log('🏠 Found direct rooms array from 2D editor with', data.rooms.length, 'rooms');
+    rooms = data.rooms.map((room, index) => {
+      const processedRoom = {
+        id: room.id || `room-${index}`,
+        x: parseFloat(room.x || 0),
+        y: parseFloat(room.y || 0),
+        width: parseFloat(room.width || 100),
+        height: parseFloat(room.height || 100),
+        type: room.type || room.tag || room.roomType || 'room',
+        name: room.name || room.type || room.tag || 'Room',
+        source: room.source || 'unknown'
+      };
+      console.log(`  Processing room ${index}:`, room, '→', processedRoom);
+      return processedRoom;
+    });
+  }
+  
+  // Then check if data has mapData array (genetic algorithm output)
   if (data && data.mapData && Array.isArray(data.mapData)) {
     console.log('📊 Found mapData with', data.mapData.length, 'items');
     
-    // Separate different types of elements
+    // Separate different types of elements (only if no direct rooms array found)
     data.mapData.forEach((item, index) => {
       if (!item) return;
       
-      console.log(`Item ${index}:`, item);
+      console.log(`MapData item ${index}:`, item);
       
-      // Extract room data with flexible field mapping
-      if (item.type === 'room' && (item.x !== undefined || item.position)) {
+      // Extract room data with flexible field mapping (only add if not already from direct array)
+      if (item.type === 'room' && (item.x !== undefined || item.position) && rooms.length === 0) {
         const x = item.x || item.position?.x || 0;
         const y = item.y || item.position?.y || 0;
         const width = item.width || item.size?.width || item.dimensions?.width || 100;
         const height = item.height || item.size?.height || item.dimensions?.height || 100;
         
         rooms.push({
-          id: item.id || `room-${index}`,
+          id: item.id || `mapdata-room-${index}`,
           x: parseFloat(x),
           y: parseFloat(y),
           width: parseFloat(width),
           height: parseFloat(height),
           type: item.roomType || item.tag || item.name || 'room',
           name: item.name || item.roomType || item.tag || 'Room',
-          fitness: item.fitness || 0
+          fitness: item.fitness || 0,
+          source: 'mapdata'
         });
+        console.log(`  Added mapData room:`, rooms[rooms.length - 1]);
       } 
       // Extract wall data
       else if (item.type === 'wall' && item.x1 !== undefined) {
-        walls.push({
+        const wallData = {
           x1: parseFloat(item.x1 || 0),
           y1: parseFloat(item.y1 || 0),
           x2: parseFloat(item.x2 || 100),
           y2: parseFloat(item.y2 || 100)
-        });
+        };
+        walls.push(wallData);
+        console.log('🧱 Found wall:', wallData);
       } 
       // Extract door data - Enhanced to detect brown rectangles as doors
       else if (item.type === 'door' || (item.x !== undefined && item.width !== undefined && item.height !== undefined && 
@@ -825,8 +848,8 @@ const analyzeFloorPlanData = (data) => {
           type: 'door'
         });
       }
-      // Handle rooms without explicit type (legacy format)
-      else if (!item.type && item.x !== undefined && item.width !== undefined) {
+      // Handle rooms without explicit type (legacy format) - only if no direct rooms
+      else if (!item.type && item.x !== undefined && item.width !== undefined && rooms.length === 0) {
         // Check if this is a door based on size (small rectangles are doors)
         const width = parseFloat(item.width);
         const height = parseFloat(item.height || 100);
@@ -844,33 +867,117 @@ const analyzeFloorPlanData = (data) => {
           });
         } else {
           // This is a room
-          rooms.push({
-            id: item.id || `room-${index}`,
+          const newRoom = {
+            id: item.id || `legacy-room-${index}`,
             x: parseFloat(item.x),
             y: parseFloat(item.y || 0),
             width: width,
             height: height,
             type: item.roomType || item.tag || item.name || 'room',
             name: item.name || item.roomType || item.tag || 'Room',
-            fitness: item.fitness || 0
-          });
+            fitness: item.fitness || 0,
+            source: 'legacy'
+          };
+          rooms.push(newRoom);
+          console.log(`  Added legacy room:`, newRoom);
         }
       }
     });
   }
   
-  // Fallback 1: check for direct rooms array
+  // Check for doors array (from 2D editor)
+  if (data && data.doors && Array.isArray(data.doors)) {
+    console.log('🚪 Using direct doors array with', data.doors.length, 'doors');
+    doors = data.doors.map((door, index) => {
+      // Handle both line format (x1,y1,x2,y2) and rect format (x,y,width,height)
+      if (door.x1 !== undefined && door.y1 !== undefined) {
+        // Line format - convert to rect format
+        const x = Math.min(door.x1, door.x2);
+        const y = Math.min(door.y1, door.y2);
+        const width = Math.abs(door.x2 - door.x1) || 30;
+        const height = Math.abs(door.y2 - door.y1) || 80;
+        
+        return {
+          id: door.id || `door-${index}`,
+          x: parseFloat(x),
+          y: parseFloat(y),
+          width: Math.max(parseFloat(width), 10),
+          height: Math.max(parseFloat(height), 10),
+          rotation: 0,
+          type: 'door'
+        };
+      } else if (door.points && Array.isArray(door.points) && door.points.length >= 4) {
+        // Points array format [x1, y1, x2, y2]
+        const x = Math.min(door.points[0], door.points[2]);
+        const y = Math.min(door.points[1], door.points[3]);
+        const width = Math.abs(door.points[2] - door.points[0]) || 30;
+        const height = Math.abs(door.points[3] - door.points[1]) || 80;
+        
+        return {
+          id: door.id || `door-${index}`,
+          x: parseFloat(x),
+          y: parseFloat(y),
+          width: Math.max(parseFloat(width), 10),
+          height: Math.max(parseFloat(height), 10),
+          rotation: 0,
+          type: 'door'
+        };
+      } else {
+        // Standard rect format
+        return {
+          id: door.id || `door-${index}`,
+          x: parseFloat(door.x || 0),
+          y: parseFloat(door.y || 0),
+          width: parseFloat(door.width || 30),
+          height: parseFloat(door.height || 80),
+          rotation: parseFloat(door.rotation || 0),
+          type: 'door'
+        };
+      }
+    });
+  }
+  
+  // Check for walls array (from 2D editor)
+  if (data && data.walls && Array.isArray(data.walls)) {
+    console.log('🧱 Using direct walls array with', data.walls.length, 'walls:', data.walls);
+    walls = data.walls.map((wall, idx) => {
+      if (wall.points && Array.isArray(wall.points) && wall.points.length >= 4) {
+        const wallData = {
+          x1: parseFloat(wall.points[0]),
+          y1: parseFloat(wall.points[1]),
+          x2: parseFloat(wall.points[2]),
+          y2: parseFloat(wall.points[3])
+        };
+        console.log(`  Wall ${idx}:`, wall.points, '→', wallData);
+        return wallData;
+      }
+      return {
+        x1: parseFloat(wall.x1 || 0),
+        y1: parseFloat(wall.y1 || 0),
+        x2: parseFloat(wall.x2 || 0),
+        y2: parseFloat(wall.y2 || 0)
+      };
+    });
+  }
+  
+  // Fallback 1: check for direct rooms array (from 2D editor)
   if (rooms.length === 0 && data && data.rooms && Array.isArray(data.rooms)) {
-    console.log('📋 Using direct rooms array');
-    rooms = data.rooms.map((room, index) => ({
-      id: room.id || `room-${index}`,
-      x: parseFloat(room.x || 0),
-      y: parseFloat(room.y || 0),
-      width: parseFloat(room.width || 100),
-      height: parseFloat(room.height || 100),
-      type: room.type || room.tag || room.roomType || 'room',
-      name: room.name || room.type || room.tag || 'Room'
-    }));
+    console.log('📋 Using direct rooms array from 2D editor with', data.rooms.length, 'rooms');
+    console.log('📋 Raw rooms data:', data.rooms);
+    rooms = data.rooms.map((room, index) => {
+      const processedRoom = {
+        id: room.id || `room-${index}`,
+        x: parseFloat(room.x || 0),
+        y: parseFloat(room.y || 0),
+        width: parseFloat(room.width || 100),
+        height: parseFloat(room.height || 100),
+        type: room.type || room.tag || room.roomType || 'room',
+        name: room.name || room.type || room.tag || 'Room',
+        source: room.source || 'unknown' // Track room source
+      };
+      console.log(`  Room ${index}:`, room, '→', processedRoom);
+      return processedRoom;
+    });
   }
   
   // Fallback 2: check if data is directly a rooms array
@@ -917,6 +1024,7 @@ const analyzeFloorPlanData = (data) => {
   
   console.log('✅ Final analysis:', { rooms: rooms.length, walls: walls.length, doors: doors.length });
   console.log('🏠 Room details:', rooms);
+  console.log('🧱 Wall details:', walls);
   return { rooms, walls, doors };
 };
 
@@ -968,8 +1076,152 @@ const calculateBounds = (rooms) => {
   return bounds;
 };
 
+// Standalone Wall Component - Renders custom walls from 2D editor
+const Wall3D = ({ wall, bounds }) => {
+  const wallHeight = 2.7; // Match room boundary walls
+  const wallThickness = 0.08; // Match room boundary walls
+  
+  console.log('🧱 Rendering wall:', wall, 'bounds:', bounds);
+  
+  // Convert wall coordinates to 3D world space
+  const start = convertToWorld3D(wall.x1, wall.y1, 0, 0, bounds);
+  const end = convertToWorld3D(wall.x2, wall.y2, 0, 0, bounds);
+  
+  // Calculate wall center, length, and rotation
+  const centerX = (start.x + end.x) / 2;
+  const centerZ = (start.z + end.z) / 2;
+  
+  const dx = end.x - start.x;
+  const dz = end.z - start.z;
+  const length = Math.sqrt(dx * dx + dz * dz);
+  const angle = Math.atan2(dz, dx);
+  
+  if (length < 0.01) return null; // Skip zero-length walls
+  
+  return (
+    <mesh
+      position={[centerX, wallHeight / 2, centerZ]}
+      rotation={[0, -angle, 0]}
+      castShadow
+      receiveShadow
+    >
+      <boxGeometry args={[length, wallHeight, wallThickness]} />
+      {/* Custom walls with same styling as room boundary walls */}
+      <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+    </mesh>
+  );
+};
+
+// Simple Door Component for 2D editor doors - positioned at exact coordinates
+const SimpleDoor3D = ({ door, bounds }) => {
+  const doorHeight = 2.1;
+  const doorThickness = 0.08; // Match wall thickness
+  const doorFrameWidth = 0.1; // Door frame width
+  
+  // Doors from 2D editor already converted to {x, y, width, height} format by analyzeFloorPlanData
+  const x = door.x || 0;
+  const y = door.y || 0;
+  const rectWidth = door.width || 30;
+  const rectHeight = door.height || 80;
+  
+  console.log('🚪 Door input data:', { x, y, rectWidth, rectHeight });
+  
+  // Determine door orientation based on rectangle dimensions
+  // If width > height, door is horizontal; if height > width, door is vertical
+  let centerX, centerZ, doorWidth, angle;
+  
+  if (rectWidth > rectHeight) {
+    // Horizontal door (along X axis)
+    const x1 = x;
+    const x2 = x + rectWidth;
+    const yPos = y + rectHeight / 2;
+    
+    const start = convertToWorld3D(x1, yPos, 0, 0, bounds);
+    const end = convertToWorld3D(x2, yPos, 0, 0, bounds);
+    
+    centerX = (start.x + end.x) / 2;
+    centerZ = (start.z + end.z) / 2;
+    
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    doorWidth = Math.sqrt(dx * dx + dz * dz);
+    angle = Math.atan2(dz, dx);
+  } else {
+    // Vertical door (along Y axis)
+    const xPos = x + rectWidth / 2;
+    const y1 = y;
+    const y2 = y + rectHeight;
+    
+    const start = convertToWorld3D(xPos, y1, 0, 0, bounds);
+    const end = convertToWorld3D(xPos, y2, 0, 0, bounds);
+    
+    centerX = (start.x + end.x) / 2;
+    centerZ = (start.z + end.z) / 2;
+    
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    doorWidth = Math.sqrt(dx * dx + dz * dz);
+    angle = Math.atan2(dz, dx);
+  }
+  
+  console.log('🚪 SimpleDoor3D:', { 
+    center: [centerX.toFixed(2), centerZ.toFixed(2)], 
+    angle: (angle * 180 / Math.PI).toFixed(1) + '°',
+    doorWidth: doorWidth.toFixed(2),
+    orientation: rectWidth > rectHeight ? 'horizontal' : 'vertical'
+  });
+  
+  if (doorWidth < 0.1) return null; // Skip tiny doors
+  
+  return (
+    <group position={[centerX, 0, centerZ]} rotation={[0, -angle, 0]}>
+      {/* Door opening/gap - no mesh, just empty space */}
+      
+      {/* Left door frame */}
+      <mesh
+        position={[-doorWidth / 2 + doorFrameWidth / 2, doorHeight / 2, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[doorFrameWidth, doorHeight, doorThickness]} />
+        <meshStandardMaterial color="#8B4513" roughness={0.6} metalness={0.2} />
+      </mesh>
+      
+      {/* Right door frame */}
+      <mesh
+        position={[doorWidth / 2 - doorFrameWidth / 2, doorHeight / 2, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[doorFrameWidth, doorHeight, doorThickness]} />
+        <meshStandardMaterial color="#8B4513" roughness={0.6} metalness={0.2} />
+      </mesh>
+      
+      {/* Top frame */}
+      <mesh
+        position={[0, doorHeight - doorFrameWidth / 2, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[doorWidth, doorFrameWidth, doorThickness]} />
+        <meshStandardMaterial color="#8B4513" roughness={0.6} metalness={0.2} />
+      </mesh>
+      
+      {/* Door panel (swinging door) - positioned at left side */}
+      <mesh
+        position={[0, doorHeight / 2, 0]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[doorWidth - doorFrameWidth * 2, doorHeight - doorFrameWidth, 0.04]} />
+        <meshStandardMaterial color="#A0522D" roughness={0.4} metalness={0.1} />
+      </mesh>
+    </group>
+  );
+};
+
 // Enhanced Room Component - FIXED positioning with doors and windows
-const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) => {
+const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], walls = [] }) => {
   const roomColors = {
     'livingroom': '#F4E4C7', // Warm beige
     'living': '#F4E4C7',
@@ -1031,11 +1283,109 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
         <meshLambertMaterial color={roomColor} transparent opacity={0.9} />
       </mesh>
       
-      {/* Walls with smart door cutouts */}
-      <group>
-        {/* Generate wall segments that avoid door openings */}
-        {(() => {
-          // Function to generate wall segments avoiding door cutouts
+      {/* Room boundary walls - check for overlaps with custom walls */}
+      {(() => {
+          const wallHeight = 2.7;
+          const wallThickness = 0.08;
+          
+          // Function to check if a custom wall overlaps with a room boundary segment
+          const customWallOverlaps = (segmentStart, segmentEnd, wallType) => {
+            if (walls.length === 0) return false;
+            
+            // Get room boundaries in world coordinates
+            const roomWorldX = world.x + world.width / 2;
+            const roomWorldZ = world.z + world.height / 2;
+            
+            // Define the room boundary wall line based on wall type
+            let boundaryLine = null;
+            switch (wallType) {
+              case 'north':
+                boundaryLine = {
+                  x1: roomWorldX - world.width/2 + segmentStart,
+                  z1: roomWorldZ - world.height/2,
+                  x2: roomWorldX - world.width/2 + segmentEnd,
+                  z2: roomWorldZ - world.height/2
+                };
+                break;
+              case 'south':
+                boundaryLine = {
+                  x1: roomWorldX - world.width/2 + segmentStart,
+                  z1: roomWorldZ + world.height/2,
+                  x2: roomWorldX - world.width/2 + segmentEnd,
+                  z2: roomWorldZ + world.height/2
+                };
+                break;
+              case 'east':
+                boundaryLine = {
+                  x1: roomWorldX + world.width/2,
+                  z1: roomWorldZ - world.height/2 + segmentStart,
+                  x2: roomWorldX + world.width/2,
+                  z2: roomWorldZ - world.height/2 + segmentEnd
+                };
+                break;
+              case 'west':
+                boundaryLine = {
+                  x1: roomWorldX - world.width/2,
+                  z1: roomWorldZ - world.height/2 + segmentStart,
+                  x2: roomWorldX - world.width/2,
+                  z2: roomWorldZ - world.height/2 + segmentEnd
+                };
+                break;
+            }
+            
+            if (!boundaryLine) return false;
+            
+            // Check each custom wall for overlap with this boundary segment
+            return walls.some(wall => {
+              const wallWorld = convertToWorld3D(
+                wall.x1,
+                wall.y1,
+                Math.abs(wall.x2 - wall.x1),
+                Math.abs(wall.y2 - wall.y1),
+                bounds
+              );
+              
+              const customWallLine = {
+                x1: wallWorld.x,
+                z1: wallWorld.z,
+                x2: wallWorld.x + (wall.x2 > wall.x1 ? wallWorld.width : -wallWorld.width),
+                z2: wallWorld.z + (wall.y2 > wall.y1 ? wallWorld.height : -wallWorld.height)
+              };
+              
+              // Calculate distance between the two line segments
+              const threshold = 0.3; // 30cm overlap threshold
+              
+              // Simple overlap check - if lines are close and parallel
+              const dx1 = boundaryLine.x2 - boundaryLine.x1;
+              const dz1 = boundaryLine.z2 - boundaryLine.z1;
+              const dx2 = customWallLine.x2 - customWallLine.x1;
+              const dz2 = customWallLine.z2 - customWallLine.z1;
+              
+              // Check if lines are roughly parallel (within 15 degrees)
+              const len1 = Math.sqrt(dx1*dx1 + dz1*dz1);
+              const len2 = Math.sqrt(dx2*dx2 + dz2*dz2);
+              if (len1 === 0 || len2 === 0) return false;
+              
+              const dot = (dx1*dx2 + dz1*dz2) / (len1 * len2);
+              const isParallel = Math.abs(Math.abs(dot) - 1) < 0.26; // cos(15°) ≈ 0.966
+              
+              if (!isParallel) return false;
+              
+              // Check if the lines are close to each other
+              const dist1 = Math.sqrt(
+                Math.pow(customWallLine.x1 - boundaryLine.x1, 2) + 
+                Math.pow(customWallLine.z1 - boundaryLine.z1, 2)
+              );
+              const dist2 = Math.sqrt(
+                Math.pow(customWallLine.x2 - boundaryLine.x2, 2) + 
+                Math.pow(customWallLine.z2 - boundaryLine.z2, 2)
+              );
+              
+              return (dist1 < threshold || dist2 < threshold);
+            });
+          };
+          
+          // Function to generate wall segments avoiding door cutouts AND custom wall overlaps
           const generateWallSegments = (wallType, totalLength) => {
             // Find doors on this wall for this specific room
             const wallDoors = roomDoors.filter(door => {
@@ -1048,7 +1398,12 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
             });
             
             if (wallDoors.length === 0) {
-              return [{ start: -totalLength/2, end: totalLength/2, center: 0, length: totalLength }];
+              // Check if entire wall is overlapped by custom walls
+              const fullSegment = { start: -totalLength/2, end: totalLength/2, center: 0, length: totalLength };
+              if (customWallOverlaps(fullSegment.start, fullSegment.end, wallType)) {
+                return []; // Hide entire wall
+              }
+              return [fullSegment];
             }
             
             const segments = [];
@@ -1068,29 +1423,33 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
               const doorStart = doorPos - doorWidth/2;
               const doorEnd = doorPos + doorWidth/2;
               
-              // Add segment before door if there's space
+              // Add segment before door if there's space AND no custom wall overlap
               if (currentPos < doorStart - 0.05) { // 5cm clearance
-                const segmentCenter = (currentPos + doorStart) / 2;
-                segments.push({ 
-                  start: currentPos, 
-                  end: doorStart - 0.05, 
-                  center: segmentCenter,
-                  length: doorStart - 0.05 - currentPos
-                });
+                if (!customWallOverlaps(currentPos, doorStart - 0.05, wallType)) {
+                  const segmentCenter = (currentPos + doorStart) / 2;
+                  segments.push({ 
+                    start: currentPos, 
+                    end: doorStart - 0.05, 
+                    center: segmentCenter,
+                    length: doorStart - 0.05 - currentPos
+                  });
+                }
               }
               
               currentPos = doorEnd + 0.05; // 5cm clearance after door
             });
             
-            // Add final segment after last door
+            // Add final segment after last door if no custom wall overlap
             if (currentPos < totalLength/2) {
-              const segmentCenter = (currentPos + totalLength/2) / 2;
-              segments.push({ 
-                start: currentPos, 
-                end: totalLength/2, 
-                center: segmentCenter,
-                length: totalLength/2 - currentPos
-              });
+              if (!customWallOverlaps(currentPos, totalLength/2, wallType)) {
+                const segmentCenter = (currentPos + totalLength/2) / 2;
+                segments.push({ 
+                  start: currentPos, 
+                  end: totalLength/2, 
+                  center: segmentCenter,
+                  length: totalLength/2 - currentPos
+                });
+              }
             }
             
             return segments.filter(seg => seg.length > 0.1); // Only include segments > 10cm
@@ -1099,7 +1458,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
           return (
             <>
               {/* North wall segments */}
-              {generateWallSegments('north', world.width, 'x').map((segment, idx) => (
+              {generateWallSegments('north', world.width).map((segment, idx) => (
                 <mesh 
                   key={`north-${idx}`}
                   position={[segment.center, wallHeight/2, -world.height/2 + wallThickness/2]} 
@@ -1112,7 +1471,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
               ))}
               
               {/* South wall segments */}
-              {generateWallSegments('south', world.width, 'x').map((segment, idx) => (
+              {generateWallSegments('south', world.width).map((segment, idx) => (
                 <mesh 
                   key={`south-${idx}`}
                   position={[segment.center, wallHeight/2, world.height/2 - wallThickness/2]} 
@@ -1125,7 +1484,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
               ))}
               
               {/* East wall segments */}
-              {generateWallSegments('east', world.height, 'z').map((segment, idx) => (
+              {generateWallSegments('east', world.height).map((segment, idx) => (
                 <mesh 
                   key={`east-${idx}`}
                   position={[world.width/2 - wallThickness/2, wallHeight/2, segment.center]} 
@@ -1138,7 +1497,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
               ))}
               
               {/* West wall segments */}
-              {generateWallSegments('west', world.height, 'z').map((segment, idx) => (
+              {generateWallSegments('west', world.height).map((segment, idx) => (
                 <mesh 
                   key={`west-${idx}`}
                   position={[-world.width/2 + wallThickness/2, wallHeight/2, segment.center]} 
@@ -1152,7 +1511,6 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
             </>
           );
         })()}
-      </group>
       
       {/* Render windows with smart positioning - FIXED: Windows embedded in walls */}
       {roomWindows.map((window, idx) => {
@@ -1213,22 +1571,56 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [] }) =
         );
       })}
       
-      {/* Room Label with better positioning and styling */}
-      {showLabels && (
-        <Text
-          position={[0, 0.15, 0]}
-          rotation={[-Math.PI/2, 0, 0]}
-          fontSize={Math.min(world.width, world.height) * 0.15}
-          color="#2C3E50"
-          anchorX="center"
-          anchorY="middle"
-          maxWidth={world.width * 0.85}
-          outlineWidth={0.01}
-          outlineColor="#FFFFFF"
-        >
-          {room.name || room.type || 'Room'}
-        </Text>
-      )}
+      {/* Room Label positioned inside custom wall layout */}
+      {showLabels && (() => {
+        // Calculate the actual center of the room based on custom wall boundaries
+        // Find walls that belong to this room by checking proximity
+        const roomWalls = walls.filter(wall => {
+          const wx1 = wall.x1 - roomX;
+          const wz1 = wall.y1 - roomZ;
+          const wx2 = wall.x2 - roomX;
+          const wz2 = wall.y2 - roomZ;
+          
+          // Check if wall endpoints are within or near room boundaries
+          const isInside = (x, z) => 
+            Math.abs(x) <= world.width/2 + 0.2 && 
+            Math.abs(z) <= world.height/2 + 0.2;
+          
+          return isInside(wx1, wz1) || isInside(wx2, wz2);
+        });
+        
+        // Calculate bounding box of custom walls for this room
+        let minX = -world.width/2, maxX = world.width/2;
+        let minZ = -world.height/2, maxZ = world.height/2;
+        
+        if (roomWalls.length > 0) {
+          minX = Math.min(...roomWalls.flatMap(w => [w.x1 - roomX, w.x2 - roomX]));
+          maxX = Math.max(...roomWalls.flatMap(w => [w.x1 - roomX, w.x2 - roomX]));
+          minZ = Math.min(...roomWalls.flatMap(w => [w.y1 - roomZ, w.y2 - roomZ]));
+          maxZ = Math.max(...roomWalls.flatMap(w => [w.y1 - roomZ, w.y2 - roomZ]));
+        }
+        
+        // Position label at center of custom wall boundaries
+        const labelX = (minX + maxX) / 2;
+        const labelZ = (minZ + maxZ) / 2;
+        const labelWidth = maxX - minX;
+        
+        return (
+          <Text
+            position={[labelX, 0.15, labelZ]}
+            rotation={[-Math.PI/2, 0, 0]}
+            fontSize={Math.min(world.width, world.height) * 0.15}
+            color="#2C3E50"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={labelWidth * 0.85}
+            outlineWidth={0.01}
+            outlineColor="#FFFFFF"
+          >
+            {room.name || room.type || 'Room'}
+          </Text>
+        );
+      })()}
     </group>
   );
 };
@@ -1738,11 +2130,30 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
   
   // Analyze and extract data - memoized to prevent infinite loops
   const analysisData = useMemo(() => {
-    console.log('🔍 Analyzing floor plan data:', floorPlanData);
-    return analyzeFloorPlanData(floorPlanData);
+    console.log('🔍 Analyzing floor plan data for 3D rendering:', floorPlanData);
+    console.log('🔍 Data structure check - has rooms?:', floorPlanData?.rooms?.length || 0);
+    console.log('🔍 Data structure check - has walls?:', floorPlanData?.walls?.length || 0);
+    console.log('🔍 Data structure check - has doors?:', floorPlanData?.doors?.length || 0);
+    console.log('🔍 Data structure check - has mapData?:', floorPlanData?.mapData?.length || 0);
+    console.log('🔍 Update timestamp:', floorPlanData?._updateTimestamp);
+    
+    if (floorPlanData?.rooms) {
+      console.log('🏠 Direct rooms data for 3D:', floorPlanData.rooms.map(r => ({ id: r.id, name: r.name, source: r.source })));
+    }
+    
+    const result = analyzeFloorPlanData(floorPlanData);
+    console.log('🎯 Analysis result - rooms for 3D:', result.rooms.length, result.rooms.map(r => ({ id: r.id, name: r.name, source: r.source })));
+    return result;
   }, [floorPlanData]);
   
   const { rooms, walls, doors } = analysisData;
+  
+  console.log('📊 Extracted data:', { 
+    rooms: rooms.length, 
+    walls: walls.length, 
+    doors: doors.length,
+    doorsData: doors 
+  });
   
   // Calculate bounds - memoized
   const bounds = useMemo(() => {
@@ -1751,8 +2162,9 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
   }, [rooms]);
   
   // Generate smart doors and windows using detected doors from 2D plan - memoized to prevent loops
+  // Always generate smart doors for room connectivity
   const smartDoors = useMemo(() => {
-    console.log('🚪 Generating smart doors for', rooms.length, 'rooms');
+    console.log('🚪 Generating smart doors for', rooms.length, 'rooms, detected 2D doors:', doors.length);
     return generateSmartDoors(rooms, bounds, doors);
   }, [rooms, bounds, doors]);
   
@@ -1843,6 +2255,33 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
         />
       </mesh>
       
+      {/* Render standalone custom walls from 2D editor */}
+      {console.log('🔧 About to render walls:', walls?.length, walls)}
+      {walls && walls.length > 0 && walls.map((wall, index) => {
+        console.log(`🧱 Rendering wall ${index}:`, wall);
+        return (
+          <Wall3D 
+            key={`custom-wall-${index}`}
+            wall={wall}
+            bounds={bounds}
+          />
+        );
+      })}
+      
+      {/* Render doors from 2D editor - DISABLED, using smart doors instead */}
+      {/* SimpleDoor3D is only for user-placed doors in customization mode */}
+      {false && walls.length > 0 && console.log('🔧 About to render user doors:', doors?.length, doors)}
+      {false && walls.length > 0 && doors && doors.length > 0 && doors.map((door, index) => {
+        console.log(`🚪 Rendering user door ${index}:`, door);
+        return (
+          <SimpleDoor3D 
+            key={`2d-door-${index}`}
+            door={door}
+            bounds={bounds}
+          />
+        );
+      })}
+      
       {/* Render rooms with doors and windows */}
       {rooms.map((room, index) => (
         <Room3D 
@@ -1852,10 +2291,11 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
           showLabels={mode === 'overview'}
           doors={smartDoors}
           windows={smartWindows}
+          walls={walls}
         />
       ))}
       
-      {/* Render all doors globally - visible from both connected rooms */}
+      {/* Render smart doors globally - visible from both connected rooms */}
       {smartDoors.map((door) => {
         // Use global position for doors to ensure they're visible from both sides
         const position = door.globalPosition || door.position || [0, 0, 0];
@@ -1955,36 +2395,7 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
         )}
       </div>
 
-      {/* Enhanced Instructions */}
-      <div className="absolute bottom-4 left-4 z-10 bg-black/85 text-white p-4 rounded-xl text-sm max-w-xs backdrop-blur-sm border border-white/20">
-        <div className="font-semibold mb-2 text-base">
-          {viewMode === 'overview' ? '🏗️ Architectural Overview' : '🚶 Virtual Walkthrough'}
-        </div>
-        <div className="text-xs space-y-1">
-          {viewMode === 'overview' ? (
-            <>
-              <div>• <span className="text-blue-300">Drag</span> to rotate 360° around the building</div>
-              <div>• <span className="text-green-300">Scroll</span> to zoom in/out for detail views</div>
-              <div>• <span className="text-yellow-300">Right-click + drag</span> to pan view</div>
-              <div>• <span className="text-purple-300">Smart positioning</span> - camera centers on building</div>
-              <div>• <span className="text-pink-300">Click doors</span> to open/close them</div>
-              <div>• <span className="text-emerald-300">Optimal angles</span> - restricted for best views</div>
-            </>
-          ) : (
-            <>
-              <div>• <span className="text-yellow-300">⌨️ W/A/S/D</span> keys to walk (most important!)</div>
-              <div>• <span className="text-blue-300">🖱️ Mouse</span> to look around (click first)</div>
-              <div>• <span className="text-green-300">🏃 Arrow Keys</span> to look if mouse fails</div>
-              <div>• <span className="text-purple-300">⚡ Shift</span> to sprint/run faster</div>
-              <div>• <span className="text-pink-300">🚪 Doors</span> open automatically nearby</div>
-              <div>• <span className="text-emerald-300">🔴 ESC</span> to exit pointer lock</div>
-              <div className="mt-2 p-2 bg-yellow-900/30 rounded text-yellow-200 text-xs">
-                <strong>Tip:</strong> If mouse doesn't work, just use WASD + Arrow Keys!
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+
 
       {/* Quality indicator */}
       <div className="absolute top-4 right-4 z-10 bg-black/70 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm">

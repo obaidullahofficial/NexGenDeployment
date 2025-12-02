@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import KonvaFloorPlan from '../../components/FloorPlan/KonvaFloorPlan';
+
 
 // Dynamic import for 3D component with fallback
 const FloorPlan3D = React.lazy(() => 
@@ -28,19 +29,198 @@ const FloorPlanCustomization = () => {
   const [floorPlanData, setFloorPlanData] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [viewMode, setViewMode] = useState('2d'); // '2d' or '3d'
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const autoSaveTimeoutRef = useRef(null);
 
-  // Get floor plan data from navigation state
+  // Authentication helper
+  const getAuthData = useCallback(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      return { token, user };
+    } catch (error) {
+      console.error('Error parsing auth data:', error);
+      return { token: null, user: null };
+    }
+  }, []);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const { token } = getAuthData();
+    setIsAuthenticated(!!token);
+  }, [getAuthData]);
+
+  // Get floor plan data from navigation state or localStorage
   useEffect(() => {
     if (location.state?.floorPlan) {
-      setFloorPlanData(location.state.floorPlan);
+      // Data from navigation
+      const floorPlan = location.state.floorPlan;
+      setFloorPlanData(floorPlan);
+      
+      // Save to localStorage for persistence across refreshes
+      localStorage.setItem('currentFloorPlan', JSON.stringify(floorPlan));
+      
+      // Initialize floor plan data
+      const initialDataStr = JSON.stringify({
+        rooms: floorPlan.rooms,
+        walls: floorPlan.walls,
+        doors: floorPlan.doors,
+        plotDimensions: floorPlan.plotDimensions
+      });
     } else {
-      // If no floor plan data, redirect back to generator
-      navigate('/floor-plan/generate', { replace: true });
+      // Try to load from localStorage on refresh
+      const savedFloorPlan = localStorage.getItem('currentFloorPlan');
+      if (savedFloorPlan) {
+        try {
+          const floorPlan = JSON.parse(savedFloorPlan);
+          console.log('Loaded floor plan from localStorage after refresh');
+          setFloorPlanData(floorPlan);
+          
+          // Floor plan loaded from localStorage
+          const initialDataStr = JSON.stringify({
+            rooms: floorPlan.rooms || [],
+            walls: floorPlan.walls || [],
+            doors: floorPlan.doors || [],
+            plotDimensions: floorPlan.plotDimensions || {}
+          });
+        } catch (error) {
+          console.error('Error parsing saved floor plan:', error);
+          navigate('/floor-plan/generate', { replace: true });
+        }
+      } else {
+        // No data available, redirect to generator
+        navigate('/floor-plan/generate', { replace: true });
+      }
     }
   }, [location.state, navigate]);
 
-  // Handle room updates
+  // Cleanup auto-save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-save function with debouncing
+  const autoSave = useCallback(async (data) => {
+    if (!data || !data.id) return;
+
+    // Check if data has actually changed
+    const currentDataStr = JSON.stringify({
+      rooms: data.rooms,
+      walls: data.walls,
+      doors: data.doors,
+      plotDimensions: data.plotDimensions
+    });
+
+    try {
+      setIsAutoSaving(true);
+      
+      // Get authentication data
+      const { token, user } = getAuthData();
+      
+      // Validate required data
+      if (!data.id) {
+        throw new Error('Floor plan ID is required for saving');
+      }
+      
+      // If no token, save locally instead of throwing error
+      if (!token) {
+        console.log('No authentication token found, saving locally only');
+        
+        // Save to localStorage as backup
+        localStorage.setItem(`floorplan_backup_${data.id}`, JSON.stringify({
+          ...data,
+          savedAt: new Date().toISOString(),
+          offline: true
+        }));
+        
+        // Also update the current floor plan for refresh persistence
+        localStorage.setItem('currentFloorPlan', JSON.stringify(data));
+        
+        setIsAutoSaving(false);
+        setHasUnsavedChanges(false);
+        console.log('Floor plan saved locally (offline mode)');
+        return;
+      }
+      
+      const response = await fetch('http://localhost:5000/api/floorplan/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          floorplan_id: data.id,
+          user_id: user?.id || data.user_id || 'anonymous',
+          floor_plan_data: {
+            rooms: data.rooms || [],
+            walls: data.walls || [],
+            doors: data.doors || [],
+            plotDimensions: data.plotDimensions || {},
+            mapData: data.mapData || []
+          }
+        }),
+      });
+
+      if (response.ok) {
+        setHasUnsavedChanges(false);
+        
+        // Also update the current floor plan for refresh persistence
+        localStorage.setItem('currentFloorPlan', JSON.stringify(data));
+        
+        console.log('Floor plan auto-saved successfully');
+      } else {
+        const errorText = await response.text();
+        console.error('Auto-save failed:', response.status, errorText);
+        throw new Error(`Failed to auto-save floor plan: ${response.status} - ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      
+      // Provide user-friendly error messages based on error type
+      if (error.message.includes('Floor plan ID')) {
+        console.warn('Auto-save failed: Invalid floor plan data.');
+      } else if (error.message.includes('fetch')) {
+        console.warn('Auto-save failed: Network error. Data saved locally.');
+        // Save locally as fallback
+        try {
+          localStorage.setItem(`floorplan_backup_${data.id}`, JSON.stringify({
+            ...data,
+            savedAt: new Date().toISOString(),
+            offline: true
+          }));
+        } catch (localError) {
+          console.error('Failed to save locally:', localError);
+        }
+      } else {
+        console.warn('Auto-save failed: Server error.');
+      }
+      // Don't show alerts for auto-save errors to avoid disrupting UX
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, []);
+
+  // Debounced auto-save trigger
+  const triggerAutoSave = useCallback((data) => {
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-save (2 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave(data);
+    }, 2000);
+  }, [autoSave]);
+
+  // Handle room updates with auto-save
   const handleRoomUpdate = useCallback((roomId, newProperties) => {
     setFloorPlanData(prevData => {
       if (!prevData) return prevData;
@@ -52,11 +232,71 @@ const FloorPlanCustomization = () => {
           : room
       );
       
+      // Trigger auto-save with debouncing
+      triggerAutoSave(updatedData);
+      
       return updatedData;
     });
     
     setHasUnsavedChanges(true);
-  }, []);
+  }, [triggerAutoSave]);
+
+  // Handle any floor plan data updates (walls, doors, etc.)
+  const handleFloorPlanUpdate = useCallback((updatedData) => {
+    console.log('📥 Received floor plan update:', {
+      walls: updatedData?.walls?.length || 0,
+      mapData: updatedData?.mapData?.length || 0,
+      rooms: updatedData?.rooms?.length || 0,
+      wallsData: updatedData?.walls
+    });
+    
+    setFloorPlanData(prevData => {
+      if (!prevData) {
+        // First time setting data
+        localStorage.setItem('currentFloorPlan', JSON.stringify(updatedData));
+        setTimeout(() => {
+          setHasUnsavedChanges(true);
+          triggerAutoSave(updatedData);
+        }, 0);
+        return updatedData;
+      }
+      
+      // Only update if there are actual changes to prevent feedback loops
+      // However, always update if mapData changed (for 3D view updates)
+      const mapDataChanged = JSON.stringify(prevData.mapData) !== JSON.stringify(updatedData.mapData);
+      
+      const hasChanges = 
+        JSON.stringify(prevData.rooms) !== JSON.stringify(updatedData.rooms) ||
+        JSON.stringify(prevData.walls) !== JSON.stringify(updatedData.walls) ||
+        JSON.stringify(prevData.doors) !== JSON.stringify(updatedData.doors) ||
+        mapDataChanged;
+      
+      if (!hasChanges) {
+        console.log('No actual changes detected, skipping update to prevent feedback loop');
+        console.log('Previous walls:', prevData.walls?.length, 'Updated walls:', updatedData.walls?.length);
+        console.log('Previous mapData:', prevData.mapData?.length, 'Updated mapData:', updatedData.mapData?.length);
+        return prevData;
+      }
+      
+      // Force update for 3D view when mapData changes
+      if (mapDataChanged) {
+        console.log('🔄 MapData changed - forcing 3D view update');
+      }
+      
+      console.log('Floor plan data updated with changes');
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('currentFloorPlan', JSON.stringify(updatedData));
+      
+      // Use setTimeout to handle side effects after state update
+      setTimeout(() => {
+        setHasUnsavedChanges(true);
+        triggerAutoSave(updatedData);
+      }, 0);
+      
+      return updatedData;
+    });
+  }, [triggerAutoSave]);
 
   // Save floor plan
   const handleSave = async () => {
@@ -64,18 +304,66 @@ const FloorPlanCustomization = () => {
 
     setIsSaving(true);
     try {
+      // Get authentication data
+      const { token, user } = getAuthData();
+      
+      // Validate required data
+      if (!floorPlanData.id) {
+        throw new Error('Floor plan ID is required for saving');
+      }
+      
+      if (!token) {
+        // Offer local save as alternative
+        const saveLocally = confirm(
+          'You are not logged in. Would you like to save this floor plan locally? ' +
+          'Note: Local saves will be lost if you clear browser data.'
+        );
+        
+        if (saveLocally) {
+          try {
+            const localSaveData = {
+              ...floorPlanData,
+              savedAt: new Date().toISOString(),
+              offline: true,
+              rooms: floorPlanData.rooms || [],
+              walls: floorPlanData.walls || [],
+              doors: floorPlanData.doors || [],
+              plotDimensions: floorPlanData.plotDimensions || {},
+              mapData: floorPlanData.mapData || []
+            };
+            
+            localStorage.setItem(`floorplan_backup_${floorPlanData.id}`, JSON.stringify(localSaveData));
+            setHasUnsavedChanges(false);
+            alert('Floor plan saved locally successfully!');
+            return;
+          } catch (localError) {
+            console.error('Local save failed:', localError);
+            alert('Failed to save locally. Please try logging in.');
+            return;
+          }
+        } else {
+          alert('Please log in to save your floor plan to the server.');
+          return;
+        }
+      }
+
       // Send updated floor plan data to backend
-      const response = await fetch('/api/floorplan/update', {
+      const response = await fetch('http://localhost:5000/api/floorplan/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          planId: floorPlanData.id,
-          rooms: floorPlanData.rooms,
-          walls: floorPlanData.walls,
-          doors: floorPlanData.doors,
-          plotDimensions: floorPlanData.plotDimensions
+          floorplan_id: floorPlanData.id,
+          user_id: user?.id || floorPlanData.user_id || 'anonymous',
+          floor_plan_data: {
+            rooms: floorPlanData.rooms || [],
+            walls: floorPlanData.walls || [],
+            doors: floorPlanData.doors || [],
+            plotDimensions: floorPlanData.plotDimensions || {},
+            mapData: floorPlanData.mapData || []
+          }
         }),
       });
 
@@ -84,11 +372,21 @@ const FloorPlanCustomization = () => {
         // Show success message
         alert('Floor plan saved successfully!');
       } else {
-        throw new Error('Failed to save floor plan');
+        const errorText = await response.text();
+        console.error('Save failed:', response.status, errorText);
+        throw new Error(`Failed to save floor plan: ${response.status} - ${errorText}`);
       }
     } catch (error) {
       console.error('Error saving floor plan:', error);
-      alert('Failed to save floor plan. Please try again.');
+      
+      // Provide user-friendly error messages
+      if (error.message.includes('logged in')) {
+        alert('Please log in to save your floor plan.');
+      } else if (error.message.includes('Floor plan ID')) {
+        alert('Invalid floor plan data. Please try generating a new floor plan.');
+      } else {
+        alert(`Failed to save floor plan: ${error.message}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -136,7 +434,9 @@ const FloorPlanCustomization = () => {
       <div className="bg-[#1e2a3a] shadow-lg border-b border-[#ED7600]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
+              <h1 className="text-xl font-semibold text-white">Floor Plan Customization</h1>
+              <div className="h-6 w-px bg-[#ED7600]"></div>
               <button
                 onClick={handleBack}
                 className="inline-flex items-center px-3 py-2 border border-[#ED7600] shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-transparent hover:bg-[#ED7600] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ED7600] transition-colors"
@@ -146,13 +446,7 @@ const FloorPlanCustomization = () => {
                 </svg>
                 Back to Generator
               </button>
-              <div className="h-6 w-px bg-[#ED7600]"></div>
-              <h1 className="text-xl font-semibold text-white">Floor Plan Customization</h1>
-              {hasUnsavedChanges && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ED7600] text-white">
-                  Unsaved Changes
-                </span>
-              )}
+              {/* Save status removed - using undo/redo instead */}
             </div>
             
             <div className="flex items-center space-x-3">
@@ -255,15 +549,18 @@ const FloorPlanCustomization = () => {
             {/* Floor Plan Canvas */}
             <div className="flex justify-center">
               {viewMode === '2d' ? (
-                <KonvaFloorPlan
-                  floorPlanData={floorPlanData}
-                  width={800}
-                  height={600}
-                  isEditable={true}
-                  onRoomUpdate={handleRoomUpdate}
-                />
+                <div className="bg-white rounded-lg shadow-2xl border-4 border-[#1e2a3a] overflow-hidden">
+                  <KonvaFloorPlan
+                    floorPlanData={floorPlanData}
+                    width={1000}
+                    height={500}
+                    isEditable={true}
+                    onRoomUpdate={handleRoomUpdate}
+                    onFloorPlanUpdate={handleFloorPlanUpdate}
+                  />
+                </div>
               ) : (
-                <div className="w-full h-[600px] rounded-lg overflow-hidden border border-[#ED7600]">
+                <div className="w-full h-[500px] rounded-lg overflow-hidden border border-[#ED7600]">
                   <React.Suspense 
                     fallback={
                       <div className="flex items-center justify-center h-full bg-[#2F3D57]">
@@ -321,8 +618,10 @@ const FloorPlanCustomization = () => {
                   <span className="mr-2">💾</span> Saving Changes
                 </h4>
                 <ul className="text-gray-300 space-y-1">
-                  <li>• Changes are tracked automatically</li>
-                  <li>• Click "Save Changes" to persist updates</li>
+                  <li>• Changes are auto-saved every 2 seconds when logged in</li>
+                  <li>• Local backup saves when offline or not authenticated</li>
+                  <li>• Manual save available for immediate backup</li>
+                  <li>• 3D view updates automatically with 2D changes</li>
                   <li>• Export your design as JSON file</li>
                 </ul>
               </div>

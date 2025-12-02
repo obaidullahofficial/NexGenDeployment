@@ -6,6 +6,7 @@ const KonvaFloorPlan = ({
   width = 800, 
   height = 600, 
   onRoomUpdate,
+  onFloorPlanUpdate,
   isEditable = false 
 }) => {
   const [rooms, setRooms] = useState([]);
@@ -31,7 +32,104 @@ const KonvaFloorPlan = ({
   const [roomPercentages, setRoomPercentages] = useState({}); // Room ID -> percentage mapping
   const [availablePercentage, setAvailablePercentage] = useState(100);
   const [roomTypeDistribution, setRoomTypeDistribution] = useState({}); // Room type -> total percentage
+  const [isInternalUpdate, setIsInternalUpdate] = useState(false); // Track internal updates to prevent double processing
+  const [draggingWallEndpoint, setDraggingWallEndpoint] = useState(null); // Track which wall endpoint is being dragged
+  const userModifiedWalls = useRef(false); // Track if user has modified walls
+  const lastUpdate3D = useRef(0); // Throttle 3D updates during drag
   const stageRef = useRef();
+  
+  // Undo/Redo history management
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isUndoRedo = useRef(false); // Flag to prevent saving history during undo/redo
+
+  // Save current state to history
+  const saveToHistory = useCallback((customRooms, customWalls, customDoors) => {
+    if (isUndoRedo.current) return; // Don't save during undo/redo
+    
+    const currentState = {
+      rooms: JSON.parse(JSON.stringify(customRooms !== undefined ? customRooms : rooms)),
+      walls: JSON.parse(JSON.stringify(customWalls !== undefined ? customWalls : walls)),
+      doors: JSON.parse(JSON.stringify(customDoors !== undefined ? customDoors : doors)),
+      timestamp: Date.now()
+    };
+    
+    setHistory(prev => {
+      // Remove any future states if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add current state
+      newHistory.push(currentState);
+      // Limit history to last 50 states
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    
+    setHistoryIndex(prev => {
+      const newIndex = Math.min(prev + 1, 49);
+      return newIndex;
+    });
+  }, [rooms, walls, doors, historyIndex]);
+
+  // Undo function
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      isUndoRedo.current = true;
+      const newIndex = historyIndex - 1;
+      const prevState = history[newIndex];
+      
+      setRooms(prevState.rooms);
+      setWalls(prevState.walls);
+      setDoors(prevState.doors);
+      setHistoryIndex(newIndex);
+      
+      // Trigger update to parent
+      requestAnimationFrame(() => {
+        if (onFloorPlanUpdate && floorPlanData) {
+          const updatedData = {
+            ...floorPlanData,
+            rooms: prevState.rooms,
+            walls: prevState.walls,
+            doors: prevState.doors,
+            _updateTimestamp: Date.now()
+          };
+          onFloorPlanUpdate(updatedData);
+        }
+        isUndoRedo.current = false;
+      });
+    }
+  }, [historyIndex, history, onFloorPlanUpdate, floorPlanData]);
+
+  // Redo function
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isUndoRedo.current = true;
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      
+      setRooms(nextState.rooms);
+      setWalls(nextState.walls);
+      setDoors(nextState.doors);
+      setHistoryIndex(newIndex);
+      
+      // Trigger update to parent
+      requestAnimationFrame(() => {
+        if (onFloorPlanUpdate && floorPlanData) {
+          const updatedData = {
+            ...floorPlanData,
+            rooms: nextState.rooms,
+            walls: nextState.walls,
+            doors: nextState.doors,
+            _updateTimestamp: Date.now()
+          };
+          onFloorPlanUpdate(updatedData);
+        }
+        isUndoRedo.current = false;
+      });
+    }
+  }, [historyIndex, history, onFloorPlanUpdate, floorPlanData]);
 
   // Snap to grid helper function
   const snapToGridCoordinate = useCallback((value) => {
@@ -39,24 +137,229 @@ const KonvaFloorPlan = ({
     return Math.round(value / gridSize) * gridSize;
   }, [snapToGrid, gridSize]);
 
+  // Helper function to trigger onFloorPlanUpdate with current state
+  const triggerFloorPlanUpdate = useCallback((allowDuringDrag = false, currentWalls = null) => {
+    if (onFloorPlanUpdate && floorPlanData && (allowDuringDrag || !isDragging)) {
+      // Use provided walls or fall back to state
+      const wallsToUse = currentWalls || walls;
+      
+      console.log('🚀 triggerFloorPlanUpdate called with:', {
+        allowDuringDrag,
+        isDragging,
+        roomsCount: rooms.length,
+        roomsData: rooms.map(r => ({ id: r.id, name: r.name, source: r.source }))
+      });
+      
+      // Calculate the same scaling factors used in data conversion
+      const plotWidth = 1000; 
+      const plotHeight = 1000; 
+      const margin = 40;
+      const scaleX = (width - margin * 2) / plotWidth;
+      const scaleY = (height - margin * 2) / plotHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      // Convert rooms back to original coordinates
+      const originalRooms = rooms.map(room => ({
+        ...room,
+        id: room.id,
+        type: room.type || 'Room',
+        tag: room.tag || room.type || 'room',
+        name: room.name || 'New Room',
+        x: room.originalX !== undefined ? room.originalX : (room.x - margin) / scale,
+        y: room.originalY !== undefined ? room.originalY : (room.y - margin) / scale,
+        width: room.originalWidth !== undefined ? room.originalWidth : room.width / scale,
+        height: room.originalHeight !== undefined ? room.originalHeight : room.height / scale,
+        // Preserve visual properties for consistency
+        fill: room.fill,
+        stroke: room.stroke,
+        strokeWidth: room.strokeWidth
+      }));
+      
+      // Convert walls back to original coordinates
+      const originalWalls = wallsToUse.map(wall => ({
+        ...wall,
+        x1: (wall.points[0] - margin) / scale,
+        y1: (wall.points[1] - margin) / scale,
+        x2: (wall.points[2] - margin) / scale,
+        y2: (wall.points[3] - margin) / scale,
+        points: [
+          (wall.points[0] - margin) / scale,
+          (wall.points[1] - margin) / scale,
+          (wall.points[2] - margin) / scale,
+          (wall.points[3] - margin) / scale
+        ]
+      }));
+      
+      // Convert doors back to original coordinates
+      const originalDoors = doors.map(door => ({
+        ...door,
+        points: [
+          (door.points[0] - margin) / scale,
+          (door.points[1] - margin) / scale,
+          (door.points[2] - margin) / scale,
+          (door.points[3] - margin) / scale
+        ],
+        x1: (door.points[0] - margin) / scale,
+        y1: (door.points[1] - margin) / scale,
+        x2: (door.points[2] - margin) / scale,
+        y2: (door.points[3] - margin) / scale
+      }));
+      
+      // Update mapData to ensure 3D view receives the changes
+      let updatedMapData = floorPlanData.mapData ? [...floorPlanData.mapData] : [];
+      
+      // Update or add walls in mapData
+      originalWalls.forEach(wall => {
+        const wallMapItem = {
+          type: 'wall',
+          id: wall.id,
+          x1: wall.x1,
+          y1: wall.y1,
+          x2: wall.x2,
+          y2: wall.y2,
+          stroke: wall.stroke,
+          strokeWidth: wall.strokeWidth
+        };
+        
+        // Find existing wall by id OR by type='wall' or type='Wall'
+        const existingIndex = updatedMapData.findIndex(item => 
+          (item.id === wall.id) || 
+          (item.type && item.type.toLowerCase() === 'wall' && 
+           Math.abs(item.x1 - wall.x1) < 1 && 
+           Math.abs(item.y1 - wall.y1) < 1)
+        );
+        
+        if (existingIndex >= 0) {
+          // Update existing wall
+          updatedMapData[existingIndex] = wallMapItem;
+        } else {
+          // Add new wall to mapData
+          updatedMapData.push(wallMapItem);
+        }
+      });
+      
+      const updatedData = {
+        ...floorPlanData,
+        rooms: originalRooms,
+        walls: originalWalls,
+        doors: originalDoors,
+        mapData: updatedMapData,
+        // Add timestamp to force update
+        _updateTimestamp: Date.now(),
+        // Ensure room count and data integrity
+        totalRooms: originalRooms.length
+      };
+      
+      console.log('🔄 Sending floor plan update:');
+      console.log('  - Rooms count:', originalRooms.length);
+      console.log('  - Walls count:', originalWalls.length);
+      console.log('  - Doors count:', originalDoors.length);
+      console.log('  - MapData count:', updatedMapData.length);
+      console.log('  - Room data sample:', originalRooms.length > 0 ? originalRooms[0] : 'No rooms');
+      if (allowDuringDrag) {
+        console.log('  - UPDATE DURING DRAG (3D should update)');
+      }
+      
+      setIsInternalUpdate(true);
+      onFloorPlanUpdate(updatedData);
+      // Clear the flag after a short delay to allow the parent to process the update
+      setTimeout(() => setIsInternalUpdate(false), 50);
+    }
+  }, [onFloorPlanUpdate, floorPlanData, rooms, walls, doors, width, height, isDragging]);
+
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isEditable) return;
       
-      // Delete selected item
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      // Undo: Ctrl+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      
+      // Redo: Ctrl+Y or Ctrl+Shift+Z
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      
+      // Delete selected item (only with Delete key, not Backspace)
+      if (e.key === 'Delete') {
         if (selectedRoom) {
           removeRoomAndRebalance(selectedRoom);
           setSelectedRoom(null);
+          saveToHistory();
         } else if (selectedDoor) {
           const updatedDoors = doors.filter(d => d.id !== selectedDoor);
+          console.log('Keyboard delete door:', selectedDoor);
           setDoors(updatedDoors);
           setSelectedDoor(null);
+          saveToHistory(undefined, undefined, updatedDoors);
+          
+          // Immediately notify parent
+          if (onFloorPlanUpdate && floorPlanData) {
+            const plotWidth = 1000;
+            const plotHeight = 1000;
+            const margin = 40;
+            const scaleX = (width - margin * 2) / plotWidth;
+            const scaleY = (height - margin * 2) / plotHeight;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const originalDoors = updatedDoors.map(door => ({
+              ...door,
+              points: [
+                (door.points[0] - margin) / scale,
+                (door.points[1] - margin) / scale,
+                (door.points[2] - margin) / scale,
+                (door.points[3] - margin) / scale
+              ],
+              x1: (door.points[0] - margin) / scale,
+              y1: (door.points[1] - margin) / scale,
+              x2: (door.points[2] - margin) / scale,
+              y2: (door.points[3] - margin) / scale
+            }));
+            
+            setIsInternalUpdate(true);
+            onFloorPlanUpdate({ ...floorPlanData, doors: originalDoors });
+            setTimeout(() => setIsInternalUpdate(false), 100);
+          }
         } else if (selectedWall) {
           const updatedWalls = walls.filter(w => w.id !== selectedWall);
+          console.log('Keyboard delete wall:', selectedWall);
           setWalls(updatedWalls);
           setSelectedWall(null);
+          saveToHistory(undefined, updatedWalls, undefined);
+          
+          // Immediately notify parent
+          if (onFloorPlanUpdate && floorPlanData) {
+            const plotWidth = 1000;
+            const plotHeight = 1000;
+            const margin = 40;
+            const scaleX = (width - margin * 2) / plotWidth;
+            const scaleY = (height - margin * 2) / plotHeight;
+            const scale = Math.min(scaleX, scaleY);
+            
+            const originalWalls = updatedWalls.map(wall => ({
+              ...wall,
+              points: [
+                (wall.points[0] - margin) / scale,
+                (wall.points[1] - margin) / scale,
+                (wall.points[2] - margin) / scale,
+                (wall.points[3] - margin) / scale
+              ],
+              x1: (wall.points[0] - margin) / scale,
+              y1: (wall.points[1] - margin) / scale,
+              x2: (wall.points[2] - margin) / scale,
+              y2: (wall.points[3] - margin) / scale
+            }));
+            
+            setIsInternalUpdate(true);
+            onFloorPlanUpdate({ ...floorPlanData, walls: originalWalls });
+            setTimeout(() => setIsInternalUpdate(false), 100);
+          }
         }
       }
       
@@ -70,59 +373,119 @@ const KonvaFloorPlan = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditable, selectedRoom, selectedDoor, selectedWall, rooms, doors, walls]);
+  }, [isEditable, selectedRoom, selectedDoor, selectedWall, rooms, doors, walls, onFloorPlanUpdate, floorPlanData, width, height]);
 
-  // Convert backend data to Konva-friendly format
+  // Convert backend data to Konva-friendly format - only when data comes from external source
   useEffect(() => {
-    if (floorPlanData) {
-      console.log('=== FLOOR PLAN DATA DEBUG ===');
-      console.log('floorPlanData:', floorPlanData);
-      console.log('mapData:', floorPlanData.mapData);
-      console.log('mapData length:', floorPlanData.mapData?.length);
-      
-      if (floorPlanData.mapData) {
-        const doors = floorPlanData.mapData.filter(item => item.type === 'Door');
-        const walls = floorPlanData.mapData.filter(item => item.type === 'Wall');
-        console.log('Found walls:', walls.length);
-        console.log('Found doors:', doors.length);
-        console.log('Door items:', doors);
-      }
-      
-      // Calculate scaling factors to fit the floor plan within canvas boundaries
-      const plotWidth = 1000; // Default backend plot width
-      const plotHeight = 1000; // Default backend plot height
-      const margin = 40; // Margin from canvas edges
-      
-      const scaleX = (width - margin * 2) / plotWidth;
-      const scaleY = (height - margin * 2) / plotHeight;
-      const scale = Math.min(scaleX, scaleY); // Use uniform scaling to maintain aspect ratio
-      
-      // Convert rooms data with proper scaling
-      const roomsData = (floorPlanData.rooms || []).map((room, index) => ({
-        id: room.id || `room-${index}`,
-        x: (room.x || 0) * scale + margin,
-        y: (room.y || 0) * scale + margin,
-        width: (room.width || 100) * scale,
-        height: (room.height || 100) * scale,
-        fill: getRoomColor(room.type || room.tag),
-        stroke: '#333',
-        strokeWidth: 2,
-        draggable: isEditable,
-        type: room.type || room.tag || 'Room',
-        tag: room.tag || `room-${index}`,
-        name: getRoomName(room.type || room.tag),
-        originalX: room.x || 0,
-        originalY: room.y || 0,
-        originalWidth: room.width || 100,
-        originalHeight: room.height || 100,
-        scale: scale
-      }));
+    // Skip loading if this is an internal update (user made changes in 2D editor)
+    if (!floorPlanData || isInternalUpdate || isDragging || draggingWallEndpoint) {
+      console.log('Skipping data load - isInternalUpdate:', isInternalUpdate, 'isDragging:', isDragging, 'draggingWallEndpoint:', draggingWallEndpoint);
+      return;
+    }
+    
+    // Skip if we have recent local rooms to prevent overriding them
+    const hasRecentLocalRooms = rooms.some(room => room.source === 'local');
+    
+    if (hasRecentLocalRooms && isInternalUpdate) {
+      console.log('Skipping data load - recent local rooms exist and internal update active');
+      return;
+    }
+    
+    console.log('=== LOADING FLOOR PLAN DATA FROM EXTERNAL SOURCE ===');
+    console.log('floorPlanData:', floorPlanData);
+    console.log('mapData:', floorPlanData.mapData);
+    console.log('mapData length:', floorPlanData.mapData?.length);
+    
+    if (floorPlanData.mapData) {
+      const doors = floorPlanData.mapData.filter(item => item.type === 'Door');
+      const walls = floorPlanData.mapData.filter(item => item.type === 'Wall');
+      console.log('Found walls:', walls.length);
+      console.log('Found doors:', doors.length);
+      console.log('Door items:', doors);
+    }
+    
+    // Calculate scaling factors to fit the floor plan within canvas boundaries
+    const plotWidth = 1000; // Default backend plot width
+    const plotHeight = 1000; // Default backend plot height
+    const margin = 40; // Margin from canvas edges
+    
+    const scaleX = (width - margin * 2) / plotWidth;
+    const scaleY = (height - margin * 2) / plotHeight;
+    const scale = Math.min(scaleX, scaleY); // Use uniform scaling to maintain aspect ratio
+    
+    // Convert and merge rooms data with proper scaling
+    const backendRoomsData = (floorPlanData.rooms || []).map((room, index) => ({
+      id: room.id || `room-${index}`,
+      x: (room.x || 0) * scale + margin,
+      y: (room.y || 0) * scale + margin,
+      width: (room.width || 100) * scale,
+      height: (room.height || 100) * scale,
+      fill: getRoomColor(room.type || room.tag),
+      stroke: '#333',
+      strokeWidth: 2,
+      draggable: isEditable,
+      type: room.type || room.tag || 'Room',
+      tag: room.tag || `room-${index}`,
+      name: getRoomName(room.type || room.tag),
+      originalX: room.x || 0,
+      originalY: room.y || 0,
+      originalWidth: room.width || 100,
+      originalHeight: room.height || 100,
+      scale: scale,
+      source: 'backend' // Mark as backend room
+    }));
+    
+    // Merge with existing rooms (preserve locally created rooms)
+    const existingLocalRooms = rooms.filter(room => 
+      room.source !== 'backend' && !backendRoomsData.some(br => br.id === room.id)
+    );
+    
+    const mergedRooms = [...backendRoomsData, ...existingLocalRooms];
+    
+    console.log('Room merge result:', {
+      backend: backendRoomsData.length,
+      local: existingLocalRooms.length,
+      total: mergedRooms.length
+    });
 
-      // Convert walls data with proper scaling
-      const wallsData = (floorPlanData.mapData || [])
+    // Convert walls data with proper scaling - prioritize direct walls array over mapData
+    let wallsData = [];
+    
+    // Method 1: Check direct walls array first (preferred)
+    if (floorPlanData.walls && Array.isArray(floorPlanData.walls) && floorPlanData.walls.length > 0) {
+      wallsData = floorPlanData.walls.map((wall, index) => {
+        // Handle both points array format and x1,y1,x2,y2 format
+        let points;
+        if (wall.points && Array.isArray(wall.points)) {
+          points = [
+            (wall.points[0] || 0) * scale + margin,
+            (wall.points[1] || 0) * scale + margin,
+            (wall.points[2] || 0) * scale + margin,
+            (wall.points[3] || 0) * scale + margin
+          ];
+        } else {
+          points = [
+            (wall.x1 || 0) * scale + margin,
+            (wall.y1 || 0) * scale + margin,
+            (wall.x2 || 0) * scale + margin,
+            (wall.y2 || 0) * scale + margin
+          ];
+        }
+        
+        return {
+          id: wall.id || `wall-${index}`,
+          points,
+          stroke: wall.stroke || '#000',
+          strokeWidth: Math.max(1, (wall.strokeWidth || 4) * scale),
+          lineCap: 'round'
+        };
+      });
+    } else if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+      // Method 2: Fallback to mapData for walls
+      wallsData = floorPlanData.mapData
         .filter(item => item.type === 'Wall')
         .map((wall, index) => ({
-          id: `wall-${index}`,
+          id: wall.id || `wall-${index}`,
           points: [
             (wall.x1 || 0) * scale + margin, 
             (wall.y1 || 0) * scale + margin, 
@@ -133,89 +496,131 @@ const KonvaFloorPlan = ({
           strokeWidth: Math.max(1, 4 * scale),
           lineCap: 'round'
         }));
+    }
 
-      // Convert doors data with proper scaling - check multiple possible data sources
-      let doorsData = [];
-      
-      // Method 1: Check mapData for doors
-      if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
-        const mapDoors = floorPlanData.mapData
-          .filter(item => item.type === 'Door')
-          .map((door, index) => ({
-            id: `door-${index}`,
-            points: [
-              (door.x1 || 0) * scale + margin, 
-              (door.y1 || 0) * scale + margin, 
-              (door.x2 || 0) * scale + margin, 
-              (door.y2 || 0) * scale + margin
-            ],
-            stroke: '#8B4513',
-            strokeWidth: Math.max(6, 4 * scale),
-            lineCap: 'round'
-          }));
-        doorsData = [...doorsData, ...mapDoors];
-      }
-      
-      // Method 2: Check direct doors array
-      if (floorPlanData.doors && Array.isArray(floorPlanData.doors)) {
-        const directDoors = floorPlanData.doors.map((door, index) => ({
-          id: `direct-door-${index}`,
+    // Convert doors data with proper scaling - prioritize direct doors array over mapData
+    let doorsData = [];
+    
+    // Method 1: Check direct doors array first (preferred)
+    if (floorPlanData.doors && Array.isArray(floorPlanData.doors) && floorPlanData.doors.length > 0) {
+      doorsData = floorPlanData.doors.map((door, index) => {
+        // Handle both points array format and x1,y1,x2,y2 format
+        let points;
+        if (door.points && Array.isArray(door.points)) {
+          points = [
+            (door.points[0] || 0) * scale + margin,
+            (door.points[1] || 0) * scale + margin,
+            (door.points[2] || 0) * scale + margin,
+            (door.points[3] || 0) * scale + margin
+          ];
+        } else {
+          points = [
+            (door.x1 || 0) * scale + margin,
+            (door.y1 || 0) * scale + margin,
+            (door.x2 || 0) * scale + margin,
+            (door.y2 || 0) * scale + margin
+          ];
+        }
+        
+        return {
+          id: door.id || `door-${index}`,
+          points,
+          stroke: door.stroke || '#8B4513',
+          strokeWidth: Math.max(6, (door.strokeWidth || 4) * scale),
+          lineCap: 'round'
+        };
+      });
+    } else if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+      // Method 2: Fallback to mapData for doors only if no direct doors
+      const mapDoors = floorPlanData.mapData
+        .filter(item => item.type === 'Door')
+        .map((door, index) => ({
+          id: door.id || `door-${index}`, // Use existing ID if available
           points: [
             (door.x1 || 0) * scale + margin, 
             (door.y1 || 0) * scale + margin, 
             (door.x2 || 0) * scale + margin, 
             (door.y2 || 0) * scale + margin
           ],
-          stroke: '#8B4513',
-          strokeWidth: Math.max(6, 4 * scale),
+          stroke: door.stroke || '#8B4513',
+          strokeWidth: Math.max(6, door.strokeWidth * scale || 4 * scale),
           lineCap: 'round'
         }));
-        doorsData = [...doorsData, ...directDoors];
-      }
-      
-      // Method 3: Auto-generate doors on room walls if no doors found
-      if (doorsData.length === 0 && roomsData.length > 0) {
-        console.log('No doors found in data, generating doors on room walls');
-        const generatedDoors = [];
-        
-        roomsData.forEach((room, roomIndex) => {
-          // Add door to the front wall (bottom edge) of each room
-          const doorWidth = Math.min(80 * scale, room.width * 0.3); // Door width is 30% of room width or 80 scaled units
-          const doorX = room.x + (room.width - doorWidth) / 2; // Center the door on the wall
-          const doorY = room.y + room.height; // Bottom edge of room
-          
-          generatedDoors.push({
-            id: `generated-door-${roomIndex}`,
-            points: [
-              doorX, 
-              doorY, 
-              doorX + doorWidth, 
-              doorY
-            ],
-            stroke: '#8B4513',
-            strokeWidth: Math.max(6, 4 * scale),
-            lineCap: 'round',
-            roomId: room.id
-          });
-        });
-        
-        doorsData = [...doorsData, ...generatedDoors];
-        console.log('Generated doors:', generatedDoors.length);
-      }
-
-      const finalDoorsData = doorsData;
-      
-      setRooms(roomsData);
-      setWalls(wallsData);
-      setDoors(finalDoorsData);
-      
-      console.log('=== DOOR PLACEMENT DEBUG ===');
-      console.log('Final doors data:', finalDoorsData);
-      console.log('Rooms data:', roomsData);
-      console.log('Scale factor:', scale);
-      console.log('Margin:', margin);
+      doorsData = mapDoors;
     }
-  }, [floorPlanData, isEditable]);
+    
+    // Method 3: Auto-generate doors on room walls if no doors found
+    if (doorsData.length === 0 && roomsData.length > 0) {
+      console.log('No doors found in data, generating doors on room walls');
+      const generatedDoors = [];
+      
+      roomsData.forEach((room, roomIndex) => {
+        // Add door to the front wall (bottom edge) of each room
+        const doorWidth = Math.min(80 * scale, room.width * 0.3); // Door width is 30% of room width or 80 scaled units
+        const doorX = room.x + (room.width - doorWidth) / 2; // Center the door on the wall
+        const doorY = room.y + room.height; // Bottom edge of room
+        
+        generatedDoors.push({
+          id: `generated-door-${roomIndex}`,
+          points: [
+            doorX, 
+            doorY, 
+            doorX + doorWidth, 
+            doorY
+          ],
+          stroke: '#8B4513',
+          strokeWidth: Math.max(6, 4 * scale),
+          lineCap: 'round',
+          roomId: room.id
+        });
+      });
+      
+      doorsData = [...doorsData, ...generatedDoors];
+      console.log('Generated doors:', generatedDoors.length);
+    }
+
+    const finalDoorsData = doorsData;
+    
+    // Preserve user-modified walls - keep current wall state if user has made changes
+    // Only reload from backend if walls array is empty or this is initial load
+    const shouldPreserveWalls = walls.length > 0 && (isInternalUpdate || isDragging || userModifiedWalls.current);
+    
+    const finalWallsData = shouldPreserveWalls ? walls : (() => {
+      // Merge local walls with backend walls
+      const mergedWalls = [...wallsData];
+      const localWalls = walls.filter(w => 
+        w.id && (w.id.startsWith('new-wall-') || w.id.startsWith('created-wall-'))
+      );
+      
+      localWalls.forEach(localWall => {
+        const existsInBackend = mergedWalls.some(w => w.id === localWall.id);
+        if (!existsInBackend) {
+          mergedWalls.push(localWall);
+        }
+      });
+      
+      return mergedWalls;
+    })();
+    
+    // Only update if there are actual changes to prevent unnecessary re-renders
+    if (mergedRooms.length !== rooms.length || 
+        mergedRooms.some((room, index) => {
+          const existingRoom = rooms[index];
+          return !existingRoom || room.id !== existingRoom.id;
+        })) {
+      setRooms(mergedRooms);
+    }
+    setWalls(finalWallsData);
+    setDoors(finalDoorsData);
+    
+    console.log('Walls loaded:', finalWallsData.length, shouldPreserveWalls ? '(preserved user changes)' : '(loaded from backend)');
+    
+    console.log('=== DOOR PLACEMENT DEBUG ===');
+    console.log('Final doors data:', finalDoorsData);
+    console.log('Rooms data:', mergedRooms);
+    console.log('Scale factor:', scale);
+    console.log('Margin:', margin);
+  }, [floorPlanData, isEditable, isInternalUpdate, isDragging, draggingWallEndpoint]);
 
   // Get room color based on type
   const getRoomColor = (roomType) => {
@@ -331,26 +736,44 @@ const KonvaFloorPlan = ({
     const newY = e.target.y();
     const room = rooms.find(r => r.id === roomId);
     
-    if (!room) return;
+    if (!room) {
+      setIsDragging(false);
+      setDragType(null);
+      return;
+    }
     
     const margin = 40;
     
     // Apply snap to grid but allow free movement (no boundary constraints for overlapping)
-    const snappedX = snapToGridCoordinate(newX);
-    const snappedY = snapToGridCoordinate(newY);
+    const snappedX = snapToGrid ? snapToGridCoordinate(newX) : newX;
+    const snappedY = snapToGrid ? snapToGridCoordinate(newY) : newY;
 
     // Convert back to original coordinates for backend
-    const originalX = (snappedX - margin) / room.scale;
-    const originalY = (snappedY - margin) / room.scale;
+    const originalX = (snappedX - margin) / (room.scale || 1);
+    const originalY = (snappedY - margin) / (room.scale || 1);
 
-    // Update room position with free movement - no constraints
+    // Ensure the room maintains its properties during move
     const updatedRooms = rooms.map(r => 
       r.id === roomId 
-        ? { ...r, x: snappedX, y: snappedY, originalX, originalY }
+        ? { 
+            ...r, 
+            x: snappedX, 
+            y: snappedY, 
+            originalX, 
+            originalY,
+            // Preserve all room properties to prevent disappearing
+            fill: r.fill || '#bbdefb',
+            stroke: r.stroke || '#1976d2',
+            strokeWidth: r.strokeWidth || 2,
+            width: r.width,
+            height: r.height,
+            draggable: r.draggable !== false
+          }
         : r
     );
 
     setRooms(updatedRooms);
+    saveToHistory(updatedRooms, undefined, undefined);
     setIsDragging(false);
     setDragType(null);
 
@@ -369,19 +792,29 @@ const KonvaFloorPlan = ({
       originalPosition: { x: originalX, y: originalY },
       overlapping: 'allowed'
     });
-  }, [rooms, isEditable, onRoomUpdate, snapToGridCoordinate]);
+
+    // Trigger 3D update after room movement
+    setTimeout(() => triggerFloorPlanUpdate(true), 10);
+  }, [rooms, isEditable, onRoomUpdate, snapToGridCoordinate, saveToHistory, triggerFloorPlanUpdate]);
 
   // Handle room drag move for visual feedback
   const handleRoomDragMove = useCallback((e, roomId) => {
     if (!isEditable || !isDragging) return;
     
-    // Apply snap to grid during drag for visual feedback
-    const currentX = snapToGridCoordinate(e.target.x());
-    const currentY = snapToGridCoordinate(e.target.y());
+    // Only update room state, don't modify the drag target position
+    // This prevents conflicts with Konva's internal drag handling
+    const currentX = e.target.x();
+    const currentY = e.target.y();
     
-    // Update target position to snapped coordinates
-    e.target.position({ x: currentX, y: currentY });
-  }, [isEditable, isDragging, snapToGridCoordinate]);
+    // Update room position in state for real-time feedback
+    setRooms(prevRooms => 
+      prevRooms.map(room => 
+        room.id === roomId 
+          ? { ...room, x: currentX, y: currentY }
+          : room
+      )
+    );
+  }, [isEditable, isDragging]);
 
   // Helper function to find the nearest wall edge for door placement
   const findNearestWallEdge = useCallback((x, y, doorLength) => {
@@ -389,65 +822,63 @@ const KonvaFloorPlan = ({
     let minDistance = Infinity;
     let snapPosition = null;
     
-    rooms.forEach(room => {
-      const walls = [
-        // Top wall
-        { x1: room.x, y1: room.y, x2: room.x + room.width, y2: room.y, edge: 'top' },
-        // Right wall  
-        { x1: room.x + room.width, y1: room.y, x2: room.x + room.width, y2: room.y + room.height, edge: 'right' },
-        // Bottom wall
-        { x1: room.x, y1: room.y + room.height, x2: room.x + room.width, y2: room.y + room.height, edge: 'bottom' },
-        // Left wall
-        { x1: room.x, y1: room.y, x2: room.x, y2: room.y + room.height, edge: 'left' }
-      ];
+    // Snap to custom walls instead of room boundaries
+    walls.forEach(wall => {
+      // Get wall coordinates
+      const wallData = {
+        x1: wall.points[0],
+        y1: wall.points[1],
+        x2: wall.points[2],
+        y2: wall.points[3],
+        id: wall.id
+      };
       
-      walls.forEach(wall => {
-        // Calculate distance from point to wall line
-        const wallLength = Math.sqrt((wall.x2 - wall.x1) ** 2 + (wall.y2 - wall.y1) ** 2);
-        const wallUnitX = (wall.x2 - wall.x1) / wallLength;
-        const wallUnitY = (wall.y2 - wall.y1) / wallLength;
+      // Calculate distance from point to wall line
+      const wallLength = Math.sqrt((wallData.x2 - wallData.x1) ** 2 + (wallData.y2 - wallData.y1) ** 2);
+      const wallUnitX = (wallData.x2 - wallData.x1) / wallLength;
+      const wallUnitY = (wallData.y2 - wallData.y1) / wallLength;
+      
+      // Project point onto wall line
+      const toPointX = x - wallData.x1;
+      const toPointY = y - wallData.y1;
+      const projectionLength = toPointX * wallUnitX + toPointY * wallUnitY;
+      
+      // Clamp projection to wall bounds (leave some margin for door placement)
+      const doorMargin = doorLength / 2;
+      const clampedProjection = Math.max(doorMargin, Math.min(wallLength - doorMargin, projectionLength));
+      
+      // Calculate closest point on wall
+      const closestX = wallData.x1 + wallUnitX * clampedProjection;
+      const closestY = wallData.y1 + wallUnitY * clampedProjection;
+      
+      // Calculate distance
+      const distance = Math.sqrt((x - closestX) ** 2 + (y - closestY) ** 2);
+      
+      // Check if we can fit the door on this wall segment
+      const availableLength = wallLength - doorLength;
+      const doorCanFit = availableLength >= 0;
+      
+      if (distance < minDistance && doorCanFit && distance < 50) { // 50px snap threshold
+        minDistance = distance;
+        nearestWall = { ...wallData, wallId: wall.id };
         
-        // Project point onto wall line
-        const toPointX = x - wall.x1;
-        const toPointY = y - wall.y1;
-        const projectionLength = toPointX * wallUnitX + toPointY * wallUnitY;
+        // Calculate door position centered on the closest point
+        const doorStartX = closestX - (wallUnitX * doorLength / 2);
+        const doorStartY = closestY - (wallUnitY * doorLength / 2);
+        const doorEndX = closestX + (wallUnitX * doorLength / 2);
+        const doorEndY = closestY + (wallUnitY * doorLength / 2);
         
-        // Clamp projection to wall bounds
-        const clampedProjection = Math.max(0, Math.min(wallLength, projectionLength));
-        
-        // Calculate closest point on wall
-        const closestX = wall.x1 + wallUnitX * clampedProjection;
-        const closestY = wall.y1 + wallUnitY * clampedProjection;
-        
-        // Calculate distance
-        const distance = Math.sqrt((x - closestX) ** 2 + (y - closestY) ** 2);
-        
-        // Check if we can fit the door on this wall segment
-        const availableLength = wallLength;
-        const doorCanFit = doorLength <= availableLength;
-        
-        if (distance < minDistance && doorCanFit && distance < 50) { // 50px snap threshold
-          minDistance = distance;
-          nearestWall = { ...wall, room };
-          
-          // Calculate door position centered on the closest point
-          const doorStartX = closestX - (wallUnitX * doorLength / 2);
-          const doorStartY = closestY - (wallUnitY * doorLength / 2);
-          const doorEndX = closestX + (wallUnitX * doorLength / 2);
-          const doorEndY = closestY + (wallUnitY * doorLength / 2);
-          
-          snapPosition = {
-            x1: doorStartX,
-            y1: doorStartY,
-            x2: doorEndX,
-            y2: doorEndY
-          };
-        }
-      });
+        snapPosition = {
+          x1: doorStartX,
+          y1: doorStartY,
+          x2: doorEndX,
+          y2: doorEndY
+        };
+      }
     });
     
     return { nearestWall, snapPosition, distance: minDistance };
-  }, [rooms]);
+  }, [walls]);
 
   // Handle door drag end
   const handleDoorDragEnd = useCallback((e, doorId) => {
@@ -480,7 +911,7 @@ const KonvaFloorPlan = ({
     if (nearestWall && snapPosition) {
       // Snap to wall
       finalDoorPoints = [snapPosition.x1, snapPosition.y1, snapPosition.x2, snapPosition.y2];
-      console.log('Door snapped to wall:', nearestWall.edge, 'of room:', nearestWall.room.id);
+      console.log('Door snapped to wall:', nearestWall.wallId);
     } else {
       // Return to original position if no valid wall found
       finalDoorPoints = door.points;
@@ -494,9 +925,70 @@ const KonvaFloorPlan = ({
         : d
     );
 
+    console.log('Door drag completed - updating doors only, rooms should not change');
+    console.log('Current rooms count:', rooms.length);
+    console.log('Current doors count:', doors.length);
+    console.log('Updating door', doorId, 'from', door.points, 'to', finalDoorPoints);
+    
+    // Important: Reset the dragged element's visual position to prevent ghost copies
+    // This ensures the Konva object returns to its original position while our state handles the new position
+    e.target.position({ x: 0, y: 0 });
+    
+    // Force a re-render of the doors layer to clear any visual artifacts
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.batchDraw();
+    }
+    
+    // Update doors state - this should replace the old door, not add a new one
     setDoors(updatedDoors);
-    setIsDragging(false);
-    setDragType(null);
+    
+    // Clear dragging state AFTER updating doors to prevent race conditions
+    setTimeout(() => {
+      setIsDragging(false);
+      setDragType(null);
+    }, 10);
+    
+    console.log('Updated doors array:', updatedDoors.map(d => ({ id: d.id, points: d.points })));
+    console.log('Total doors after update:', updatedDoors.length);
+    
+    // Trigger update after state has settled, but only update doors
+    setTimeout(() => {
+      if (onFloorPlanUpdate && floorPlanData) {
+        console.log('Triggering floor plan update - doors only');
+        const plotWidth = 1000; 
+        const plotHeight = 1000; 
+        const margin = 40;
+        const scaleX = (width - margin * 2) / plotWidth;
+        const scaleY = (height - margin * 2) / plotHeight;
+        const scale = Math.min(scaleX, scaleY);
+        
+        // Convert only the updated doors back to original coordinates
+        const originalDoors = updatedDoors.map(door => ({
+          ...door,
+          points: [
+            (door.points[0] - margin) / scale,
+            (door.points[1] - margin) / scale,
+            (door.points[2] - margin) / scale,
+            (door.points[3] - margin) / scale
+          ],
+          x1: (door.points[0] - margin) / scale,
+          y1: (door.points[1] - margin) / scale,
+          x2: (door.points[2] - margin) / scale,
+          y2: (door.points[3] - margin) / scale
+        }));
+        
+        const updatedData = {
+          ...floorPlanData,
+          doors: originalDoors
+          // Don't update rooms or walls unless they actually changed
+        };
+        
+        setIsInternalUpdate(true);
+        onFloorPlanUpdate(updatedData);
+        setTimeout(() => setIsInternalUpdate(false), 50);
+      }
+    }, 100);
     
     // Reset target position to prevent visual jumping
     e.target.position({ x: 0, y: 0 });
@@ -512,33 +1004,115 @@ const KonvaFloorPlan = ({
 
   // Add new door
   const addNewDoor = useCallback(() => {
+    // Calculate scale to match existing doors
+    const plotWidth = 1000;
+    const plotHeight = 1000;
+    const margin = 40;
+    const scaleX = (width - margin * 2) / plotWidth;
+    const scaleY = (height - margin * 2) / plotHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    // Create door with consistent size (80 units in backend coordinates)
+    const doorLength = 80 * scale; // Standard door width scaled to canvas
+    const startX = 200;
+    const startY = 200;
+    
     const newDoor = {
       id: `new-door-${Date.now()}`,
-      points: [200, 200, 280, 200], // Default horizontal door
+      points: [startX, startY, startX + doorLength, startY], // Horizontal door with scaled length
       stroke: '#8B4513',
-      strokeWidth: 6,
+      strokeWidth: Math.max(6, 4 * scale), // Match the strokeWidth calculation from loading
       lineCap: 'round'
     };
-    setDoors(prev => [...prev, newDoor]);
+    const updatedDoors = [...doors, newDoor];
+    console.log('Adding new door:', newDoor.id, 'with length:', doorLength);
+    
+    setDoors(updatedDoors);
     setSelectedDoor(newDoor.id);
     setSelectedRoom(null);
     setSelectedWall(null);
-  }, []);
+    saveToHistory(undefined, undefined, updatedDoors);
+    
+    // Immediately notify parent with the new door
+    if (onFloorPlanUpdate && floorPlanData) {
+      const originalDoors = updatedDoors.map(door => ({
+        ...door,
+        points: [
+          (door.points[0] - margin) / scale,
+          (door.points[1] - margin) / scale,
+          (door.points[2] - margin) / scale,
+          (door.points[3] - margin) / scale
+        ],
+        x1: (door.points[0] - margin) / scale,
+        y1: (door.points[1] - margin) / scale,
+        x2: (door.points[2] - margin) / scale,
+        y2: (door.points[3] - margin) / scale
+      }));
+      
+      setIsInternalUpdate(true);
+      onFloorPlanUpdate({ ...floorPlanData, doors: originalDoors });
+      setTimeout(() => setIsInternalUpdate(false), 100);
+    }
+  }, [doors, onFloorPlanUpdate, floorPlanData, width, height]);
 
   // Add new wall
   const addNewWall = useCallback(() => {
+    // Calculate center position and appropriate wall size
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const wallLength = 150; // Default wall length
+    
     const newWall = {
       id: `new-wall-${Date.now()}`,
-      points: [300, 300, 400, 300], // Default horizontal wall
+      points: [centerX - wallLength/2, centerY, centerX + wallLength/2, centerY], // Horizontal wall at center
       stroke: '#000',
       strokeWidth: 4,
       lineCap: 'round'
     };
-    setWalls(prev => [...prev, newWall]);
+    const updatedWalls = [...walls, newWall];
+    console.log('Adding new wall:', newWall.id);
+    
+    // Mark that user has modified walls
+    userModifiedWalls.current = true;
+    
+    setWalls(updatedWalls);
     setSelectedWall(newWall.id);
     setSelectedRoom(null);
     setSelectedDoor(null);
-  }, []);
+    saveToHistory(undefined, updatedWalls, undefined);
+    
+    // Immediately notify parent with the new wall
+    if (onFloorPlanUpdate && floorPlanData) {
+      const plotWidth = 1000;
+      const plotHeight = 1000;
+      const margin = 40;
+      const scaleX = (width - margin * 2) / plotWidth;
+      const scaleY = (height - margin * 2) / plotHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const originalWalls = updatedWalls.map(wall => ({
+        ...wall,
+        points: [
+          (wall.points[0] - margin) / scale,
+          (wall.points[1] - margin) / scale,
+          (wall.points[2] - margin) / scale,
+          (wall.points[3] - margin) / scale
+        ],
+        x1: (wall.points[0] - margin) / scale,
+        y1: (wall.points[1] - margin) / scale,
+        x2: (wall.points[2] - margin) / scale,
+        y2: (wall.points[3] - margin) / scale
+      }));
+      
+      setIsInternalUpdate(true);
+      onFloorPlanUpdate({ ...floorPlanData, walls: originalWalls });
+      setTimeout(() => {
+        setIsInternalUpdate(false);
+        // Allow reload after sufficient time for save to complete
+        setTimeout(() => userModifiedWalls.current = false, 2000);
+      }, 100);
+    }
+  }, [walls, onFloorPlanUpdate, floorPlanData, width, height]);
 
   // Calculate area from room dimensions
   const calculateRoomArea = useCallback((width, height, scale = 1) => {
@@ -558,12 +1132,13 @@ const KonvaFloorPlan = ({
   }, [totalFloorArea]);
 
   // Rebalance all room percentages to maintain 100% total
-  const rebalanceRoomPercentages = useCallback((updatedRooms, excludeRoomId = null) => {
-    const totalCurrentPercentage = Object.values(roomPercentages).reduce((sum, percent) => sum + percent, 0);
+  const rebalanceRoomPercentages = useCallback((updatedRooms, excludeRoomId = null, currentPercentages = null) => {
+    const percentagesToUse = currentPercentages || roomPercentages;
+    const totalCurrentPercentage = Object.values(percentagesToUse).reduce((sum, percent) => sum + percent, 0);
     
-    if (totalCurrentPercentage === 0) return roomPercentages;
+    if (totalCurrentPercentage === 0) return percentagesToUse;
 
-    const newPercentages = { ...roomPercentages };
+    const newPercentages = { ...percentagesToUse };
     
     // If we're updating a specific room, adjust others proportionally
     if (excludeRoomId && newPercentages[excludeRoomId]) {
@@ -591,7 +1166,7 @@ const KonvaFloorPlan = ({
     }
 
     return newPercentages;
-  }, [roomPercentages]);
+  }, []); // Remove dependency on roomPercentages
 
   // Add new room with area allocation
   const addRoomWithAreaAllocation = useCallback((roomData, requestedPercentage = null) => {
@@ -646,7 +1221,7 @@ const KonvaFloorPlan = ({
 
     // Update percentages with rebalancing
     const updatedPercentages = { ...roomPercentages, [roomId]: newPercentage };
-    const rebalanced = rebalanceRoomPercentages(rooms, roomId);
+    const rebalanced = rebalanceRoomPercentages(rooms, roomId, updatedPercentages);
     rebalanced[roomId] = newPercentage;
     
     setRoomPercentages(rebalanced);
@@ -680,7 +1255,7 @@ const KonvaFloorPlan = ({
         height: newHeight
       });
     }
-  }, [rooms, roomPercentages, rebalanceRoomPercentages, getAreaFromPercentage, onRoomUpdate]);
+  }, [rooms, roomPercentages, totalFloorArea, onRoomUpdate]); // Remove function dependencies
 
   // Remove room and rebalance percentages
   const removeRoomAndRebalance = useCallback((roomId) => {
@@ -690,14 +1265,14 @@ const KonvaFloorPlan = ({
     
     // Rebalance remaining rooms to 100%
     if (Object.keys(updatedPercentages).length > 0) {
-      const rebalanced = rebalanceRoomPercentages(updatedRooms);
+      const rebalanced = rebalanceRoomPercentages(updatedRooms, null, newPercentages);
       setRoomPercentages(rebalanced);
     } else {
       setRoomPercentages({});
     }
     
     setRooms(updatedRooms);
-  }, [rooms, roomPercentages, rebalanceRoomPercentages]);
+  }, [rooms, roomPercentages]); // Remove function dependency
 
   // Initialize room percentages when rooms change
   useEffect(() => {
@@ -706,8 +1281,11 @@ const KonvaFloorPlan = ({
 
     rooms.forEach(room => {
       if (!newPercentages[room.id]) {
-        const roomArea = calculateRoomArea(room.width, room.height, room.scale || 1);
-        const percentage = calculateAreaPercentage(roomArea);
+        // Calculate area directly without callback dependency
+        const actualWidth = room.width / (room.scale || 1);
+        const actualHeight = room.height / (room.scale || 1);
+        const roomArea = actualWidth * actualHeight;
+        const percentage = (roomArea / totalFloorArea) * 100;
         newPercentages[room.id] = percentage;
         hasChanges = true;
       }
@@ -723,10 +1301,10 @@ const KonvaFloorPlan = ({
 
     if (hasChanges) {
       // Rebalance to ensure 100% total
-      const rebalanced = rebalanceRoomPercentages(rooms);
+      const rebalanced = rebalanceRoomPercentages(rooms, null, newPercentages);
       setRoomPercentages(rebalanced);
     }
-  }, [rooms, roomPercentages, calculateRoomArea, calculateAreaPercentage, rebalanceRoomPercentages]);
+  }, [rooms, totalFloorArea]); // Only depend on rooms and totalFloorArea
 
   // Calculate available percentage
   useEffect(() => {
@@ -780,7 +1358,10 @@ const KonvaFloorPlan = ({
     });
     
     setDoors(updatedDoors);
-  }, [selectedDoor, doors]);
+    saveToHistory(undefined, undefined, updatedDoors);
+    // Trigger update after state change
+    setTimeout(() => triggerFloorPlanUpdate(), 0);
+  }, [selectedDoor, doors, triggerFloorPlanUpdate]);
 
   // Customize selected wall
   const customizeWall = useCallback((property, value) => {
@@ -794,7 +1375,67 @@ const KonvaFloorPlan = ({
     });
     
     setWalls(updatedWalls);
-  }, [selectedWall, walls]);
+    saveToHistory(undefined, updatedWalls, undefined);
+    // Trigger update after state change
+    setTimeout(() => triggerFloorPlanUpdate(), 0);
+  }, [selectedWall, walls, triggerFloorPlanUpdate]);
+
+  // Customize selected room
+  const customizeRoom = useCallback((property, value) => {
+    if (!selectedRoom) return;
+    
+    const updatedRooms = rooms.map(room => {
+      if (room.id === selectedRoom) {
+        return { ...room, [property]: value };
+      }
+      return room;
+    });
+    
+    setRooms(updatedRooms);
+    saveToHistory(updatedRooms, undefined, undefined);
+    // Trigger update after state change
+    setTimeout(() => triggerFloorPlanUpdate(), 0);
+  }, [selectedRoom, rooms, triggerFloorPlanUpdate]);
+
+  // Handle door context menu (right-click)
+  const handleDoorContextMenu = useCallback((e, doorId) => {
+    e.evt.preventDefault();
+    if (!isEditable) return;
+    
+    // Select the door
+    setSelectedDoor(doorId);
+    setSelectedRoom(null);
+    setSelectedWall(null);
+    
+    // Show native context menu with delete option
+    const confirmed = window.confirm('Delete this door?');
+    if (confirmed) {
+      const updatedDoors = doors.filter(d => d.id !== doorId);
+      setDoors(updatedDoors);
+      setSelectedDoor(null);
+      setTimeout(() => triggerFloorPlanUpdate(), 0);
+    }
+  }, [isEditable, doors, triggerFloorPlanUpdate]);
+
+  // Handle wall context menu (right-click)
+  const handleWallContextMenu = useCallback((e, wallId) => {
+    e.evt.preventDefault();
+    if (!isEditable) return;
+    
+    // Select the wall
+    setSelectedWall(wallId);
+    setSelectedRoom(null);
+    setSelectedDoor(null);
+    
+    // Show native context menu with delete option
+    const confirmed = window.confirm('Delete this wall?');
+    if (confirmed) {
+      const updatedWalls = walls.filter(w => w.id !== wallId);
+      setWalls(updatedWalls);
+      setSelectedWall(null);
+      setTimeout(() => triggerFloorPlanUpdate(), 0);
+    }
+  }, [isEditable, walls, triggerFloorPlanUpdate]);
 
   // Handle mouse move for creation preview
   const handleStageMouseMove = useCallback((e) => {
@@ -878,10 +1519,191 @@ const KonvaFloorPlan = ({
         : w
     );
 
+    // Reset the dragged element's visual position
+    e.target.position({ x: 0, y: 0 });
+    
+    // Force a re-render
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.batchDraw();
+    }
+
     setWalls(updatedWalls);
-    setIsDragging(false);
-    setDragType(null);
-  }, [walls, width, height, isEditable]);
+    saveToHistory(undefined, updatedWalls, undefined);
+    
+    // Clear dragging state AFTER updating walls
+    setTimeout(() => {
+      setIsDragging(false);
+      setDragType(null);
+    }, 10);
+    
+    // Trigger update
+    setTimeout(() => triggerFloorPlanUpdate(), 20);
+  }, [walls, width, height, isEditable, triggerFloorPlanUpdate]);
+
+  // Handle wall endpoint drag
+  const handleWallEndpointDragStart = useCallback((e, wallId, endpoint) => {
+    if (!isEditable) return;
+    
+    e.cancelBubble = true;
+    
+    console.log('Wall endpoint drag start:', wallId, endpoint);
+    
+    // Set flags to prevent data reload
+    setIsDragging(true);
+    setIsInternalUpdate(true);
+    setDraggingWallEndpoint({ wallId, endpoint });
+    setSelectedWall(wallId);
+  }, [isEditable]);
+
+  // Helper function to find nearest point on any wall
+  const findNearestWallPoint = useCallback((x, y, excludeWallId) => {
+    let nearestPoint = null;
+    let minDistance = Infinity;
+    const snapThreshold = 30; // pixels - increased for better attachment
+
+    // Check all walls except the one being dragged
+    walls.forEach(wall => {
+      if (wall.id === excludeWallId) return;
+
+      const x1 = wall.points[0];
+      const y1 = wall.points[1];
+      const x2 = wall.points[2];
+      const y2 = wall.points[3];
+
+      // Calculate distance from point to line segment
+      const lineLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+      if (lineLength === 0) return;
+
+      const t = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / (lineLength ** 2)));
+      const projX = x1 + t * (x2 - x1);
+      const projY = y1 + t * (y2 - y1);
+
+      const distance = Math.sqrt((x - projX) ** 2 + (y - projY) ** 2);
+
+      if (distance < minDistance && distance < snapThreshold) {
+        minDistance = distance;
+        nearestPoint = { x: projX, y: projY, wallId: wall.id };
+      }
+
+      // Also check endpoints of other walls
+      const dist1 = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+      const dist2 = Math.sqrt((x - x2) ** 2 + (y - y2) ** 2);
+
+      if (dist1 < minDistance && dist1 < snapThreshold) {
+        minDistance = dist1;
+        nearestPoint = { x: x1, y: y1, wallId: wall.id };
+      }
+
+      if (dist2 < minDistance && dist2 < snapThreshold) {
+        minDistance = dist2;
+        nearestPoint = { x: x2, y: y2, wallId: wall.id };
+      }
+    });
+
+    return nearestPoint;
+  }, [walls]);
+
+  const handleWallEndpointDragMove = useCallback((e) => {
+    if (!isEditable || !draggingWallEndpoint) return;
+
+    const { wallId, endpoint } = draggingWallEndpoint;
+
+    // Get pointer position from stage ref
+    const stage = stageRef.current;
+    if (!stage) {
+      console.log('Stage ref not available');
+      return;
+    }
+    
+    const pointerPos = stage.getPointerPosition();
+    if (!pointerPos) {
+      console.log('Pointer position not available');
+      return;
+    }
+
+    let newX = pointerPos.x;
+    let newY = pointerPos.y;
+    let updatedWallsArray = null;
+
+    // Update wall state using functional setState to avoid stale closure
+    setWalls(prevWalls => {
+      const wall = prevWalls.find(w => w.id === wallId);
+      if (!wall) {
+        console.log('Wall not found:', wallId);
+        return prevWalls;
+      }
+
+      // Try to snap to nearest wall point
+      const snapPoint = findNearestWallPoint(newX, newY, wallId);
+      if (snapPoint) {
+        newX = snapPoint.x;
+        newY = snapPoint.y;
+        console.log('Snapping to wall:', snapPoint.wallId);
+      } else {
+        // If not snapping to wall, apply grid snap
+        newX = snapToGridCoordinate(newX);
+        newY = snapToGridCoordinate(newY);
+      }
+
+      const margin = 40;
+      // Constrain to stage bounds
+      const constrainedX = Math.max(margin, Math.min(width - margin, newX));
+      const constrainedY = Math.max(margin, Math.min(height - margin, newY));
+
+      let updatedPoints;
+      if (endpoint === 'start') {
+        updatedPoints = [constrainedX, constrainedY, wall.points[2], wall.points[3]];
+      } else {
+        updatedPoints = [wall.points[0], wall.points[1], constrainedX, constrainedY];
+      }
+
+      const newWalls = prevWalls.map(w => 
+        w.id === wallId ? { ...w, points: updatedPoints } : w
+      );
+      
+      // Capture updated walls for 3D update
+      updatedWallsArray = newWalls;
+      
+      return newWalls;
+    });
+    
+    // Throttle 3D updates to every 100ms during drag for real-time rendering
+    const now = Date.now();
+    if (now - lastUpdate3D.current > 100 && updatedWallsArray) {
+      lastUpdate3D.current = now;
+      // Pass the updated walls directly to avoid stale state
+      triggerFloorPlanUpdate(true, updatedWallsArray);
+    }
+  }, [width, height, isEditable, snapToGridCoordinate, draggingWallEndpoint, findNearestWallPoint, triggerFloorPlanUpdate]);
+
+  const handleWallEndpointDragEnd = useCallback(() => {
+    if (!draggingWallEndpoint) return;
+    
+    console.log('Wall endpoint drag ended');
+    
+    // Mark that user has modified walls
+    userModifiedWalls.current = true;
+    
+    setDraggingWallEndpoint(null);
+    saveToHistory();
+    
+    // Clear dragging flags
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 10);
+    
+    // Trigger floor plan update after drag completes
+    setTimeout(() => {
+      triggerFloorPlanUpdate(true); // Allow update during drag cleanup
+      // Clear internal update flag after update is sent AND parent has processed
+      setTimeout(() => {
+        setIsInternalUpdate(false);
+        // Allow reload after sufficient time for save to complete
+        setTimeout(() => userModifiedWalls.current = false, 2000);
+      }, 500);
+    }, 50);
+  }, [draggingWallEndpoint, triggerFloorPlanUpdate]);
 
   // Handle room resize (for corners)
   const handleResize = useCallback((roomId, newWidth, newHeight) => {
@@ -890,14 +1712,16 @@ const KonvaFloorPlan = ({
     const room = rooms.find(r => r.id === roomId);
     if (!room) return;
 
-    const constrainedWidth = Math.max(50, newWidth);
-    const constrainedHeight = Math.max(50, newHeight);
+    // Apply constraints with minimum size
+    const constrainedWidth = Math.max(50, Math.min(newWidth, width - room.x - 10));
+    const constrainedHeight = Math.max(50, Math.min(newHeight, height - room.y - 10));
 
     // Convert back to original coordinates for backend
-    const originalWidth = constrainedWidth / room.scale;
-    const originalHeight = constrainedHeight / room.scale;
-    const originalX = (room.x - 40) / room.scale; // margin = 40
-    const originalY = (room.y - 40) / room.scale;
+    const scale = room.scale || 1;
+    const originalWidth = constrainedWidth / scale;
+    const originalHeight = constrainedHeight / scale;
+    const originalX = (room.x - 40) / scale; // margin = 40
+    const originalY = (room.y - 40) / scale;
 
     const updatedRooms = rooms.map(r => 
       r.id === roomId 
@@ -908,12 +1732,19 @@ const KonvaFloorPlan = ({
             originalWidth,
             originalHeight,
             originalX,
-            originalY
+            originalY,
+            // Preserve other properties
+            fill: r.fill || '#bbdefb',
+            stroke: r.stroke || '#1976d2',
+            strokeWidth: r.strokeWidth || 2
           }
         : r
     );
 
     setRooms(updatedRooms);
+    
+    // Save to history for undo/redo
+    saveToHistory(updatedRooms, undefined, undefined);
 
     // Send update to parent component with original coordinates
     if (onRoomUpdate) {
@@ -924,7 +1755,7 @@ const KonvaFloorPlan = ({
         height: originalHeight
       });
     }
-  }, [rooms, isEditable, onRoomUpdate]);
+  }, [rooms, isEditable, onRoomUpdate, width, height, saveToHistory]);
 
   // Handle room selection
   const handleRoomClick = useCallback((e, roomId) => {
@@ -937,18 +1768,124 @@ const KonvaFloorPlan = ({
   // Handle door selection
   const handleDoorClick = useCallback((e, doorId) => {
     e.cancelBubble = true;
-    setSelectedDoor(selectedDoor === doorId ? null : doorId);
+    
+    if (!isEditable) return;
+    
+    // If door is already selected, show delete confirmation
+    if (selectedDoor === doorId) {
+      const confirmed = window.confirm('Delete this door?\n\nPress OK to delete or Cancel to keep it.');
+      if (confirmed) {
+        const updatedDoors = doors.filter(d => d.id !== doorId);
+        console.log('Deleting door:', doorId);
+        console.log('Doors before:', doors.length);
+        console.log('Doors after:', updatedDoors.length);
+        
+        // Update local state
+        setDoors(updatedDoors);
+        setSelectedDoor(null);
+        
+        // Immediately notify parent with updated data
+        if (onFloorPlanUpdate && floorPlanData) {
+          const plotWidth = 1000;
+          const plotHeight = 1000;
+          const margin = 40;
+          const scaleX = (width - margin * 2) / plotWidth;
+          const scaleY = (height - margin * 2) / plotHeight;
+          const scale = Math.min(scaleX, scaleY);
+          
+          const originalDoors = updatedDoors.map(door => ({
+            ...door,
+            points: [
+              (door.points[0] - margin) / scale,
+              (door.points[1] - margin) / scale,
+              (door.points[2] - margin) / scale,
+              (door.points[3] - margin) / scale
+            ],
+            x1: (door.points[0] - margin) / scale,
+            y1: (door.points[1] - margin) / scale,
+            x2: (door.points[2] - margin) / scale,
+            y2: (door.points[3] - margin) / scale
+          }));
+          
+          const updatedData = {
+            ...floorPlanData,
+            doors: originalDoors
+          };
+          
+          setIsInternalUpdate(true);
+          onFloorPlanUpdate(updatedData);
+          setTimeout(() => setIsInternalUpdate(false), 100);
+        }
+      }
+      return;
+    }
+    
+    // Otherwise, select the door
+    setSelectedDoor(doorId);
     setSelectedRoom(null);
     setSelectedWall(null);
-  }, [selectedDoor]);
+  }, [selectedDoor, isEditable, doors, triggerFloorPlanUpdate]);
 
   // Handle wall selection
   const handleWallClick = useCallback((e, wallId) => {
     e.cancelBubble = true;
-    setSelectedWall(selectedWall === wallId ? null : wallId);
+    
+    if (!isEditable) return;
+    
+    // If wall is already selected, show delete confirmation
+    if (selectedWall === wallId) {
+      const confirmed = window.confirm('Delete this wall?\n\nPress OK to delete or Cancel to keep it.');
+      if (confirmed) {
+        const updatedWalls = walls.filter(w => w.id !== wallId);
+        console.log('Deleting wall:', wallId);
+        console.log('Walls before:', walls.length);
+        console.log('Walls after:', updatedWalls.length);
+        
+        // Update local state
+        setWalls(updatedWalls);
+        setSelectedWall(null);
+        
+        // Immediately notify parent with updated data
+        if (onFloorPlanUpdate && floorPlanData) {
+          const plotWidth = 1000;
+          const plotHeight = 1000;
+          const margin = 40;
+          const scaleX = (width - margin * 2) / plotWidth;
+          const scaleY = (height - margin * 2) / plotHeight;
+          const scale = Math.min(scaleX, scaleY);
+          
+          const originalWalls = updatedWalls.map(wall => ({
+            ...wall,
+            points: [
+              (wall.points[0] - margin) / scale,
+              (wall.points[1] - margin) / scale,
+              (wall.points[2] - margin) / scale,
+              (wall.points[3] - margin) / scale
+            ],
+            x1: (wall.points[0] - margin) / scale,
+            y1: (wall.points[1] - margin) / scale,
+            x2: (wall.points[2] - margin) / scale,
+            y2: (wall.points[3] - margin) / scale
+          }));
+          
+          const updatedData = {
+            ...floorPlanData,
+            walls: originalWalls
+          };
+          
+          setIsInternalUpdate(true);
+          onFloorPlanUpdate(updatedData);
+          setTimeout(() => setIsInternalUpdate(false), 100);
+        }
+      }
+      return;
+    }
+    
+    // Otherwise, select the wall
+    setSelectedWall(wallId);
     setSelectedRoom(null);
     setSelectedDoor(null);
-  }, [selectedWall]);
+  }, [selectedWall, isEditable, walls, triggerFloorPlanUpdate]);
 
   // Handle stage click (deselect)
   const handleStageClick = useCallback((e) => {
@@ -978,27 +1915,41 @@ const KonvaFloorPlan = ({
             y: y,
             width: width,
             height: height,
-            fill: '#e3f2fd',
-            stroke: '#333',
+            fill: '#bbdefb',
+            stroke: '#1976d2',
             strokeWidth: 2,
             draggable: isEditable,
             type: 'Room',
             tag: 'room',
             name: 'New Room',
-            originalX: (x - 40) / 1, // Assuming scale 1 for new rooms
-            originalY: (y - 40) / 1,
-            originalWidth: width,
-            originalHeight: height,
-            scale: 1
+            source: 'local', // Mark as locally created
+            originalX: (x - margin) / scale, // Use proper scale factor
+            originalY: (y - margin) / scale,
+            originalWidth: width / scale,
+            originalHeight: height / scale,
+            scale: scale
           };
           
-          // Calculate percentage based on drawn area
-          const drawnArea = width * height;
-          const requestedPercentage = calculateAreaPercentage(drawnArea);
+          // Calculate percentage based on drawn area (use original coordinates)
+          const originalDrawnArea = (width / scale) * (height / scale);
+          const requestedPercentage = (originalDrawnArea / totalFloorArea) * 100;
           
           // Use area allocation system
           const roomWithArea = addRoomWithAreaAllocation(baseRoom, requestedPercentage);
-          setRooms(prev => [...prev, roomWithArea]);
+          setRooms(prev => {
+            const newRooms = [...prev, roomWithArea];
+            // Track room creation time and set internal update flag
+            setIsInternalUpdate(true);
+            setTimeout(() => setIsInternalUpdate(false), 2000); // Longer delay for room creation
+            
+            // Save to history after state update
+            setTimeout(() => saveToHistory(newRooms, undefined, undefined), 0);
+            // Trigger update using the proper update function
+            setTimeout(() => {
+              triggerFloorPlanUpdate(true); // Allow update even during potential drag state
+            }, 0);
+            return newRooms;
+          });
           setSelectedRoom(baseRoom.id);
           setIsCreating(false);
           setNewElementStart(null);
@@ -1018,29 +1969,16 @@ const KonvaFloorPlan = ({
             strokeWidth: 6,
             lineCap: 'round'
           };
-          setDoors(prev => [...prev, newDoor]);
+          setDoors(prev => {
+            const newDoors = [...prev, newDoor];
+            // Save to history after state update
+            setTimeout(() => saveToHistory(undefined, undefined, newDoors), 0);
+            return newDoors;
+          });
           setSelectedDoor(newDoor.id);
           setIsCreating(false);
-          setNewElementStart(null);
-          setCreationMode(null);
-        }
-      } else if (creationMode === 'wall') {
-        if (!isCreating) {
-          // Start creating wall
-          setNewElementStart({ x: snappedX, y: snappedY });
-          setIsCreating(true);
-        } else {
-          // Complete wall creation
-          const newWall = {
-            id: `created-wall-${Date.now()}`,
-            points: [newElementStart.x, newElementStart.y, snappedX, snappedY],
-            stroke: '#000',
-            strokeWidth: 4,
-            lineCap: 'round'
-          };
-          setWalls(prev => [...prev, newWall]);
-          setSelectedWall(newWall.id);
-          setIsCreating(false);
+          // Trigger update after state change
+          setTimeout(() => triggerFloorPlanUpdate(), 0);
           setNewElementStart(null);
           setCreationMode(null);
         }
@@ -1076,7 +2014,7 @@ const KonvaFloorPlan = ({
         <div className="w-64 bg-white border-r border-gray-300 p-4 space-y-4 overflow-y-auto">
           {/* Creation Tools Section */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="text-sm font-medium text-gray-900 mb-3">
+            <div className="text-sm font-medium text-black mb-3">
               🔨 Creation Tools
             </div>
             
@@ -1097,7 +2035,7 @@ const KonvaFloorPlan = ({
                 className={`w-full px-3 py-2 text-xs rounded-lg border transition-colors ${
                   creationMode === 'door'
                     ? 'bg-green-100 border-green-300 text-green-800'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'bg-white border-gray-300 text-black hover:bg-gray-50'
                 }`}
               >
                 {creationMode === 'door' ? '✓ Click to Place Door' : '🚪 Add Door'}
@@ -1105,24 +2043,10 @@ const KonvaFloorPlan = ({
               
               {/* Add Wall Button */}
               <button
-                onClick={() => {
-                  if (creationMode === 'wall') {
-                    setCreationMode(null);
-                    setIsCreating(false);
-                    setNewElementStart(null);
-                  } else {
-                    setCreationMode('wall');
-                    setIsCreating(false);
-                    setNewElementStart(null);
-                  }
-                }}
-                className={`w-full px-3 py-2 text-xs rounded-lg border transition-colors ${
-                  creationMode === 'wall'
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                }`}
+                onClick={addNewWall}
+                className="w-full px-3 py-2 text-xs rounded-lg border transition-colors bg-white border-gray-300 text-black hover:bg-gray-50"
               >
-                {creationMode === 'wall' ? '✓ Click to Place Wall' : '🧱 Add Wall'}
+                🧱 Add Wall
               </button>
               
               {/* Add Room Button */}
@@ -1141,7 +2065,7 @@ const KonvaFloorPlan = ({
                 className={`w-full px-3 py-2 text-xs rounded-lg border transition-colors ${
                   creationMode === 'room'
                     ? 'bg-purple-100 border-purple-300 text-purple-800'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'bg-white border-gray-300 text-black hover:bg-gray-50'
                 }`}
               >
                 {creationMode === 'room' ? '✓ Click to Place Room' : '🏠 Add Room'}
@@ -1149,33 +2073,55 @@ const KonvaFloorPlan = ({
 
               {/* Quick Add Buttons */}
               <div className="border-t pt-2 mt-2">
-                <div className="text-xs text-gray-600 mb-2">Quick Add:</div>
+                <div className="text-xs text-black mb-2">Quick Add:</div>
                 <div className="grid grid-cols-3 gap-1">
                   <button
                     onClick={() => {
+                      // Calculate proper scaling for quick add
+                      const plotWidth = 1000;
+                      const plotHeight = 1000;
+                      const margin = 40;
+                      const scaleX = (width - margin * 2) / plotWidth;
+                      const scaleY = (height - margin * 2) / plotHeight;
+                      const scale = Math.min(scaleX, scaleY);
+                      
                       const baseRoom = {
                         id: `new-room-${Date.now()}`,
                         x: 200,
                         y: 200,
                         width: 150,
                         height: 100,
-                        fill: '#e3f2fd',
-                        stroke: '#333',
+                        fill: '#bbdefb',
+                        stroke: '#1976d2',
                         strokeWidth: 2,
                         draggable: isEditable,
                         type: 'Room',
                         tag: 'room',
                         name: 'New Room',
-                        originalX: 200,
-                        originalY: 200,
-                        originalWidth: 150,
-                        originalHeight: 100,
-                        scale: 1
+                        source: 'local', // Mark as locally created
+                        originalX: (200 - margin) / scale,
+                        originalY: (200 - margin) / scale,
+                        originalWidth: 150 / scale,
+                        originalHeight: 100 / scale,
+                        scale: scale
                       };
                       
                       // Use area allocation system
                       const roomWithArea = addRoomWithAreaAllocation(baseRoom, 20); // Request 20% default
-                      setRooms(prev => [...prev, roomWithArea]);
+                      setRooms(prev => {
+                        const newRooms = [...prev, roomWithArea];
+                        // Set internal update flag to prevent backend override
+                        setIsInternalUpdate(true);
+                        setTimeout(() => setIsInternalUpdate(false), 2000);
+                        
+                        // Save to history after room creation
+                        setTimeout(() => saveToHistory(newRooms, undefined, undefined), 0);
+                        // Trigger proper floor plan update
+                        setTimeout(() => {
+                          triggerFloorPlanUpdate(true);
+                        }, 0);
+                        return newRooms;
+                      });
                       setSelectedRoom(baseRoom.id);
                       setSelectedDoor(null);
                       setSelectedWall(null);
@@ -1231,14 +2177,14 @@ const KonvaFloorPlan = ({
           {/* Room Customization Panel */}
           {selectedRoom && (
             <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <div className="text-sm font-medium text-gray-900 mb-3">
+              <div className="text-sm font-medium text-black mb-3">
                 🏠 Customize Room
               </div>
               
               <div className="space-y-3">
                 {/* Room Type */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-black mb-1">
                     Room Type
                   </label>
                   <select
@@ -1255,8 +2201,9 @@ const KonvaFloorPlan = ({
                           : room
                       );
                       setRooms(updatedRooms);
+                      saveToHistory(updatedRooms, undefined, undefined);
                     }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                    className="w-full px-2 py-1 text-xs border border-blue-300 rounded bg-blue-50 text-blue-900 focus:border-blue-500 focus:bg-white"
                   >
                     <option value="livingroom">Living Room</option>
                     <option value="bedroom">Bedroom</option>
@@ -1271,7 +2218,7 @@ const KonvaFloorPlan = ({
 
                 {/* Room Name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-black mb-1">
                     Room Name
                   </label>
                   <input
@@ -1285,169 +2232,81 @@ const KonvaFloorPlan = ({
                       );
                       setRooms(updatedRooms);
                     }}
+                    onBlur={() => saveToHistory()}
                     className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
                     placeholder="Enter room name"
                   />
                 </div>
-
-                {/* Room Area Percentage */}
-                <div className="bg-blue-50 p-3 rounded border">
-                  <label className="block text-xs font-medium text-blue-800 mb-2">
-                    📊 Area Allocation: {(roomPercentages[selectedRoom] || 0).toFixed(1)}%
-                  </label>
-                  <input
-                    type="range"
-                    min="5"
-                    max="80"
-                    step="0.5"
-                    value={roomPercentages[selectedRoom] || 0}
-                    onChange={(e) => updateRoomPercentage(selectedRoom, parseFloat(e.target.value))}
-                    className="w-full mb-2"
-                  />
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      min="5"
-                      max="80"
-                      step="0.5"
-                      value={(roomPercentages[selectedRoom] || 0).toFixed(1)}
-                      onChange={(e) => updateRoomPercentage(selectedRoom, parseFloat(e.target.value))}
-                      className="flex-1 px-2 py-1 text-xs border border-blue-300 rounded"
-                    />
-                    <span className="text-xs text-blue-600">% of total</span>
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    Area: {((roomPercentages[selectedRoom] || 0) * totalFloorArea / 100).toFixed(0)} sq units
-                  </div>
-                </div>
-
-                {/* Room Dimensions (Auto-calculated) */}
+                
+                {/* Room Fill Color */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Width: {Math.round((rooms.find(r => r.id === selectedRoom)?.width || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))} units
-                  </label>
-                  <input
-                    type="number"
-                    min="50"
-                    max="500"
-                    value={Math.round((rooms.find(r => r.id === selectedRoom)?.width || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))}
-                    onChange={(e) => {
-                      const room = rooms.find(r => r.id === selectedRoom);
-                      if (room) {
-                        const newWidth = parseInt(e.target.value) * room.scale;
-                        const newArea = (newWidth / room.scale) * (room.height / room.scale);
-                        const newPercentage = calculateAreaPercentage(newArea);
-                        
-                        // Update dimensions
-                        const updatedRooms = rooms.map(r => 
-                          r.id === selectedRoom 
-                            ? { ...r, width: newWidth, originalWidth: parseInt(e.target.value) }
-                            : r
-                        );
-                        setRooms(updatedRooms);
-                        
-                        // Update percentage and rebalance
-                        updateRoomPercentage(selectedRoom, newPercentage);
-                        
-                        if (onRoomUpdate) {
-                          onRoomUpdate(selectedRoom, {
-                            x: room.originalX,
-                            y: room.originalY,
-                            width: parseInt(e.target.value),
-                            height: room.originalHeight
-                          });
-                        }
-                      }
-                    }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Height: {Math.round((rooms.find(r => r.id === selectedRoom)?.height || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))} units
-                  </label>
-                  <input
-                    type="number"
-                    min="50"
-                    max="500"
-                    value={Math.round((rooms.find(r => r.id === selectedRoom)?.height || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))}
-                    onChange={(e) => {
-                      const room = rooms.find(r => r.id === selectedRoom);
-                      if (room) {
-                        const newHeight = parseInt(e.target.value) * room.scale;
-                        const newArea = (room.width / room.scale) * (newHeight / room.scale);
-                        const newPercentage = calculateAreaPercentage(newArea);
-                        
-                        // Update dimensions
-                        const updatedRooms = rooms.map(r => 
-                          r.id === selectedRoom 
-                            ? { ...r, height: newHeight, originalHeight: parseInt(e.target.value) }
-                            : r
-                        );
-                        setRooms(updatedRooms);
-                        
-                        // Update percentage and rebalance
-                        updateRoomPercentage(selectedRoom, newPercentage);
-                        
-                        if (onRoomUpdate) {
-                          onRoomUpdate(selectedRoom, {
-                            x: room.originalX,
-                            y: room.originalY,
-                            width: room.originalWidth,
-                            height: parseInt(e.target.value)
-                          });
-                        }
-                      }
-                    }}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                  />
-                </div>
-
-                {/* Room Color */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Room Color
+                  <label className="block text-xs font-medium text-black mb-1">
+                    Room Fill Color
                   </label>
                   <div className="flex items-center space-x-2">
                     <input
                       type="color"
-                      value={rooms.find(r => r.id === selectedRoom)?.fill || '#f5f5f5'}
-                      onChange={(e) => {
-                        const updatedRooms = rooms.map(room => 
-                          room.id === selectedRoom 
-                            ? { ...room, fill: e.target.value }
-                            : room
-                        );
-                        setRooms(updatedRooms);
-                      }}
+                      value={rooms.find(r => r.id === selectedRoom)?.fill || '#bbdefb'}
+                      onChange={(e) => customizeRoom('fill', e.target.value)}
                       className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
                     />
                     <input
                       type="text"
-                      value={rooms.find(r => r.id === selectedRoom)?.fill || '#f5f5f5'}
-                      onChange={(e) => {
-                        const updatedRooms = rooms.map(room => 
-                          room.id === selectedRoom 
-                            ? { ...room, fill: e.target.value }
-                            : room
-                        );
-                        setRooms(updatedRooms);
-                      }}
+                      value={rooms.find(r => r.id === selectedRoom)?.fill || '#bbdefb'}
+                      onChange={(e) => customizeRoom('fill', e.target.value)}
                       className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                      placeholder="#f5f5f5"
+                      placeholder="#bbdefb"
                     />
                   </div>
                 </div>
-
-                {/* Position Info */}
-                <div className="border-t pt-2">
-                  <div className="text-xs text-gray-600">
-                    Position: ({Math.round((rooms.find(r => r.id === selectedRoom)?.x || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))}, {Math.round((rooms.find(r => r.id === selectedRoom)?.y || 0) / (rooms.find(r => r.id === selectedRoom)?.scale || 1))})
+                
+                {/* Room Border Color */}
+                <div>
+                  <label className="block text-xs font-medium text-black mb-1">
+                    Room Border Color
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={rooms.find(r => r.id === selectedRoom)?.stroke || '#1976d2'}
+                      onChange={(e) => customizeRoom('stroke', e.target.value)}
+                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={rooms.find(r => r.id === selectedRoom)?.stroke || '#1976d2'}
+                      onChange={(e) => customizeRoom('stroke', e.target.value)}
+                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                      placeholder="#1976d2"
+                    />
                   </div>
-                  <div className="text-xs text-green-600 mt-1">
-                    ✓ Free movement enabled - rooms can overlap
-                  </div>
+                </div>
+                
+                {/* Room Border Width */}
+                <div>
+                  <label className="block text-xs font-medium text-black mb-1">
+                    Border Width: {rooms.find(r => r.id === selectedRoom)?.strokeWidth || 2}px
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={rooms.find(r => r.id === selectedRoom)?.strokeWidth || 2}
+                    onChange={(e) => customizeRoom('strokeWidth', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                
+                {/* Room Instructions */}
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs">
+                  <div className="font-medium text-blue-900 mb-2">💡 How to customize:</div>
+                  <ul className="space-y-1 text-blue-800">
+                    <li>• Drag room to move position</li>
+                    <li>• Use blue handles to resize</li>
+                    <li>• Adjust colors and border width above</li>
+                    <li>• Use Ctrl+Z/Ctrl+Y to undo/redo</li>
+                    <li>• Press Delete key to remove room</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -1456,7 +2315,7 @@ const KonvaFloorPlan = ({
           {/* Door/Wall Customization Panel */}
           {(selectedDoor || selectedWall) && !selectedRoom && (
             <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <div className="text-sm font-medium text-gray-900 mb-3">
+              <div className="text-sm font-medium text-black mb-3">
                 🎨 Customize {selectedDoor ? 'Door' : 'Wall'}
               </div>
               
@@ -1464,7 +2323,7 @@ const KonvaFloorPlan = ({
                 <div className="space-y-3">
                   {/* Door Color */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-black mb-1">
                       Door Color
                     </label>
                     <div className="flex items-center space-x-2">
@@ -1486,7 +2345,7 @@ const KonvaFloorPlan = ({
                   
                   {/* Door Width */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-black mb-1">
                       Door Width: {doors.find(d => d.id === selectedDoor)?.strokeWidth || doorWidth}px
                     </label>
                     <input
@@ -1505,7 +2364,7 @@ const KonvaFloorPlan = ({
                 <div className="space-y-3">
                   {/* Wall Color */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-black mb-1">
                       Wall Color
                     </label>
                     <div className="flex items-center space-x-2">
@@ -1527,7 +2386,7 @@ const KonvaFloorPlan = ({
                   
                   {/* Wall Width */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-black mb-1">
                       Wall Width: {walls.find(w => w.id === selectedWall)?.strokeWidth || wallWidth}px
                     </label>
                     <input
@@ -1539,86 +2398,28 @@ const KonvaFloorPlan = ({
                       className="w-full"
                     />
                   </div>
+                  
+                  {/* Wall Instructions */}
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs">
+                    <div className="font-medium text-blue-900 mb-2">💡 How to customize:</div>
+                    <ul className="space-y-1 text-blue-800">
+                      <li>• Drag the endpoint circles to move/resize</li>
+                      <li>• Drag either end to adjust position & length</li>
+                      <li>• Click twice to delete</li>
+                      <li>• Use Ctrl+Z/Ctrl+Y to undo/redo</li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Room Type Distribution Panel */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="text-sm font-medium text-gray-900 mb-2">
-              🏠 Room Types
-            </div>
-            <div className="space-y-2">
-              {Object.entries(roomTypeDistribution).map(([roomType, percentage]) => (
-                <div key={roomType} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-700 font-medium">{roomType}:</span>
-                    <span className="text-gray-900">{percentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {getRoomsOfType(roomType).length} room{getRoomsOfType(roomType).length !== 1 ? 's' : ''}
-                    {getRoomsOfType(roomType).length > 1 && 
-                      ` (${(percentage / getRoomsOfType(roomType).length).toFixed(1)}% each)`
-                    }
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Individual Room Distribution Panel */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="text-sm font-medium text-gray-900 mb-2">
-              📊 Individual Rooms
-            </div>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {/* Total Floor Area */}
-              <div className="text-xs text-gray-600 mb-2 border-b pb-1">
-                Total: {totalFloorArea.toLocaleString()} sq units
-              </div>
-              
-              {/* Individual Room Percentages */}
-              {rooms.map(room => (
-                <div key={room.id} className="flex items-center justify-between text-xs">
-                  <span className={`truncate flex-1 ${selectedRoom === room.id ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
-                    {room.name || room.tag}:
-                  </span>
-                  <span className={`ml-2 ${selectedRoom === room.id ? 'text-blue-600 font-medium' : 'text-gray-900'}`}>
-                    {(roomPercentages[room.id] || 0).toFixed(1)}%
-                  </span>
-                </div>
-              ))}
-              
-              {/* Available Percentage */}
-              {availablePercentage > 0 && (
-                <div className="flex justify-between text-xs text-green-600 border-t pt-2">
-                  <span>Available:</span>
-                  <span>{availablePercentage.toFixed(1)}%</span>
-                </div>
-              )}
-              
-              {/* Progress Bar */}
-              <div className="mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Object.values(roomPercentages).reduce((sum, p) => sum + p, 0))}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-center text-gray-500 mt-1">
-                  {Object.values(roomPercentages).reduce((sum, p) => sum + p, 0).toFixed(1)}% allocated
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Element Count Panel */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="text-sm font-medium text-gray-900 mb-2">
+            <div className="text-sm font-medium text-black mb-2">
               🏗️ Elements
             </div>
-            <div className="space-y-1 text-xs text-gray-600">
+            <div className="space-y-1 text-xs text-black">
               <div className="flex justify-between">
                 <span>Rooms:</span>
                 <span>{rooms.length}</span>
@@ -1636,7 +2437,7 @@ const KonvaFloorPlan = ({
 
           {/* Settings Panel */}
           <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="text-sm font-medium text-gray-900 mb-2">
+            <div className="text-sm font-medium text-black mb-2">
               ⚙️ Settings
             </div>
             <div className="space-y-2">
@@ -1648,7 +2449,7 @@ const KonvaFloorPlan = ({
                   onChange={(e) => setSnapToGrid(e.target.checked)}
                   className="w-3 h-3"
                 />
-                <label htmlFor="snapToGrid" className="text-xs text-gray-600">
+                <label htmlFor="snapToGrid" className="text-xs text-black">
                   Snap to Grid ({gridSize}px)
                 </label>
               </div>
@@ -1665,10 +2466,34 @@ const KonvaFloorPlan = ({
           height={height}
           ref={stageRef}
           onClick={handleStageClick}
-          onMouseMove={handleStageMouseMove}
+          onMouseMove={(e) => {
+            handleStageMouseMove(e);
+            if (draggingWallEndpoint) {
+              handleWallEndpointDragMove(e);
+            }
+          }}
+          onMouseUp={(e) => {
+            if (draggingWallEndpoint) {
+              handleWallEndpointDragEnd();
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (draggingWallEndpoint) {
+              handleWallEndpointDragEnd();
+            }
+          }}
           className={`cursor-${creationMode ? 'crosshair' : 'default'}`}
         >
         <Layer>
+          {/* White background */}
+          <Rect
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            fill="#FFFFFF"
+          />
+          
           {/* Grid background */}
           {isEditable && (
             <>
@@ -1677,9 +2502,9 @@ const KonvaFloorPlan = ({
                 <Line
                   key={`v-grid-${i}`}
                   points={[i * 25, 0, i * 25, height]}
-                  stroke="#e0e0e0"
+                  stroke="#E8E8E8"
                   strokeWidth={0.5}
-                  opacity={0.5}
+                  opacity={0.6}
                 />
               ))}
               {/* Horizontal grid lines */}
@@ -1687,68 +2512,37 @@ const KonvaFloorPlan = ({
                 <Line
                   key={`h-grid-${i}`}
                   points={[0, i * 25, width, i * 25]}
-                  stroke="#e0e0e0"
+                  stroke="#E8E8E8"
                   strokeWidth={0.5}
-                  opacity={0.5}
+                  opacity={0.6}
                 />
               ))}
             </>
           )}
 
-          {/* Plot boundary */}
+          {/* Outer boundary - professional border */}
           <Rect
-            x={2}
-            y={2}
-            width={width - 4}
-            height={height - 4}
+            x={0}
+            y={0}
+            width={width}
+            height={height}
             fill="transparent"
-            stroke="#000"
-            strokeWidth={3}
+            stroke="#1e2a3a"
+            strokeWidth={4}
           />
-
-          {/* Walls */}
-          {walls.map(wall => (
-            <Group key={wall.id}>
-              <Line
-                points={wall.points}
-                stroke={selectedWall === wall.id ? '#2196F3' : wall.stroke}
-                strokeWidth={selectedWall === wall.id ? wall.strokeWidth + 2 : wall.strokeWidth}
-                lineCap={wall.lineCap}
-                draggable={isEditable}
-                onDragStart={(e) => handleWallDragStart(e, wall.id)}
-                onDragEnd={(e) => handleWallDragEnd(e, wall.id)}
-                onClick={(e) => handleWallClick(e, wall.id)}
-                style={{ cursor: isEditable ? 'move' : 'default' }}
-              />
-              {/* Wall selection indicator */}
-              {selectedWall === wall.id && isEditable && (
-                <>
-                  {/* Start point handle */}
-                  <Circle
-                    x={wall.points[0]}
-                    y={wall.points[1]}
-                    radius={6}
-                    fill="#2196F3"
-                    stroke="#1976D2"
-                    strokeWidth={2}
-                    draggable={true}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  {/* End point handle */}
-                  <Circle
-                    x={wall.points[2]}
-                    y={wall.points[3]}
-                    radius={6}
-                    fill="#2196F3"
-                    stroke="#1976D2"
-                    strokeWidth={2}
-                    draggable={true}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </>
-              )}
-            </Group>
-          ))}
+          
+          {/* Inner plot boundary */}
+          <Rect
+            x={4}
+            y={4}
+            width={width - 8}
+            height={height - 8}
+            fill="transparent"
+            stroke="#ED7600"
+            strokeWidth={2}
+            dash={[8, 4]}
+            opacity={0.7}
+          />
 
           {/* Rooms */}
           {rooms.map(room => (
@@ -1759,9 +2553,10 @@ const KonvaFloorPlan = ({
                 y={room.y}
                 width={room.width}
                 height={room.height}
-                fill={room.fill}
-                stroke={selectedRoom === room.id ? '#2196F3' : room.stroke}
-                strokeWidth={selectedRoom === room.id ? 3 : room.strokeWidth}
+                fill={room.fill || '#bbdefb'}
+                opacity={0.8}
+                stroke={selectedRoom === room.id ? '#2196F3' : (room.stroke || '#1976d2')}
+                strokeWidth={selectedRoom === room.id ? 3 : (room.strokeWidth || 2)}
                 draggable={room.draggable}
                 onDragStart={(e) => handleRoomDragStart(e, room.id)}
                 onDragMove={(e) => handleRoomDragMove(e, room.id)}
@@ -1814,12 +2609,20 @@ const KonvaFloorPlan = ({
                     stroke="#1976D2"
                     strokeWidth={1}
                     draggable={true}
+                    onDragStart={() => {
+                      setIsDragging(true);
+                      setDragType('resize');
+                    }}
                     onDragMove={(e) => {
                       const newWidth = e.target.x() - room.x + 4;
                       const newHeight = e.target.y() - room.y + 4;
                       handleResize(room.id, newWidth, newHeight);
                     }}
-                    style={{ cursor: 'nw-resize' }}
+                    onDragEnd={() => {
+                      setIsDragging(false);
+                      setDragType(null);
+                    }}
+                    style={{ cursor: 'se-resize' }}
                   />
                   
                   {/* Right edge handle */}
@@ -1832,9 +2635,21 @@ const KonvaFloorPlan = ({
                     stroke="#1976D2"
                     strokeWidth={1}
                     draggable={true}
+                    dragBoundFunc={(pos) => ({
+                      x: Math.max(room.x + 50, Math.min(pos.x, width - 10)),
+                      y: room.y + room.height / 2 - 4
+                    })}
+                    onDragStart={() => {
+                      setIsDragging(true);
+                      setDragType('resize');
+                    }}
                     onDragMove={(e) => {
                       const newWidth = e.target.x() - room.x + 4;
                       handleResize(room.id, newWidth, room.height);
+                    }}
+                    onDragEnd={() => {
+                      setIsDragging(false);
+                      setDragType(null);
                     }}
                     style={{ cursor: 'ew-resize' }}
                   />
@@ -1849,12 +2664,103 @@ const KonvaFloorPlan = ({
                     stroke="#1976D2"
                     strokeWidth={1}
                     draggable={true}
+                    dragBoundFunc={(pos) => ({
+                      x: room.x + room.width / 2 - 4,
+                      y: Math.max(room.y + 50, Math.min(pos.y, height - 10))
+                    })}
+                    onDragStart={() => {
+                      setIsDragging(true);
+                      setDragType('resize');
+                    }}
                     onDragMove={(e) => {
                       const newHeight = e.target.y() - room.y + 4;
                       handleResize(room.id, room.width, newHeight);
                     }}
+                    onDragEnd={() => {
+                      setIsDragging(false);
+                      setDragType(null);
+                    }}
                     style={{ cursor: 'ns-resize' }}
                   />
+                </>
+              )}
+            </Group>
+          ))}
+
+          {/* Walls - render on top of rooms */}
+          {walls.map(wall => (
+            <Group key={wall.id} draggable={false}>
+              <Line
+                points={wall.points}
+                stroke={selectedWall === wall.id ? '#2196F3' : wall.stroke}
+                strokeWidth={selectedWall === wall.id ? wall.strokeWidth + 2 : wall.strokeWidth}
+                lineCap={wall.lineCap}
+                draggable={false}
+                onClick={(e) => {
+                  e.cancelBubble = true;
+                  handleWallClick(e, wall.id);
+                }}
+                style={{ cursor: isEditable ? 'pointer' : 'default' }}
+              />
+              {/* Wall endpoint handles - always visible for easy adjustment */}
+              {isEditable && (
+                <>
+                  {/* Start point handle */}
+                  <Circle
+                    x={wall.points[0]}
+                    y={wall.points[1]}
+                    radius={selectedWall === wall.id ? 8 : 5}
+                    fill={selectedWall === wall.id ? "#2196F3" : "#757575"}
+                    stroke={selectedWall === wall.id ? "#1976D2" : "#424242"}
+                    strokeWidth={2}
+                    onMouseDown={(e) => {
+                      e.cancelBubble = true;
+                      handleWallEndpointDragStart(e, wall.id, 'start');
+                    }}
+                    listening={true}
+                    style={{ cursor: 'grab' }}
+                    opacity={selectedWall === wall.id ? 1 : 0.7}
+                  />
+                  {/* Visual snap indicator for start point */}
+                  {draggingWallEndpoint?.wallId === wall.id && draggingWallEndpoint?.endpoint === 'start' && (
+                    <Circle
+                      x={wall.points[0]}
+                      y={wall.points[1]}
+                      radius={30}
+                      stroke="#4CAF50"
+                      strokeWidth={2}
+                      dash={[5, 5]}
+                      opacity={0.5}
+                    />
+                  )}
+                  {/* End point handle */}
+                  <Circle
+                    x={wall.points[2]}
+                    y={wall.points[3]}
+                    radius={selectedWall === wall.id ? 8 : 5}
+                    fill={selectedWall === wall.id ? "#2196F3" : "#757575"}
+                    stroke={selectedWall === wall.id ? "#1976D2" : "#424242"}
+                    strokeWidth={2}
+                    onMouseDown={(e) => {
+                      e.cancelBubble = true;
+                      handleWallEndpointDragStart(e, wall.id, 'end');
+                    }}
+                    listening={true}
+                    style={{ cursor: 'grab' }}
+                    opacity={selectedWall === wall.id ? 1 : 0.7}
+                  />
+                  {/* Visual snap indicator for end point */}
+                  {draggingWallEndpoint?.wallId === wall.id && draggingWallEndpoint?.endpoint === 'end' && (
+                    <Circle
+                      x={wall.points[2]}
+                      y={wall.points[3]}
+                      radius={30}
+                      stroke="#4CAF50"
+                      strokeWidth={2}
+                      dash={[5, 5]}
+                      opacity={0.5}
+                    />
+                  )}
                 </>
               )}
             </Group>
@@ -1955,14 +2861,14 @@ const KonvaFloorPlan = ({
         <div className="absolute bottom-4 right-4 bg-white border border-gray-300 rounded-lg p-3 shadow-lg max-w-xs">
           {selectedRoom && (
             <>
-              <div className="text-sm font-medium text-gray-900 flex items-center">
+              <div className="text-sm font-medium text-black flex items-center">
                 <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded mr-2"></div>
                 Room: {rooms.find(r => r.id === selectedRoom)?.name || selectedRoom}
               </div>
-              <div className="text-xs text-gray-600 mt-1">
+              <div className="text-xs text-black mt-1">
                 Position: ({Math.round(rooms.find(r => r.id === selectedRoom)?.x || 0)}, {Math.round(rooms.find(r => r.id === selectedRoom)?.y || 0)})
               </div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-black">
                 Size: {Math.round(rooms.find(r => r.id === selectedRoom)?.width || 0)}×{Math.round(rooms.find(r => r.id === selectedRoom)?.height || 0)}
               </div>
             </>
@@ -1970,16 +2876,16 @@ const KonvaFloorPlan = ({
           
           {selectedDoor && (
             <>
-              <div className="text-sm font-medium text-gray-900 flex items-center">
+              <div className="text-sm font-medium text-black flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3" />
                 </svg>
                 Door: {selectedDoor}
               </div>
-              <div className="text-xs text-gray-600 mt-1">
+              <div className="text-xs text-black mt-1">
                 Start: ({Math.round(doors.find(d => d.id === selectedDoor)?.points[0] || 0)}, {Math.round(doors.find(d => d.id === selectedDoor)?.points[1] || 0)})
               </div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-black">
                 End: ({Math.round(doors.find(d => d.id === selectedDoor)?.points[2] || 0)}, {Math.round(doors.find(d => d.id === selectedDoor)?.points[3] || 0)})
               </div>
             </>
@@ -1987,14 +2893,14 @@ const KonvaFloorPlan = ({
           
           {selectedWall && (
             <>
-              <div className="text-sm font-medium text-gray-900 flex items-center">
+              <div className="text-sm font-medium text-black flex items-center">
                 <div className="w-4 h-1 bg-gray-600 mr-2"></div>
                 Wall: {selectedWall}
               </div>
-              <div className="text-xs text-gray-600 mt-1">
+              <div className="text-xs text-black mt-1">
                 Start: ({Math.round(walls.find(w => w.id === selectedWall)?.points[0] || 0)}, {Math.round(walls.find(w => w.id === selectedWall)?.points[1] || 0)})
               </div>
-              <div className="text-xs text-gray-600">
+              <div className="text-xs text-black">
                 End: ({Math.round(walls.find(w => w.id === selectedWall)?.points[2] || 0)}, {Math.round(walls.find(w => w.id === selectedWall)?.points[3] || 0)})
               </div>
             </>

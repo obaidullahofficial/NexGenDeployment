@@ -88,20 +88,11 @@ def generate_floorplan():
             result = genai_generate_floorplans(inputG, n=num_plans)
             
             if 'error' in result:
-                error_message = result['error']
-                # Check if it's a quota error
-                if 'quota' in error_message.lower() or 'resource_exhausted' in error_message.lower():
-                    return jsonify({
-                        'success': False,
-                        'error': 'Gemini API quota limit exceeded. Please try again later or upgrade your API quota.',
-                        'error_type': 'quota_exceeded'
-                    }), 429  # Too Many Requests
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': error_message,
-                        'raw_response': result.get('raw', None)
-                    }), 500
+                return jsonify({
+                    'success': False,
+                    'error': result['error'],
+                    'raw_response': result.get('raw', None)
+                }), 500
             
             return jsonify({
                 'success': True,
@@ -222,21 +213,28 @@ def get_user_floorplans():
                 'error': 'User ID is required'
             }), 400
         
-        # Query database
+        # Query database - include all fields for proper display
         db = get_db()
         collection = floorplan_collection(db)
         floorplans = list(collection.find(
-            {'user_id': user_id},
-            {'_id': 1, 'project_name': 1, 'created_at': 1, 'dimensions': 1, 'is_favorite': 1, 'tags': 1}
+            {'user_id': user_id}
         ).sort('created_at', -1))
         
-        # Convert ObjectId to string
+        # Convert ObjectId to string and format data
         for plan in floorplans:
             plan['_id'] = str(plan['_id'])
+            # Ensure all required fields exist with defaults
+            if 'is_favorite' not in plan:
+                plan['is_favorite'] = False
+            if 'tags' not in plan:
+                plan['tags'] = []
+            if 'room_data' not in plan and 'floor_plan_data' in plan:
+                plan['room_data'] = plan['floor_plan_data'].get('rooms', [])
         
         return jsonify({
             'success': True,
-            'floor_plans': floorplans
+            'floor_plans': floorplans,
+            'count': len(floorplans)
         })
         
     except Exception as e:

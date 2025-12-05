@@ -10,6 +10,10 @@ class AdvertisementController:
     def create_advertisement(ad_data, user_email):
         """Create a new advertisement request"""
         try:
+            print(f"[DEBUG] Received ad_data: {ad_data}")
+            print(f"[DEBUG] Society ID in ad_data: {ad_data.get('society_id')}")
+            print(f"[DEBUG] User email: {user_email}")
+            
             # Validate required fields
             if 'title' not in ad_data or not ad_data['title']:
                 return {"success": False, "error": "Title is required"}
@@ -17,6 +21,36 @@ class AdvertisementController:
                 return {"success": False, "error": "Featured image is required"}
             if 'plan_id' not in ad_data or not ad_data['plan_id']:
                 return {"success": False, "error": "Plan selection is required"}
+            
+            # Get society_id from society_profile (same as plot controller)
+            from utils.db import get_db
+            from models.user import user_collection
+            from models.society_profile import society_profile_collection
+            
+            db = get_db()
+            users = user_collection(db)
+            user = users.find_one({'email': user_email}, {'_id': 1, 'role': 1})
+            
+            if not user:
+                return {"success": False, "error": "User not found"}
+            
+            # Get society_id from profile for society users
+            if user.get('role') == 'society':
+                user_id = str(user['_id'])
+                profiles = society_profile_collection(db)
+                profile = profiles.find_one({'user_id': user_id})
+                
+                if profile:
+                    society_id = str(profile['_id'])
+                    ad_data['society_id'] = ObjectId(society_id)
+                    print(f"[DEBUG] Set society_id from profile: {society_id}")
+                else:
+                    print(f"[DEBUG] No society profile found for user {user_email}")
+                    # Remove society_id if no profile exists
+                    ad_data.pop('society_id', None)
+            else:
+                # Not a society user, remove society_id
+                ad_data.pop('society_id', None)
             
             # Validate plan exists
             plan_model = AdvertisementPlan()
@@ -37,6 +71,10 @@ class AdvertisementController:
             ad_data['price'] = plan['price']
             ad_data['start_date'] = start_date
             ad_data['end_date'] = end_date
+            
+            # Remove the duplicate society_id conversion logic since we already set it above
+            
+            print(f"[DEBUG] Final ad_data before saving: {ad_data}")
             
             # Create advertisement
             advertisement_model = Advertisement()
@@ -107,7 +145,7 @@ class AdvertisementController:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def approve_advertisement(ad_id, admin_notes=None):
+    def approve_advertisement(ad_id):
         """Approve advertisement (admin only)"""
         try:
             if not ObjectId.is_valid(ad_id):
@@ -122,16 +160,34 @@ class AdvertisementController:
             if ad['status'] != 'pending':
                 return {"success": False, "error": "Only pending advertisements can be approved"}
             
+            # Check if payment is completed
+            if ad.get('payment_status') != 'paid':
+                return {"success": False, "error": "Only paid advertisements can be approved"}
+            
             # Approve with dates from the ad itself
             success = advertisement_model.approve_advertisement(
                 ad_id,
                 ad['start_date'],
-                ad['end_date'],
-                admin_notes
+                ad['end_date']
             )
             
             if success:
-                return {"success": True, "message": "Advertisement approved successfully"}
+                # Send approval notification email
+                try:
+                    from utils.email_service import EmailService
+                    user_email = ad.get('user_email')
+                    ad_title = ad.get('title', 'Your advertisement')
+                    
+                    if user_email:
+                        EmailService.send_advertisement_approval_email(
+                            user_email, 
+                            ad_title
+                        )
+                except Exception as email_error:
+                    print(f"Failed to send approval email: {str(email_error)}")
+                    # Don't fail the approval if email fails
+                
+                return {"success": True, "message": "Advertisement approved successfully and notification sent"}
             return {"success": False, "error": "Failed to approve advertisement"}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -152,13 +208,27 @@ class AdvertisementController:
             if not ad:
                 return {"success": False, "error": "Advertisement not found"}
             
-            if ad['status'] != 'pending':
-                return {"success": False, "error": "Only pending advertisements can be rejected"}
-            
+            # Allow rejection of any advertisement regardless of status
             success = advertisement_model.reject_advertisement(ad_id, admin_notes)
             
             if success:
-                return {"success": True, "message": "Advertisement rejected"}
+                # Send rejection notification email
+                try:
+                    from utils.email_service import EmailService
+                    user_email = ad.get('user_email')
+                    ad_title = ad.get('title', 'Your advertisement')
+                    
+                    if user_email:
+                        EmailService.send_advertisement_rejection_email(
+                            user_email, 
+                            ad_title, 
+                            admin_notes
+                        )
+                except Exception as email_error:
+                    print(f"Failed to send rejection email: {str(email_error)}")
+                    # Don't fail the rejection if email fails
+                
+                return {"success": True, "message": "Advertisement rejected and notification sent"}
             return {"success": False, "error": "Failed to reject advertisement"}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -170,16 +240,6 @@ class AdvertisementController:
             advertisement_model = Advertisement()
             ads = advertisement_model.get_active_advertisements()
             return {"success": True, "data": ads}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    @staticmethod
-    def increment_clicks(ad_id):
-        """Track click on advertisement"""
-        try:
-            advertisement_model = Advertisement()
-            advertisement_model.increment_clicks(ad_id)
-            return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -202,4 +262,57 @@ class AdvertisementController:
             return {"success": True, "expired_count": count}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def update_advertisement(ad_id, update_data):
+        """Update advertisement details (admin only - cannot update payment_status)"""
+        try:
+            if not ObjectId.is_valid(ad_id):
+                return {"success": False, "error": "Invalid advertisement ID"}
+            
+            advertisement_model = Advertisement()
+            ad = advertisement_model.get_advertisement_by_id(ad_id)
+            
+            if not ad:
+                return {"success": False, "error": "Advertisement not found"}
+            
+            # Don't allow updating payment_status (handled by Stripe)
+            if 'payment_status' in update_data:
+                return {"success": False, "error": "Payment status cannot be updated directly"}
+            
+            # Convert ObjectIds if needed
+            if 'plan_id' in update_data and isinstance(update_data['plan_id'], str):
+                update_data['plan_id'] = ObjectId(update_data['plan_id'])
+            if 'society_id' in update_data and isinstance(update_data['society_id'], str):
+                update_data['society_id'] = ObjectId(update_data['society_id'])
+            
+            success = advertisement_model.update_advertisement(ad_id, update_data)
+            
+            if success:
+                return {"success": True, "message": "Advertisement updated successfully"}
+            return {"success": False, "error": "Failed to update advertisement"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
+    def delete_advertisement(ad_id):
+        """Delete advertisement (admin only)"""
+        try:
+            if not ObjectId.is_valid(ad_id):
+                return {"success": False, "error": "Invalid advertisement ID"}
+            
+            advertisement_model = Advertisement()
+            ad = advertisement_model.get_advertisement_by_id(ad_id)
+            
+            if not ad:
+                return {"success": False, "error": "Advertisement not found"}
+            
+            success = advertisement_model.delete_advertisement(ad_id)
+            
+            if success:
+                return {"success": True, "message": "Advertisement deleted successfully"}
+            return {"success": False, "error": "Failed to delete advertisement"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 

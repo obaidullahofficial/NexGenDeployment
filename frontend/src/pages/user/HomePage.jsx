@@ -102,6 +102,10 @@ const HomePage = () => {
           // Show popup after 3 seconds
           popupTimeout = setTimeout(() => {
             setShowPopup(true);
+            // Track impression when popup is shown
+            if (firstAd._id) {
+              advertisementAPI.trackImpression(firstAd._id);
+            }
           }, 3000);
 
           // Start cycling through ads every 15 seconds
@@ -118,6 +122,11 @@ const HomePage = () => {
                 image: nextAd.featured_image,
                 link: nextAd.link_url
               });
+              
+              // Track impression for the new ad
+              if (nextAd._id) {
+                advertisementAPI.trackImpression(nextAd._id);
+              }
               
               return nextIndex;
             });
@@ -187,6 +196,11 @@ const HomePage = () => {
         image: nextAd.featured_image,
         link: nextAd.link_url
       });
+      
+      // Track impression for manually viewed ad
+      if (nextAd._id) {
+        advertisementAPI.trackImpression(nextAd._id);
+      }
     }
   };
 
@@ -205,6 +219,11 @@ const HomePage = () => {
         image: prevAd.featured_image,
         link: prevAd.link_url
       });
+      
+      // Track impression for manually viewed ad
+      if (prevAd._id) {
+        advertisementAPI.trackImpression(prevAd._id);
+      }
     }
   };
 

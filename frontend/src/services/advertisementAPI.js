@@ -93,12 +93,11 @@ class AdvertisementAPI {
   }
 
   // Approve advertisement (admin only)
-  async approveAdvertisement(adId, adminNotes = null) {
+  async approveAdvertisement(adId) {
     try {
       const response = await fetch(`${API_BASE_URL}/advertisements/${adId}/approve`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({ admin_notes: adminNotes })
+        headers: this.getAuthHeaders()
       });
 
       const data = await response.json();
@@ -142,18 +141,6 @@ class AdvertisementAPI {
     }
   }
 
-  // Track click on advertisement
-  async trackClick(adId) {
-    try {
-      await fetch(`${API_BASE_URL}/advertisements/${adId}/click`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      console.error('Error tracking click:', error);
-    }
-  }
-
   // Track impression of advertisement
   async trackImpression(adId) {
     try {
@@ -163,6 +150,39 @@ class AdvertisementAPI {
       });
     } catch (error) {
       console.error('Error tracking impression:', error);
+    }
+  }
+
+  // Update advertisement (admin only - can update status but not payment_status)
+  async updateAdvertisement(adId, updateData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/advertisements/${adId}`, {
+        method: 'PUT',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating advertisement:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete advertisement (admin only)
+  async deleteAdvertisement(adId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/advertisements/${adId}`, {
+        method: 'DELETE',
+        headers: this.getAuthHeaders()
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error deleting advertisement:', error);
+      return { success: false, error: error.message };
     }
   }
 }

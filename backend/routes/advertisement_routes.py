@@ -154,8 +154,7 @@ def approve_advertisement(ad_id):
         if claims.get('role') != 'admin':
             return jsonify({"success": False, "error": "Admin access required"}), 403
         
-        admin_notes = request.json.get('admin_notes') if request.json else None
-        result = AdvertisementController.approve_advertisement(ad_id, admin_notes)
+        result = AdvertisementController.approve_advertisement(ad_id)
         return jsonify(result), 200 if result['success'] else 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -189,15 +188,6 @@ def get_active_advertisements():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-@advertisement_bp.route('/advertisements/<ad_id>/click', methods=['POST'])
-def track_click(ad_id):
-    """Track advertisement click"""
-    try:
-        result = AdvertisementController.increment_clicks(ad_id)
-        return jsonify(result), 200
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
 @advertisement_bp.route('/advertisements/<ad_id>/impression', methods=['POST'])
 def track_impression(ad_id):
     """Track advertisement impression"""
@@ -206,4 +196,38 @@ def track_impression(ad_id):
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@advertisement_bp.route('/advertisements/<ad_id>', methods=['PUT'])
+@jwt_required()
+def update_advertisement(ad_id):
+    """Update advertisement (admin only - can update status but not payment_status)"""
+    try:
+        claims = get_jwt()
+        if claims.get('role') != 'admin':
+            return jsonify({"success": False, "error": "Admin access required"}), 403
+        
+        # Don't allow payment_status to be updated via this endpoint
+        update_data = request.json.copy()
+        if 'payment_status' in update_data:
+            del update_data['payment_status']
+        
+        result = AdvertisementController.update_advertisement(ad_id, update_data)
+        return jsonify(result), 200 if result['success'] else 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@advertisement_bp.route('/advertisements/<ad_id>', methods=['DELETE'])
+@jwt_required()
+def delete_advertisement(ad_id):
+    """Delete advertisement (admin only)"""
+    try:
+        claims = get_jwt()
+        if claims.get('role') != 'admin':
+            return jsonify({"success": False, "error": "Admin access required"}), 403
+        
+        result = AdvertisementController.delete_advertisement(ad_id)
+        return jsonify(result), 200 if result['success'] else 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 

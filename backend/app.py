@@ -69,6 +69,10 @@ app.register_blueprint(approval_request_bp, url_prefix='/api')
 from routes.floorplan_routes import floorplan_bp
 app.register_blueprint(floorplan_bp, url_prefix='/api')
 
+# Import and register payment blueprint
+from routes.payment_routes import payment_bp
+app.register_blueprint(payment_bp, url_prefix='/api/payment')
+
 
 # ========== FILE SERVING ROUTES (for uploaded user documents) ==========
 

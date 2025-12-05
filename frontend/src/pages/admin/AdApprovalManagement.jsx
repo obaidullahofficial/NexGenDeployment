@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import advertisementAPI from '../../services/advertisementAPI';
-import './AdApprovalManagement.css';
 
 const AdApprovalManagement = () => {
   const [pendingAds, setPendingAds] = useState([]);

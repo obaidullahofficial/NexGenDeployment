@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import GoogleOAuthProvider from './components/auth/GoogleOAuthProvider';
 import { AdminDataProvider } from './context/AdminDataContext';
@@ -42,6 +42,10 @@ import ReportManagement from "./pages/admin/ReportManagement";
 import AdvertisementManagement from "./pages/admin/AdvertisementManagement";
 import AdvertisementPlanManagement from "./pages/admin/AdvertisementPlanManagement";
 
+// Payment imports
+import PaymentSuccess from './pages/payment/PaymentSuccess';
+import PaymentCancel from './pages/payment/PaymentCancel';
+
 // Wrapper for Admin Layout with Sidebar + Topbar + Data Context
 const AdminLayout = ({ children }) => (
   <AdminDataProvider>
@@ -67,6 +71,10 @@ function App() {
           <Route path="/signup" element={<Login />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/registration-form" element={<RegistrationForm />} />
+
+          {/* Payment Routes */}
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancelled" element={<PaymentCancel />} />
 
           {/* Society Profile Standalone */}
           <Route path="/society-profile-setup" element={<SocietyProfileSetup />} />

@@ -331,3 +331,316 @@ NextGenArchitect Team
             
         except Exception as e:
             print(f"[EMAIL SERVICE ERROR] Failed to delete expired tokens: {str(e)}")
+    
+    @staticmethod
+    def send_advertisement_rejection_email(email, ad_title, rejection_reason):
+        """
+        Send advertisement rejection notification email to society
+        
+        Args:
+            email: Recipient's email address (society email)
+            ad_title: Title of the rejected advertisement
+            rejection_reason: Admin's reason for rejection
+            
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        try:
+            # Get SMTP configuration from environment
+            smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+            smtp_port = int(os.getenv('SMTP_PORT', 587))
+            sender_email = os.getenv('SENDER_EMAIL')
+            sender_password = os.getenv('SENDER_PASSWORD')
+            
+            # Validate configuration
+            if not sender_email or not sender_password:
+                return False, "Email configuration is incomplete"
+            
+            # Create email message
+            message = MIMEMultipart('alternative')
+            message['Subject'] = 'Advertisement Rejected - NextGenArchitect'
+            message['From'] = f"NextGenArchitect <{sender_email}>"
+            message['To'] = email
+            
+            # Plain text version
+            text_content = f"""
+Hello,
+
+We regret to inform you that your advertisement request has been rejected.
+
+Advertisement Title: {ad_title}
+
+Reason for Rejection:
+{rejection_reason}
+
+If you have any questions or would like to submit a revised advertisement, please contact our support team or submit a new request.
+
+Best regards,
+NextGenArchitect Team
+"""
+            
+            # HTML version
+            html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }}
+        .header {{
+            background-color: #f44336;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }}
+        .content {{
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }}
+        .ad-title {{
+            font-size: 18px;
+            font-weight: bold;
+            color: #2F3D57;
+            margin: 15px 0;
+        }}
+        .reason-box {{
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .footer {{
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">Advertisement Rejected</h2>
+        </div>
+        <div class="content">
+            <p>Hello,</p>
+            <p>We regret to inform you that your advertisement request has been rejected.</p>
+            
+            <div class="ad-title">
+                Advertisement: {ad_title}
+            </div>
+            
+            <div class="reason-box">
+                <strong>Reason for Rejection:</strong>
+                <p style="margin: 10px 0 0 0;">{rejection_reason}</p>
+            </div>
+            
+            <p>If you have any questions or would like to submit a revised advertisement, please contact our support team or submit a new request through your dashboard.</p>
+            
+            <p>Best regards,<br>
+            <strong>NextGenArchitect Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+            
+            # Attach both versions
+            text_part = MIMEText(text_content, 'plain')
+            html_part = MIMEText(html_content, 'html')
+            message.attach(text_part)
+            message.attach(html_part)
+            
+            # Send email
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.send_message(message)
+            
+            return True, "Rejection notification sent successfully"
+            
+        except smtplib.SMTPAuthenticationError:
+            return False, "SMTP authentication failed"
+        except smtplib.SMTPException as e:
+            return False, f"SMTP error: {str(e)}"
+        except Exception as e:
+            return False, f"Failed to send rejection email: {str(e)}"
+    
+    @staticmethod
+    def send_advertisement_approval_email(email, ad_title):
+        """
+        Send advertisement approval notification email to society
+        
+        Args:
+            email: Recipient's email address (society email)
+            ad_title: Title of the approved advertisement
+            
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        try:
+            # Get SMTP configuration from environment
+            smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+            smtp_port = int(os.getenv('SMTP_PORT', 587))
+            sender_email = os.getenv('SENDER_EMAIL')
+            sender_password = os.getenv('SENDER_PASSWORD')
+            
+            # Validate configuration
+            if not sender_email or not sender_password:
+                return False, "Email configuration is incomplete"
+            
+            # Create email message
+            message = MIMEMultipart('alternative')
+            message['Subject'] = 'Advertisement Approved - Now Live on NextGenArchitect'
+            message['From'] = f"NextGenArchitect <{sender_email}>"
+            message['To'] = email
+            
+            # Plain text version
+            text_content = f"""
+Hello,
+
+Great news! Your advertisement has been approved and is now live on the NextGenArchitect website.
+
+Advertisement Title: {ad_title}
+
+Your advertisement is now visible to all visitors and will help attract potential buyers to your property.
+
+You can view your active advertisements in your dashboard.
+
+Best regards,
+NextGenArchitect Team
+"""
+            
+            # HTML version
+            html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }}
+        .header {{
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }}
+        .content {{
+            background-color: white;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }}
+        .ad-title {{
+            font-size: 18px;
+            font-weight: bold;
+            color: #2F3D57;
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }}
+        .info-box {{
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .footer {{
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }}
+        .success-icon {{
+            font-size: 48px;
+            color: #4CAF50;
+            text-align: center;
+            margin: 20px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">Advertisement Approved!</h2>
+        </div>
+        <div class="content">
+            <div class="success-icon">✓</div>
+            <p>Hello,</p>
+            <p>Great news! Your advertisement has been approved and is now <strong>live on the NextGenArchitect website</strong>.</p>
+            
+            <div class="ad-title">
+                {ad_title}
+            </div>
+            
+            <div class="info-box">
+                <strong>What's Next?</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li>Your advertisement is now visible to all website visitors</li>
+                    <li>Track views and clicks in your dashboard</li>
+                    <li>Monitor engagement and responses</li>
+                </ul>
+            </div>
+            
+            <p>You can view and manage your active advertisements anytime through your dashboard.</p>
+            
+            <p>Thank you for using NextGenArchitect to promote your properties!</p>
+            
+            <p>Best regards,<br>
+            <strong>NextGenArchitect Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+            
+            # Attach both versions
+            text_part = MIMEText(text_content, 'plain')
+            html_part = MIMEText(html_content, 'html')
+            message.attach(text_part)
+            message.attach(html_part)
+            
+            # Send email
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.send_message(message)
+            
+            return True, "Approval notification sent successfully"
+            
+        except smtplib.SMTPAuthenticationError:
+            return False, "SMTP authentication failed"
+        except smtplib.SMTPException as e:
+            return False, f"SMTP error: {str(e)}"
+        except Exception as e:
+            return False, f"Failed to send approval email: {str(e)}"

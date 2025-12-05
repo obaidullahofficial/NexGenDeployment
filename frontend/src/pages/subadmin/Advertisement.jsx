@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import advertisementAPI from '../../services/advertisementAPI';
 import advertisementPlanAPI from '../../services/advertisementPlanAPI';
-import './Advertisement.css';
+import paymentAPI from '../../services/paymentAPI';
 
 const Advertisement = () => {
+  const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [myAds, setMyAds] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -18,13 +20,27 @@ const Advertisement = () => {
     title: '',
     featured_image: '',
     link_url: '',
-    plan_id: ''
+    plan_id: '',
+    society_id: user?.societyId || ''
   });
 
   useEffect(() => {
     fetchPlans();
     fetchMyAds();
-  }, []);
+    // Update society_id when user is loaded
+    if (user?.societyId) {
+      console.log('Setting society_id from user:', user.societyId);
+      setFormData(prev => ({
+        ...prev,
+        society_id: user.societyId
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    console.log('Current user:', user);
+    console.log('Current formData:', formData);
+  }, [user, formData]);
 
   const fetchPlans = async () => {
     try {
@@ -113,31 +129,65 @@ const Advertisement = () => {
       return;
     }
 
+    // Ensure society_id is included
+    const submissionData = {
+      ...formData,
+      society_id: user?.societyId || formData.society_id
+    };
+
     try {
       setLoading(true);
-      const result = await advertisementAPI.createAdvertisement(formData);
+      console.log('Creating advertisement with data:', submissionData);
+      const result = await advertisementAPI.createAdvertisement(submissionData);
+      console.log('Advertisement created:', result);
 
       if (result.success) {
-        setSuccess(`${result.message} Amount: $${result.price}`);
-        setFormData({
-          title: '',
-          featured_image: '',
-          link_url: '',
-          plan_id: ''
-        });
-        setImageFile(null);
-        setImagePreview('');
-        setSelectedPlan(null);
-        fetchMyAds();
+        setSuccess(`${result.message} Redirecting to payment...`);
         
-        // Simulate payment redirect
-        setTimeout(() => {
-          alert(`Redirect to payment gateway for $${result.price}\nAdvertisement ID: ${result.advertisement_id}`);
-        }, 1500);
+        // Create Stripe checkout session and redirect
+        try {
+          console.log('Creating checkout session...', {
+            ad_id: result.advertisement_id,
+            plan: selectedPlan.name,
+            price: selectedPlan.price
+          });
+
+          const paymentResult = await paymentAPI.createCheckoutSession(
+            result.advertisement_id,
+            selectedPlan.name,
+            selectedPlan.price
+          );
+
+          console.log('Payment result:', paymentResult);
+
+          if (paymentResult.success) {
+            console.log('Redirecting to Stripe:', paymentResult.checkout_url);
+            // Redirect to Stripe Checkout
+            window.location.href = paymentResult.checkout_url;
+          } else {
+            console.error('Payment session failed:', paymentResult);
+            setError('Failed to create payment session: ' + (paymentResult.error || 'Unknown error'));
+          }
+        } catch (paymentError) {
+          console.error('Payment error:', paymentError);
+          setError('Payment error: ' + paymentError.message);
+          // Clear form even on error to prevent duplicate submissions
+          setFormData({
+            title: '',
+            featured_image: '',
+            link_url: '',
+            plan_id: ''
+          });
+          setImageFile(null);
+          setImagePreview('');
+          setSelectedPlan(null);
+          fetchMyAds();
+        }
       } else {
         setError(result.error || 'Failed to create advertisement');
       }
     } catch (err) {
+      console.error('Submit error:', err);
       setError('Error creating advertisement: ' + err.message);
     } finally {
       setLoading(false);
@@ -169,186 +219,198 @@ const Advertisement = () => {
   };
 
   return (
-    <div className="advertisement-container">
-      <div className="advertisement-header">
-        <h1>Create Advertisement</h1>
-        <p>Select a plan, upload your image, and submit for admin approval</p>
-      </div>
-
-      {error && (
-        <div className="alert alert-error">
-          <span className="alert-icon">⚠</span>
-          {error}
+    <div className="min-h-screen bg-white p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Create Advertisement</h1>
+          <p className="text-gray-600">Select a plan, upload your image, and submit for admin approval</p>
         </div>
-      )}
 
-      {success && (
-        <div className="alert alert-success">
-          <span className="alert-icon">✓</span>
-          {success}
-        </div>
-      )}
-
-      {/* Plan Selection */}
-      <div className="section-card">
-        <h2>Step 1: Select a Plan</h2>
-        {loadingPlans ? (
-          <div className="loading-spinner">Loading plans...</div>
-        ) : plans.length === 0 ? (
-          <p className="no-data">No plans available</p>
-        ) : (
-          <div className="plans-grid">
-            {plans.map(plan => (
-              <div
-                key={plan._id}
-                className={`plan-card ${selectedPlan?._id === plan._id ? 'plan-selected' : ''}`}
-                onClick={() => handlePlanSelect(plan)}
-              >
-                <div className="plan-header">
-                  <h3>{plan.name}</h3>
-                  <span className="plan-price">${plan.price}</span>
-                </div>
-                <div className="plan-details">
-                  <p><strong>{plan.duration_days}</strong> days</p>
-                  {selectedPlan?._id === plan._id && (
-                    <span className="plan-selected-badge">✓ Selected</span>
-                  )}
-                </div>
-              </div>
-            ))}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg flex items-center gap-3 text-red-800">
+            <span className="text-2xl">⚠</span>
+            <span>{error}</span>
           </div>
         )}
-      </div>
 
-      {/* Advertisement Form */}
-      <div className="section-card">
-        <h2>Step 2: Advertisement Details</h2>
-        <form onSubmit={handleSubmit} className="ad-form">
-          <div className="form-group">
-            <label htmlFor="title">
-              Title <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Enter advertisement title"
-              required
-            />
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg flex items-center gap-3 text-green-800">
+            <span className="text-2xl">✓</span>
+            <span>{success}</span>
           </div>
+        )}
 
-          <div className="form-group">
-            <label htmlFor="featured_image">
-              Featured Image <span className="required">*</span>
-            </label>
-            <input
-              type="file"
-              id="featured_image"
-              name="featured_image"
-              accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
-              onChange={handleImageChange}
-              className="file-input"
-              required={!imagePreview}
-            />
-            <small>Upload your advertisement image (PNG, JPG, GIF, or WebP - Max 5MB)</small>
-            {imagePreview && (
-              <div className="image-preview-container">
-                <img src={imagePreview} alt="Advertisement preview" className="image-preview" />
-                <button
-                  type="button"
-                  className="btn-remove-image"
-                  onClick={() => {
-                    setImageFile(null);
-                    setImagePreview('');
-                    setFormData(prev => ({ ...prev, featured_image: '' }));
-                  }}
+        {/* Plan Selection */}
+        <div className="bg-gray-50 rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Step 1: Select a Plan</h2>
+          {loadingPlans ? (
+            <div className="text-center py-8 text-gray-600">Loading plans...</div>
+          ) : plans.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No plans available</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plans.map(plan => (
+                <div
+                  key={plan._id}
+                  className={`bg-white rounded-xl p-6 cursor-pointer transition-all duration-300 border-2 ${
+                    selectedPlan?._id === plan._id 
+                      ? 'border-[#ED7600] shadow-lg shadow-[#ED7600]/20' 
+                      : 'border-gray-300 hover:border-[#ED7600]/50'
+                  }`}
+                  onClick={() => handlePlanSelect(plan)}
                 >
-                  ✕ Remove
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="link_url">
-              Link URL <span className="optional">(Optional)</span>
-            </label>
-            <input
-              type="url"
-              id="link_url"
-              name="link_url"
-              value={formData.link_url}
-              onChange={handleInputChange}
-              placeholder="https://example.com"
-            />
-            <small>Users will be directed here when they click your ad</small>
-          </div>
-
-          {!selectedPlan && (
-            <p className="form-warning">⚠ Please select a plan first</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
+                    <span className="text-2xl font-bold text-[#ED7600]">Rs {plan.price}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-600"><strong className="text-gray-900">{plan.duration_days}</strong> days</p>
+                    {selectedPlan?._id === plan._id && (
+                      <span className="bg-[#ED7600] text-white px-3 py-1 rounded-full text-sm font-semibold">✓ Selected</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
+        </div>
 
-          <button
-            type="submit"
-            className="btn-submit"
-            disabled={loading || !selectedPlan}
-          >
-            {loading ? 'Creating...' : 'Create Advertisement & Pay'}
-          </button>
-        </form>
-      </div>
+        {/* Advertisement Form */}
+        <div className="bg-gray-50 rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Step 2: Advertisement Details</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="title" className="block text-gray-700 font-semibold mb-2">
+                Title <span className="text-[#ED7600]">*</span>
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="Enter advertisement title"
+                required
+                className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-[#ED7600] outline-none transition-all"
+              />
+            </div>
 
-      {/* My Advertisements */}
-      <div className="section-card">
-        <h2>My Advertisements</h2>
-        {myAds.length === 0 ? (
-          <p className="no-data">No advertisements yet</p>
-        ) : (
-          <div className="ads-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Plan</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Stats</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myAds.map(ad => (
-                  <tr key={ad._id}>
-                    <td>
-                      <div className="ad-title">
-                        {ad.title}
-                        {ad.link_url && <small>{ad.link_url}</small>}
-                      </div>
-                    </td>
-                    <td>{ad.plan_name}</td>
-                    <td>${ad.price}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusBadgeClass(ad.status)}`}>
-                        {ad.status}
-                      </span>
-                    </td>
-                    <td>{formatDate(ad.start_date)}</td>
-                    <td>{formatDate(ad.end_date)}</td>
-                    <td>
-                      <div className="ad-stats">
-                        <span title="Clicks">👆 {ad.clicks || 0}</span>
-                        <span title="Impressions">👁 {ad.impressions || 0}</span>
-                      </div>
-                    </td>
+            <div>
+              <label htmlFor="featured_image" className="block text-gray-700 font-semibold mb-2">
+                Featured Image <span className="text-[#ED7600]">*</span>
+              </label>
+              <input
+                type="file"
+                id="featured_image"
+                name="featured_image"
+                accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                onChange={handleImageChange}
+                className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#ED7600] file:text-white file:font-semibold file:cursor-pointer hover:file:bg-[#D56900] transition-all"
+                required={!imagePreview}
+              />
+              <small className="text-gray-400 text-sm">Upload your advertisement image (PNG, JPG, GIF, or WebP - Max 5MB)</small>
+              {imagePreview && (
+                <div className="mt-4 relative inline-block">
+                  <img src={imagePreview} alt="Advertisement preview" className="w-full max-w-md rounded-lg border-2 border-[#ED7600]" />
+                  <button
+                    type="button"
+                    className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-lg font-semibold hover:bg-red-600 transition-colors"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview('');
+                      setFormData(prev => ({ ...prev, featured_image: '' }));
+                    }}
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="link_url" className="block text-gray-700 font-semibold mb-2">
+                Link URL <span className="text-gray-500">(Optional)</span>
+              </label>
+              <input
+                type="url"
+                id="link_url"
+                name="link_url"
+                value={formData.link_url}
+                onChange={handleInputChange}
+                placeholder="https://example.com"
+                className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-[#ED7600] outline-none transition-all"
+              />
+              <small className="text-gray-400 text-sm">Users will be directed here when they click your ad</small>
+            </div>
+
+            {!selectedPlan && (
+              <p className="text-yellow-400 flex items-center gap-2 bg-yellow-500/10 p-3 rounded-lg border border-yellow-500">
+                <span>⚠</span> Please select a plan first
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-[#ED7600] text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-[#D56900] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              disabled={loading || !selectedPlan}
+            >
+              {loading ? 'Creating...' : 'Create Advertisement & Pay'}
+            </button>
+          </form>
+        </div>
+
+        {/* My Advertisements */}
+        <div className="bg-gray-50 rounded-2xl shadow-xl p-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">My Advertisements</h2>
+          {myAds.length === 0 ? (
+            <p className="text-center text-gray-500 py-8">No advertisements yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-300">
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Title</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Plan</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Price</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Status</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Start Date</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">End Date</th>
+                    <th className="text-left py-4 px-4 text-gray-700 font-semibold">Stats</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {myAds.map(ad => (
+                    <tr key={ad._id} className="border-b border-gray-200 hover:bg-gray-100 transition-colors">
+                      <td className="py-4 px-4">
+                        <div className="text-gray-900 font-medium">{ad.title}</div>
+                        {ad.link_url && <div className="text-xs text-gray-500 truncate max-w-xs">{ad.link_url}</div>}
+                      </td>
+                      <td className="py-4 px-4 text-gray-700">{ad.plan_name}</td>
+                      <td className="py-4 px-4 text-[#ED7600] font-bold">Rs {ad.price}</td>
+                      <td className="py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          ad.status === 'active' ? 'bg-green-500 text-white' :
+                          ad.status === 'pending' ? 'bg-yellow-500 text-white' :
+                          ad.status === 'rejected' ? 'bg-red-500 text-white' :
+                          'bg-gray-500 text-white'
+                        }`}>
+                          {ad.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-gray-700">{formatDate(ad.start_date)}</td>
+                      <td className="py-4 px-4 text-gray-700">{formatDate(ad.end_date)}</td>
+                      <td className="py-4 px-4">
+                        <div className="flex gap-3 text-gray-600">
+                          <span title="Views">👁 {ad.impressions || 0}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

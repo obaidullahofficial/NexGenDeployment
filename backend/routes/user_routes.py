@@ -584,6 +584,22 @@ def login():
         }
     }
     
+    # Add societyId for society role users
+    if user['role'] == 'society':
+        # Get society_id from registration form
+        try:
+            db = get_db()
+            society_form_collection = db.society_registration_forms
+            registration = society_form_collection.find_one({'user_email': email})
+            
+            if registration and 'society_id' in registration:
+                response_data['societyId'] = str(registration['society_id'])
+                print(f"[LOGIN] Added societyId to response: {response_data['societyId']}")
+            else:
+                print(f"[LOGIN] No society_id found in registration for {email}")
+        except Exception as e:
+            print(f"[LOGIN] Error fetching society_id: {str(e)}")
+    
     # Lightweight profile check for society users (async-friendly)
     if user['role'] == 'society':
         try:

@@ -7,6 +7,18 @@ class Advertisement:
     def __init__(self):
         self.db = get_db()
         self.collection = self.db.advertisements
+        self.society_profiles = self.db.society_profiles
+    
+    def _get_society_name(self, society_id):
+        """Helper method to fetch society name by society_id"""
+        try:
+            if society_id:
+                profile = self.society_profiles.find_one({"_id": ObjectId(society_id)}, {"name": 1})
+                if profile:
+                    return profile.get('name')
+        except:
+            pass
+        return None
 
     def create_advertisement(self, ad_data):
         """Create a new advertisement request"""
@@ -15,8 +27,10 @@ class Advertisement:
             ad_data['created_at'] = now
             ad_data['updated_at'] = now
             ad_data['status'] = 'pending'
-            ad_data['clicks'] = 0
             ad_data['impressions'] = 0
+            ad_data['payment_status'] = 'pending'
+            ad_data['payment_id'] = None
+            ad_data['paid_at'] = None
             
             result = self.collection.insert_one(ad_data)
             return str(result.inserted_id)
@@ -29,8 +43,13 @@ class Advertisement:
             ad = self.collection.find_one({"_id": ObjectId(ad_id)})
             if ad:
                 ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad:
+                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
                     ad['plan_id'] = str(ad['plan_id'])
+                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
+                    society_id = ad['society_id']
+                    ad['society_id'] = str(society_id)
+                    # Fetch and add society name
+                    ad['society_name'] = self._get_society_name(society_id)
             return ad
         except Exception as e:
             raise Exception(f"Error fetching advertisement: {str(e)}")
@@ -51,8 +70,13 @@ class Advertisement:
             ads = []
             for ad in self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page):
                 ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad:
+                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
                     ad['plan_id'] = str(ad['plan_id'])
+                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
+                    society_id = ad['society_id']
+                    ad['society_id'] = str(society_id)
+                    # Fetch and add society name
+                    ad['society_name'] = self._get_society_name(society_id)
                 ads.append(ad)
             
             return {
@@ -85,7 +109,7 @@ class Advertisement:
         except Exception as e:
             raise Exception(f"Error deleting advertisement: {str(e)}")
 
-    def approve_advertisement(self, ad_id, start_date, end_date, admin_notes=None):
+    def approve_advertisement(self, ad_id, start_date, end_date):
         """Approve advertisement and set active dates"""
         try:
             update_data = {
@@ -94,8 +118,6 @@ class Advertisement:
                 'end_date': end_date,
                 'updated_at': datetime.utcnow()
             }
-            if admin_notes:
-                update_data['admin_notes'] = admin_notes
             
             result = self.collection.update_one(
                 {"_id": ObjectId(ad_id)},
@@ -121,17 +143,6 @@ class Advertisement:
         except Exception as e:
             raise Exception(f"Error rejecting advertisement: {str(e)}")
 
-    def increment_clicks(self, ad_id):
-        """Increment click count"""
-        try:
-            result = self.collection.update_one(
-                {"_id": ObjectId(ad_id)},
-                {"$inc": {"clicks": 1}}
-            )
-            return result.modified_count > 0
-        except Exception as e:
-            raise Exception(f"Error incrementing clicks: {str(e)}")
-
     def increment_impressions(self, ad_id):
         """Increment impression count"""
         try:
@@ -153,8 +164,13 @@ class Advertisement:
             ads = []
             for ad in self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page):
                 ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad:
+                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
                     ad['plan_id'] = str(ad['plan_id'])
+                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
+                    society_id = ad['society_id']
+                    ad['society_id'] = str(society_id)
+                    # Fetch and add society name
+                    ad['society_name'] = self._get_society_name(society_id)
                 ads.append(ad)
             
             return {
@@ -180,8 +196,13 @@ class Advertisement:
             ads = []
             for ad in self.collection.find(query).sort("created_at", -1):
                 ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad:
+                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
                     ad['plan_id'] = str(ad['plan_id'])
+                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
+                    society_id = ad['society_id']
+                    ad['society_id'] = str(society_id)
+                    # Fetch and add society name
+                    ad['society_name'] = self._get_society_name(society_id)
                 ads.append(ad)
             return ads
         except Exception as e:
@@ -201,5 +222,25 @@ class Advertisement:
             return result.modified_count
         except Exception as e:
             raise Exception(f"Error checking expired advertisements: {str(e)}")
+
+    def update_payment_status(self, ad_id, payment_status, payment_id=None):
+        """Update payment status for advertisement"""
+        try:
+            update_data = {
+                'payment_status': payment_status,
+                'updated_at': datetime.utcnow()
+            }
+            if payment_id:
+                update_data['payment_id'] = payment_id
+            if payment_status == 'paid':
+                update_data['paid_at'] = datetime.utcnow()
+            
+            result = self.collection.update_one(
+                {"_id": ObjectId(ad_id)},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            raise Exception(f"Error updating payment status: {str(e)}")
 
 

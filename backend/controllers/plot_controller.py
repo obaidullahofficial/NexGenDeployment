@@ -92,8 +92,9 @@ class PlotController:
             else:
                 return jsonify({'error': 'Invalid request format. Expected form data or JSON.'}), 400
 
-            # Use the society profile's _id as societyId
-            data['societyId'] = str(profile['_id'])
+            # Use the society profile's _id as societyId (store as ObjectId for foreign key)
+            society_id = profile['_id'] if isinstance(profile['_id'], ObjectId) else ObjectId(profile['_id'])
+            data['societyId'] = society_id
             
             # Validate required fields
             if not data.get('plot_number') or not data['plot_number'].strip():
@@ -101,7 +102,7 @@ class PlotController:
             
             plot_col = plot_collection(db)
             existing_plot = plot_col.find_one({
-                'societyId': data['societyId'],
+                'societyId': society_id,
                 'plot_number': data['plot_number'].strip()
             })
             
@@ -157,13 +158,17 @@ class PlotController:
         if not profile:
             return jsonify({'error': 'Society profile not found'}), 400
         
-        society_id = str(profile['_id'])
+        # Use ObjectId to match the foreign key format stored in plots
+        society_id = profile['_id'] if isinstance(profile['_id'], ObjectId) else ObjectId(profile['_id'])
         plot_col = plot_collection(db)
         
         plots = list(plot_col.find({'societyId': society_id}))
         
         for plot in plots:
             plot['_id'] = str(plot['_id'])
+            # Convert societyId ObjectId to string for JSON serialization
+            if 'societyId' in plot and isinstance(plot['societyId'], ObjectId):
+                plot['societyId'] = str(plot['societyId'])
         
         return jsonify(plots)
 

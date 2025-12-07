@@ -316,13 +316,22 @@ def get_all_approval_requests():
         # requests to that society only, using the society profile's _id.
         query = {}
         if current_user.get('role') == 'society':
+            # Get user_id from current user (same approach as plot filtering)
+            user_id = str(current_user['_id'])
+            
             profiles = society_profile_collection(db)
-            profile = profiles.find_one({'user_email': current_user_email})
+            profile = profiles.find_one({'user_id': user_id})
+            
             if profile:
+                # Use the society profile's _id to filter approval requests
                 society_id = str(profile['_id'])
                 query['society_id'] = society_id
+                print(f"🔍 [Approval Requests] Filtering by society_id: {society_id} for user_id: {user_id}")
+            else:
+                print(f"⚠️ [Approval Requests] No society profile found for user_id: {user_id}")
 
         all_requests = list(requests_collection.find(query).sort('created_at', -1))
+        print(f"🔍 [Approval Requests] Query: {query}, Found: {len(all_requests)} requests")
 
         # Build a map from user_id -> username/email so we can show
         # the requester name in the admin/subadmin approvals panel.

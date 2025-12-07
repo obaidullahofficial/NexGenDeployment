@@ -190,7 +190,7 @@ const Approvals = () => {
   const confirmActionHandler = () => {
     if (confirmAction === 'Approved') {
       updateStatus(confirmTargetId, "Approved");
-    } else if (confirmAction === 'reject') {
+    } else if (confirmAction === 'Rejected') {
       updateStatus(confirmTargetId, "Rejected");
     }
     setShowConfirmDialog(false);

@@ -21,7 +21,7 @@ class UserProfile:
     def to_dict(self):
         """Convert the profile to a dictionary"""
         return {
-            'user_id': str(self.user_id),
+            'user_id': self.user_id,
             'cnic': self.cnic,
             'first_name': self.first_name,
             'last_name': self.last_name,
@@ -52,7 +52,7 @@ class UserActivity:
     def to_dict(self):
         """Convert the activity to a dictionary"""
         return {
-            'user_id': str(self.user_id),
+            'user_id': self.user_id,
             'activity_type': self.activity_type,
             'description': self.description,
             'metadata': self.metadata,

@@ -29,21 +29,29 @@ const Activity = () => {
       setLoading(true);
       setError(null);
 
+      console.log('[Activity] Fetching data for user:', user?.id);
+
       // Fetch both activities and progress summary
       const [activitiesResponse, progressResponse] = await Promise.all([
         userProfileAPI.getUserActivities(50, 0),
         userProfileAPI.getUserProgress()
       ]);
 
+      console.log('[Activity] Activities Response:', activitiesResponse);
+      console.log('[Activity] Progress Response:', progressResponse);
+
       if (activitiesResponse.success) {
         setActivities(activitiesResponse.data || []);
       }
 
       if (progressResponse.success) {
+        console.log('[Activity] Progress Summary Data:', progressResponse.data);
         setProgressSummary(progressResponse.data || null);
+      } else {
+        console.error('[Activity] Failed to fetch progress:', progressResponse);
       }
     } catch (err) {
-      console.error('Error fetching activity data:', err);
+      console.error('[Activity] Error fetching activity data:', err);
       setError(err.message || 'Failed to load activity data');
     } finally {
       setLoading(false);
@@ -79,11 +87,18 @@ const Activity = () => {
       case 'profile_update':
         return <FiUser className="text-blue-500" />;
       case 'request_submitted':
+      case 'approval_request_submitted':
         return <FiFileText className="text-green-500" />;
       case 'request_approved':
+      case 'approval_request_approved':
         return <FiCheckCircle className="text-green-600" />;
       case 'request_rejected':
+      case 'approval_request_rejected':
         return <FiXCircle className="text-red-500" />;
+      case 'approval_request_updated':
+        return <FiActivity className="text-blue-500" />;
+      case 'approval_request_deleted':
+        return <FiXCircle className="text-orange-500" />;
       case 'floorplan_created':
         return <FiFileText className="text-purple-500" />;
       default:
@@ -96,11 +111,18 @@ const Activity = () => {
       case 'profile_update':
         return 'border-blue-500';
       case 'request_submitted':
+      case 'approval_request_submitted':
         return 'border-green-500';
       case 'request_approved':
+      case 'approval_request_approved':
         return 'border-green-600';
       case 'request_rejected':
+      case 'approval_request_rejected':
         return 'border-red-500';
+      case 'approval_request_updated':
+        return 'border-blue-500';
+      case 'approval_request_deleted':
+        return 'border-orange-500';
       case 'floorplan_created':
         return 'border-purple-500';
       default:
@@ -143,70 +165,69 @@ const Activity = () => {
         </div>
 
         {/* Progress Summary Cards */}
-        {progressSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    {progressSummary.profile_completed ? '✓' : '○'}
-                  </div>
-                  <div className="text-sm text-gray-600">Profile Status</div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {progressSummary?.profile_completed ? '✓' : '○'}
                 </div>
-                <FiUser className="text-3xl text-blue-500 opacity-50" />
+                <div className="text-sm text-gray-600">Profile Status</div>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
-                {progressSummary.profile_completed ? 'Completed' : 'Incomplete'}
-              </div>
+              <FiUser className="text-3xl text-blue-500 opacity-50" />
             </div>
-
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    {progressSummary.total_requests || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Requests</div>
-                </div>
-                <FiFileText className="text-3xl text-green-500 opacity-50" />
-              </div>
-              <div className="mt-2 text-xs text-gray-500">
-                All time
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    {progressSummary.approved_requests || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Approved</div>
-                </div>
-                <FiCheckCircle className="text-3xl text-yellow-500 opacity-50" />
-              </div>
-              <div className="mt-2 text-xs text-gray-500">
-                Success rate: {progressSummary.total_requests > 0 
-                  ? Math.round((progressSummary.approved_requests / progressSummary.total_requests) * 100) 
-                  : 0}%
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">
-                    {progressSummary.pending_requests || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Pending</div>
-                </div>
-                <FiClock className="text-3xl text-purple-500 opacity-50" />
-              </div>
-              <div className="mt-2 text-xs text-gray-500">
-                Awaiting review
-              </div>
+            <div className="mt-2 text-xs text-gray-500">
+              {progressSummary?.profile_completed ? 'Completed' : 'Incomplete'}
             </div>
           </div>
+
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {progressSummary?.total_requests || 0}
+                </div>
+                <div className="text-sm text-gray-600">Total Requests</div>
+              </div>
+              <FiFileText className="text-3xl text-green-500 opacity-50" />
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              All time
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {progressSummary?.approved_requests || 0}
+                </div>
+                <div className="text-sm text-gray-600">Approved</div>
+              </div>
+              <FiCheckCircle className="text-3xl text-yellow-500 opacity-50" />
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              Success rate: {progressSummary && progressSummary.total_requests > 0 
+                ? Math.round((progressSummary.approved_requests / progressSummary.total_requests) * 100) 
+                : 0}%
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {progressSummary?.pending_requests || 0}
+                </div>
+                <div className="text-sm text-gray-600">Pending</div>
+              </div>
+              <FiClock className="text-3xl text-purple-500 opacity-50" />
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              Awaiting review
+            </div>
+          </div>
+        </div>
         )}
 
         {/* Activity Timeline */}

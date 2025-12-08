@@ -154,9 +154,12 @@ class UserActivityController:
             db = get_db()
             activities = user_activity_collection(db)
             
-            user_activities = list(activities.find(
-                {'user_id': ObjectId(user_id)}
-            ).sort('timestamp', -1).skip(offset).limit(limit))
+            print(f"[DEBUG] Getting activities for user_id: {user_id}")
+            query = {'user_id': ObjectId(user_id)}
+            total_count = activities.count_documents(query)
+            print(f"[DEBUG] Found {total_count} activities for user")
+            
+            user_activities = list(activities.find(query).sort('timestamp', -1).skip(offset).limit(limit))
             
             # Convert ObjectIds to strings
             for activity in user_activities:
@@ -182,6 +185,13 @@ class UserActivityController:
             profile = profiles.find_one({'user_id': ObjectId(user_id)})
             profile_completed = bool(profile and profile.get('cnic') and profile.get('first_name'))
             
+            # Debug: Check what's in the database
+            print(f"[DEBUG] Checking requests for user_id: {user_id}")
+            all_user_requests = list(requests.find({'user_id': ObjectId(user_id)}))
+            print(f"[DEBUG] Found {len(all_user_requests)} total requests")
+            for req in all_user_requests:
+                print(f"[DEBUG] Request: _id={req.get('_id')}, status={req.get('status')}, user_id={req.get('user_id')}")
+            
             # Get approval request stats
             total_requests = requests.count_documents({'user_id': ObjectId(user_id)})
             approved_requests = requests.count_documents({
@@ -192,6 +202,8 @@ class UserActivityController:
                 'user_id': ObjectId(user_id),
                 'status': 'Pending'
             })
+            
+            print(f"[DEBUG] Counts - Total: {total_requests}, Approved: {approved_requests}, Pending: {pending_requests}")
             
             # Get recent activities count
             recent_activities = activities.count_documents({

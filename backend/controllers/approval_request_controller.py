@@ -42,12 +42,22 @@ class ApprovalRequestController:
             # Insert into database
             result = requests.insert_one(approval_request.to_dict())
 
+            # Get plot number for activity logging
+            plot_number = "N/A"
+            if request_data.get('plot_id'):
+                try:
+                    plot = db['plots'].find_one({'_id': ObjectId(request_data['plot_id'])})
+                    if plot:
+                        plot_number = plot.get('plot_number', 'N/A')
+                except:
+                    pass
+
             # Log activity
             UserProfileController._log_activity(
                 user_id,
                 'approval_request_submitted',
-                f"Approval request submitted for plot {request_data.get('plot_id', 'N/A')}",
-                {'request_id': str(result.inserted_id)},
+                f"Approval request submitted for plot {plot_number}",
+                {'request_id': str(result.inserted_id), 'plot_id': request_data.get('plot_id')},
             )
 
             return str(result.inserted_id), "Approval request submitted successfully"

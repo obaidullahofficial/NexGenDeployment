@@ -10,7 +10,7 @@ import SocietyProfileSetup from './pages/subadmin/SocietyProfileSetup';
 import SocietyProfileEdit from './pages/subadmin/SocietyProfileEdit';
 import PlotManager from './pages/subadmin/PlotManager';
 import Approvals from './pages/subadmin/Approvals';
-import ComplianceManagement from './pages/subadmin/ComplianceManagement';
+import ComplianceManagement from './components/subadmin/ComplianceManagement';
 import FloorPlanManager from './pages/subadmin/FloorPlanManager';
 import Advertisement from './pages/subadmin/Advertisement';
 import ProtectedSubAdminRoute from './components/common/ProtectedSubAdminRoute';

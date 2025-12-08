@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 import traceback
 
 def generate_floorplan():
-    """Generate floor plan using AI algorithm (GA or GenAI)"""
+    """Generate floor plan using AI algorithm (GA or GenAI) with automatic compliance rules"""
     try:
         data = request.get_json()
         
@@ -20,6 +20,19 @@ def generate_floorplan():
                     'success': False,
                     'error': f'Missing required field: {field}'
                 }), 400
+        
+        # **NEW: Fetch and apply compliance rules if plot_id is provided**
+        compliance_rules = None
+        if data.get('plot_id'):
+            from controllers.compliance_controller import ComplianceController
+            compliance_rules, message = ComplianceController.get_compliance_for_floorplan(data['plot_id'])
+            
+            if compliance_rules:
+                print(f"[Compliance] Applying compliance rules for plot: {message}")
+                # Store compliance in response to show user
+                data['compliance_applied'] = compliance_rules
+            else:
+                print(f"[Compliance] No compliance rules found: {message}")
         
         # Extract data with defaults - matching GA_driver parameters exactly
         width = int(data.get('width', 1000))
@@ -133,13 +146,20 @@ def generate_floorplan():
                 'error': result['error']
             }), 500
         
-        return jsonify({
+        # Include compliance rules in response if available
+        response_data = {
             'success': True,
             'data': result,  # Return the full result from GA_driver
             'floor_plans': result.get('maps', []),
             'room_data': result.get('room', []),
             'message': f'Generated {len(result.get("maps", []))} floor plan variations'
-        })
+        }
+        
+        if compliance_rules:
+            response_data['compliance'] = compliance_rules
+            response_data['message'] += f' (Compliance rules applied for {compliance_rules.get("marla_size")} plot)'
+        
+        return jsonify(response_data)
         
     except ValueError as e:
         return jsonify({

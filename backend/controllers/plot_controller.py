@@ -180,16 +180,20 @@ class PlotController:
         db = get_db()
         plot_col = plot_collection(db)
         try:
+            print(f"[get_plot] Fetching plot with ID: {plot_id}")
             plot_data = plot_col.find_one({'_id': ObjectId(plot_id)})
             if not plot_data:
+                print(f"[get_plot] Plot not found: {plot_id}")
                 return jsonify({'error': 'Plot not found'}), 404
                 
             plot_data['_id'] = str(plot_data['_id'])
             plot_data['plot_id'] = plot_data['_id']
             
+            print(f"[get_plot] Successfully fetched plot: {plot_data.get('plot_number')}")
             return jsonify(plot_data)
         except Exception as e:
-            return jsonify({'error': 'Invalid plot ID format'}), 400
+            print(f"[get_plot] Error: {str(e)}")
+            return jsonify({'error': f'Invalid plot ID format: {str(e)}'}), 400
 
     @staticmethod
     def get_plots_by_society_id(society_id):

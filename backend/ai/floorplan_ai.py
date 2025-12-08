@@ -395,11 +395,16 @@ def gen_population(N, Nr, cat):
   pop = []
   for i in range (N):
     chrom = []
+    # Randomly choose tree structure for more diversity
     chrom.append(random.randint(0,cat))
+    # Randomly choose room order
     chrom.append(random.randint(0, math.factorial(Nr) - 1) )
+    # Generate diverse split ratios (1-9 range gives good variety)
     for j in range (Nr - 1):
-      chrom.append(random.randint(0,1))
-      chrom.append(random.randint(1,9))
+      chrom.append(random.randint(0,1))  # Split direction (horizontal/vertical)
+      # Use wider range for split ratios to create more diverse layouts
+      split_ratio = random.choice([1,2,3,4,5,6,7,8,9])  # Equal probability for all ratios
+      chrom.append(split_ratio)
     pop.append([chrom,None])
     
   return pop
@@ -503,15 +508,24 @@ def checkDuplicate(chr,pop):
             return True
     return False
 
-def GA(pop_size, generations_count, Nr, cat,inputG,trees):
+def GA(pop_size, generations_count, Nr, cat,inputG,trees, diversity_seed=0):
     #print("Population: ")
+    # Use completely different random seeds for each variation to ensure diversity
+    import time
+    # Create truly unique seed using microseconds + diversity offset + process variations
+    seed_value = int(time.time() * 1000000) + diversity_seed * 123456 + (diversity_seed ** 2) * 7890
+    random.seed(seed_value)
+    np.random.seed(seed_value % (2**32))  # NumPy seed must be < 2^32
+    print(f"🎲 GA diversity_seed={diversity_seed}, seed={seed_value}")
+    
     pop = gen_population(pop_size, Nr, cat)
     #print(pop)
     
     for i in range (generations_count):
         #print("Generation "+str(i+1)+":")
         noOfCrossover=int(len(pop)*0.5)
-        noOfMutations=int(len(pop)*2.5)
+        # Increase mutation rate based on diversity seed to create more variation
+        noOfMutations=int(len(pop)*(2.5 + diversity_seed * 0.5))
         for n in range(noOfCrossover):
             parent1 = random.choice(pop)
             parent2 = random.choice(pop)
@@ -544,18 +558,56 @@ def GA(pop_size, generations_count, Nr, cat,inputG,trees):
                 pop[j][1]=fitness(inputG,pop[j][0],trees)
         
         
-        # sort the population in decreasing order of fitness score
+        # Sort the population in decreasing order of fitness score
         pop = sorted(pop, key = lambda x:x[1],reverse=True)
-
-        pop=pop[:pop_size]
+        
+        # Keep top solutions but also maintain some diversity
+        # Take top 70% by fitness, and random 30% for diversity
+        top_count = int(pop_size * 0.7)
+        diverse_count = pop_size - top_count
+        
+        # Keep best solutions
+        survivors = pop[:top_count]
+        
+        # Add some random diverse solutions
+        if len(pop) > pop_size:
+            remaining = pop[top_count:]
+            random.shuffle(remaining)
+            survivors.extend(remaining[:diverse_count])
+        else:
+            # If not enough, just take what we have
+            survivors.extend(pop[top_count:pop_size])
+        
+        pop = survivors[:pop_size]
         avgFitness=0
         for chrom in pop:
             avgFitness+=chrom[1]
         avgFitness=avgFitness/len(pop)
         #print("Fitness :"+str(avgFitness))
 
-
-    return pop[:5]
+    # Return different solutions based on diversity_seed for more variety
+    # Instead of always returning top 5, return from different ranks
+    result = None
+    if diversity_seed == 0:
+        # Plan 1: Return a mix - best solution + some diverse ones
+        result = [pop[0], pop[2], pop[4], pop[1], pop[3]]
+    elif diversity_seed == 1:
+        # Plan 2: Start from rank 1-5
+        result = pop[1:6] if len(pop) >= 6 else pop[:5]
+    elif diversity_seed == 2:
+        # Plan 3: Start from rank 2-6
+        result = pop[2:7] if len(pop) >= 7 else pop[:5]
+    elif diversity_seed == 3:
+        # Plan 4: Mix of top and middle ranks
+        indices = [0, 3, 1, 4, 2]
+        result = [pop[i] if i < len(pop) else pop[-1] for i in indices]
+    else:
+        # Plan 5: More diverse selection
+        indices = [1, 4, 2, 5, 3] if len(pop) >= 6 else [0, 2, 1, 3, 4]
+        result = [pop[i] if i < len(pop) else pop[-1] for i in indices]
+    
+    print(f"  📊 Returning solution with fitness: {result[0][1]:.2f} (from pop size {len(pop)})")
+    return result
 
 def getRoomCenters(rooms):
   room_centers = []
@@ -742,11 +794,18 @@ def GA_driver(connects=None, width=1000, height=1000, kitchen_p=0.7, living_p=0.
         generations = max_generations  # Use parameter
         pop_size = min(population_size, 10)  # Limit to avoid performance issues
         
-        top1=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree)
-        top2=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree)
-        top3=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree)
-        top4=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree)
-        top5=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree)
+        # Run GA 5 times with different diversity seeds for completely different layouts
+        print("🎨 Generating 5 diverse floor plan variations...")
+        top1=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree, diversity_seed=0)
+        print(f"  ✓ Variation 1 complete (Standard layout)")
+        top2=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree, diversity_seed=1)
+        print(f"  ✓ Variation 2 complete (High mutation)")
+        top3=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree, diversity_seed=2)
+        print(f"  ✓ Variation 3 complete (Extra variation)")
+        top4=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree, diversity_seed=3)
+        print(f"  ✓ Variation 4 complete (Maximum diversity)")
+        top5=GA(pop_size, generations, len(Roms), len(alltree)-1,inputG,alltree, diversity_seed=4)
+        print(f"  ✓ Variation 5 complete (Alternative approach)")
 
         jsonn = []
         rooms=[]

@@ -27,7 +27,7 @@ class ApprovalRequest:
     def to_dict(self):
         """Convert the approval request to a dictionary"""
         return {
-            'user_id': str(self.user_id),
+            'user_id': self.user_id,  # Keep as ObjectId for database queries
             'society_id': self.society_id,
             'plot_id': self.plot_id,
             'design_type': self.design_type,

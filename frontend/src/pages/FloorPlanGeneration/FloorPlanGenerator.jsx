@@ -485,108 +485,142 @@ const FloorPlanGenerator = () => {
 
   // Helper function to create a simplified floor plan preview
   const createFloorPlanPreview = (plan) => {
-    if (!plan || !plan.rooms || plan.rooms.length === 0) {
+    if (!plan) {
       return null;
     }
+    
+    // Get mapData directly from plan - ensure we're using THIS plan's data
+    const mapData = plan.mapData || plan.map;
+
+    if (!mapData || mapData.length === 0) {
+      return null;
+    }
+    
+    // Extract only label items (rooms) from THIS plan's mapData
+    const rooms = mapData.filter(item => item.type === 'label' && item.label);
 
     // Define room colors based on type
     const roomColors = {
-      'livingroom': '#FFB3BA',
-      'bedroom': '#BAFFC9',
-      'kitchen': '#FFFFBA',
-      'bathroom': '#BAE1FF',
+      'livingroom': '#A8D5FF',
+      'bedroom': '#FFCCE5',
+      'kitchen': '#FFE5CC',
+      'bathroom': '#D4F1D4',
       'drawingroom': '#FFDFBA',
       'carporch': '#E0BBE4',
       'garden': '#C7CEEA',
       'default': '#F0F0F0'
     };
 
-    // Create a grid-based layout
-    const gridSize = 100;
-    const padding = 10;
+    // Scale factor to fit 1000x1000 plot into 120x100 thumbnail
+    const scale = 0.12;
+    const viewWidth = 130;
+    const viewHeight = 110;
 
     return (
-      <svg width="130" height="110" viewBox="0 0 130 110" className="border border-gray-300 rounded">
+      <svg 
+        key={`svg-${plan.id}`}
+        width={viewWidth} 
+        height={viewHeight} 
+        viewBox="0 0 130 110" 
+        className="border border-gray-300 rounded"
+      >
         {/* Background */}
-        <rect x="0" y="0" width="130" height="110" fill="#f8f9fa" stroke="#dee2e6" strokeWidth="1"/>
+        <rect x="0" y="0" width="130" height="110" fill="#ffffff" stroke="#dee2e6" strokeWidth="1"/>
         
-        {/* Render rooms based on their data */}
-        {plan.rooms.map((room, index) => {
-          // Calculate position and size based on room data or use grid layout
-          const cols = Math.ceil(Math.sqrt(plan.rooms.length));
-          const rows = Math.ceil(plan.rooms.length / cols);
+        {/* Render rooms from THIS plan's data */}
+        {rooms.map((room, index) => {
+            // Extract room coordinates from label item
+            // x1, y1 = top-left corner, x2, y2 = top-right, x3, y3 = bottom-left, x4, y4 = bottom-right
+            // Add small overlap (0.5px) to eliminate gaps between adjacent rooms
+            const x = room.x1 * scale + 5 - 0.5;
+            const y = room.y1 * scale + 5 - 0.5;
+            const width = (room.x2 - room.x1) * scale + 1;
+            const height = (room.y3 - room.y1) * scale + 1;
+            
+            // Extract room type from label
+            const roomType = (room.label || '').split('-')[0].toLowerCase();
+            const color = roomColors[roomType] || roomColors.default;
+            
+            return (
+              <g key={`plan-${plan.id}-room-${room.label}-${room.x1}-${room.y1}`}>
+                <rect
+                  x={x}
+                  y={y}
+                  width={width}
+                  height={height}
+                  fill={color}
+                  stroke={color}
+                  strokeWidth="0"
+                />
+                <text
+                  x={x + width / 2}
+                  y={y + height / 2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="7"
+                  fill="#333"
+                  fontWeight="600"
+                >
+                  {roomType.charAt(0).toUpperCase()}
+                </text>
+              </g>
+            );
+          })
+        }
+        
+        {/* Fallback: If no map data, try rooms array */}
+        {(!mapData || mapData.filter(item => item.type === 'label').length === 0) && plan.rooms && plan.rooms.map((room, index) => {
+          let x, y, width, height, roomType, color;
           
-          const roomWidth = (gridSize - padding * (cols + 1)) / cols;
-          const roomHeight = (90 - padding * (rows + 1)) / rows;
+          // Check GA format - array with 5 elements: [[x1,y1], [x2,y2], [x3,y3], [x4,y4], "tag"]
+          if (Array.isArray(room) && room.length === 5 && Array.isArray(room[0])) {
+            const [p0, p1, p2, p3, tag] = room;
+            roomType = (tag || '').split('-')[0].toLowerCase();
+            color = roomColors[roomType] || roomColors.default;
+            x = (p0[0] * scale) + 5 - 0.5;
+            y = (p0[1] * scale) + 5 - 0.5;
+            width = Math.abs(p1[0] - p0[0]) * scale + 1;
+            height = Math.abs(p2[1] - p0[1]) * scale + 1;
+          }
+          // Object format
+          else if (room && typeof room === 'object' && room.x !== undefined) {
+            x = (room.x * scale) + 5 - 0.5;
+            y = (room.y * scale) + 5 - 0.5;
+            width = (room.width || 100) * scale + 1;
+            height = (room.height || 100) * scale + 1;
+            roomType = (room.type || room.tag || '').split('-')[0].toLowerCase();
+            color = roomColors[roomType] || roomColors.default;
+          } else {
+            return null;
+          }
           
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-          
-          const x = padding + col * (roomWidth + padding);
-          const y = padding + row * (roomHeight + padding);
-          
-          // Use actual room dimensions if available, otherwise use grid layout
-          const finalX = room.x !== undefined ? (room.x / 10) + 5 : x;
-          const finalY = room.y !== undefined ? (room.y / 10) + 5 : y;
-          const finalWidth = room.width !== undefined ? Math.max(room.width / 10, 15) : roomWidth;
-          const finalHeight = room.height !== undefined ? Math.max(room.height / 10, 15) : roomHeight;
-          
-          const roomType = room.type || 'default';
-          const color = roomColors[roomType] || roomColors.default;
+          if (!width || !height || width < 0 || height < 0) return null;
           
           return (
-            <g key={index}>
+            <g key={`fallback-room-${index}`}>
               <rect
-                x={finalX}
-                y={finalY}
-                width={finalWidth}
-                height={finalHeight}
+                x={x}
+                y={y}
+                width={width}
+                height={height}
                 fill={color}
-                stroke="#666"
-                strokeWidth="1"
-                rx="2"
+                stroke={color}
+                strokeWidth="0"
               />
               <text
-                x={finalX + finalWidth / 2}
-                y={finalY + finalHeight / 2}
+                x={x + width / 2}
+                y={y + height / 2}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fontSize="8"
+                fontSize="7"
                 fill="#333"
-                fontWeight="bold"
+                fontWeight="600"
               >
-                {roomType.charAt(0).toUpperCase()}
+                {roomType ? roomType.charAt(0).toUpperCase() : 'R'}
               </text>
             </g>
           );
         })}
-        
-        {/* Add doors if available */}
-        {plan.doors && plan.doors.map((door, index) => (
-          <line
-            key={`door-${index}`}
-            x1={(door.x1 / 10) + 5}
-            y1={(door.y1 / 10) + 5}
-            x2={(door.x2 / 10) + 5}
-            y2={(door.y2 / 10) + 5}
-            stroke="#8B4513"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        ))}
-        
-        {/* Add walls if available */}
-        {plan.walls && plan.walls.map((wall, index) => (
-          <line
-            key={`wall-${index}`}
-            x1={(wall.x1 / 10) + 5}
-            y1={(wall.y1 / 10) + 5}
-            x2={(wall.x2 / 10) + 5}
-            y2={(wall.y2 / 10) + 5}
-            stroke="#333"
-            strokeWidth="2"
-          />
-        ))}
       </svg>
     );
   };
@@ -684,49 +718,19 @@ const FloorPlanGenerator = () => {
     });
   };
 
-  // Generate new variations based on current plan
+  // Generate completely new floor plans (not variations of existing)
   const generateVariations = async () => {
-    const currentPlan = generatedPlans[currentPlanIndex];
-    if (!currentPlan) return;
-
-    setIsGenerating(true);
-
-    try {
-      const variationData = {
-        basePlan: currentPlan,
-        variationCount: 3,
-        mutationRate: 0.1,
-        crossoverRate: 0.7
-      };
-
-      const response = await fetch('http://localhost:5000/api/floorplan/variations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(variationData)
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        
-        if (result.variations) {
-          // Add new variations to the plans list
-          const newVariations = result.variations.map((variation, idx) => ({
-            ...variation,
-            id: `${currentPlan.id}-var-${idx + 1}`,
-            isVariation: true,
-            parentId: currentPlan.id
-          }));
-
-          setGeneratedPlans(prevPlans => [...prevPlans, ...newVariations]);
-          alert(`Generated ${newVariations.length} new variations!`);
-        }
-      }
-    } catch (error) {
-      console.error('Error generating variations:', error);
-      alert('Failed to generate variations. Please try again.');
-    } finally {
-      setIsGenerating(false);
+    // Simply trigger a fresh generation with current form data using GA
+    // This ensures we always get 5 brand new diverse plans
+    console.log('🔄 Generating fresh floor plans with GA...');
+    
+    const selectedRooms = getSelectedRooms();
+    if (selectedRooms.length === 0) {
+      alert('Please configure rooms first before generating variations');
+      return;
     }
+    
+    await generateFloorPlans(false); // false = use GA (Genetic Algorithm)
   };
 
   const handleSubmit = async (e) => {
@@ -1535,6 +1539,7 @@ const FloorPlanGenerator = () => {
 
                         {/* Konva Canvas Floor Plan */}
                         <KonvaFloorPlan
+                          key={`main-plan-${currentPlanIndex}-${generatedPlans[currentPlanIndex]?.id}-${generatedPlans[currentPlanIndex]?.fitness}`}
                           floorPlanData={generatedPlans[currentPlanIndex]}
                           width={800}
                           height={500}
@@ -1562,7 +1567,7 @@ const FloorPlanGenerator = () => {
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         {generatedPlans.map((plan, index) => (
                           <div
-                            key={plan.id ?? index}
+                            key={`plan-${plan.id}-${index}-${plan.fitness}`}
                             className="flex-shrink-0 text-center"
                           >
                             <button
@@ -1574,7 +1579,7 @@ const FloorPlanGenerator = () => {
                               }`}
                             >
                               <div className="w-full h-32 mb-2 flex items-center justify-center bg-gray-50 rounded">
-                                {plan && plan.rooms && plan.rooms.length > 0 ? (
+                                {plan && plan.mapData && plan.mapData.length > 0 ? (
                                   <div className="relative w-full h-full flex items-center justify-center">
                                     {/* Custom SVG Floor Plan Preview */}
                                     {createFloorPlanPreview(plan)}

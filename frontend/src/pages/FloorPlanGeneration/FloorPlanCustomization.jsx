@@ -58,10 +58,13 @@ const FloorPlanCustomization = () => {
     if (location.state?.floorPlan) {
       // Data from navigation
       const floorPlan = location.state.floorPlan;
+      console.log('📥 FloorPlanCustomization received plan:', floorPlan.id, 'Fitness:', floorPlan.fitness, 'Rooms:', floorPlan.rooms?.length);
       setFloorPlanData(floorPlan);
       
-      // Save to localStorage for persistence across refreshes
+      // Save to localStorage with timestamp to force refresh
+      const floorPlanWithTimestamp = { ...floorPlan, _loadedAt: Date.now() };
       localStorage.setItem('currentFloorPlan', JSON.stringify(floorPlan));
+      localStorage.setItem('currentFloorPlan', JSON.stringify(floorPlanWithTimestamp));
       
       // Initialize floor plan data
       const initialDataStr = JSON.stringify({
@@ -616,6 +619,7 @@ const FloorPlanCustomization = () => {
               {viewMode === '2d' ? (
                 <div className="bg-white rounded-lg shadow-2xl border-4 border-[#1e2a3a] overflow-hidden">
                   <KonvaFloorPlan
+                    key={`floor-plan-${floorPlanData?.id}-${floorPlanData?._loadedAt || Date.now()}`}
                     floorPlanData={floorPlanData}
                     width={1000}
                     height={500}

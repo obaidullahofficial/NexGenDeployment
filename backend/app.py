@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_file, abort
+from flask import Flask, jsonify, send_file, abort, request
 from flask_jwt_extended import JWTManager
 from routes.user_routes import user_bp
 from routes.society_profile_routes import society_profile_bp
@@ -36,6 +36,13 @@ app.config['JWT_COOKIE_SAMESITE'] = 'Lax'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 jwt = JWTManager(app)
 
+# Request logging middleware
+@app.before_request
+def log_request():
+    print(f"[REQUEST] {request.method} {request.path}")
+    if request.args:
+        print(f"[ARGS] {dict(request.args)}")
+
 # JWT Error Handlers
 @jwt.expired_token_loader
 def expired_token_callback(jwt_header, jwt_payload):
@@ -72,6 +79,10 @@ app.register_blueprint(floorplan_bp, url_prefix='/api')
 # Import and register payment blueprint
 from routes.payment_routes import payment_bp
 app.register_blueprint(payment_bp, url_prefix='/api/payment')
+
+# Import and register compliance blueprint
+from routes.compliance_routes import compliance_bp
+app.register_blueprint(compliance_bp, url_prefix='/api/compliance')
 
 
 # ========== FILE SERVING ROUTES (for uploaded user documents) ==========

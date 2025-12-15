@@ -166,9 +166,13 @@ class ComplianceController:
             if not society_id or not marla_size:
                 return None, "Plot missing society or marla size information"
             
+            # Convert society_id to ObjectId if it's a string
+            if isinstance(society_id, str):
+                society_id = ObjectId(society_id)
+            
             # Get compliance rules
             compliance = compliances.find_one({
-                'society_id': ObjectId(society_id),
+                'society_id': society_id,
                 'marla_size': marla_size,
                 'is_active': True
             })

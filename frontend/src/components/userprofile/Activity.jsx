@@ -228,7 +228,6 @@ const Activity = () => {
             </div>
           </div>
         </div>
-        )}
 
         {/* Activity Timeline */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">

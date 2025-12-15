@@ -64,9 +64,9 @@ const PlotDetail = () => {
         const societyIdToUse = plot.societyId || societyId;
         if (societyIdToUse) {
           try {
-            const societyResponse = await axios.get(`${API_URL}/society-profile/${societyIdToUse}`, getAuthHeaders());
+            const societyResponse = await axios.get(`${API_URL}/society-profiles/${societyIdToUse}`, getAuthHeaders());
             console.log('[PlotDetail] Society response:', societyResponse.data);
-            setSocietyData(societyResponse.data.profile);
+            setSocietyData(societyResponse.data.data || societyResponse.data.profile);
           } catch (socError) {
             console.log('[PlotDetail] Society not found or error:', socError.message);
           }

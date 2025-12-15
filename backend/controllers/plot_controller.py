@@ -189,6 +189,10 @@ class PlotController:
             plot_data['_id'] = str(plot_data['_id'])
             plot_data['plot_id'] = plot_data['_id']
             
+            # Convert societyId ObjectId to string for JSON serialization
+            if 'societyId' in plot_data and isinstance(plot_data['societyId'], ObjectId):
+                plot_data['societyId'] = str(plot_data['societyId'])
+            
             print(f"[get_plot] Successfully fetched plot: {plot_data.get('plot_number')}")
             return jsonify(plot_data)
         except Exception as e:

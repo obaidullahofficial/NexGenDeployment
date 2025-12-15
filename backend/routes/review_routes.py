@@ -101,6 +101,45 @@ def get_reviews_by_society(society_id):
     except Exception as e:
         return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500
 
+# READ - Get reviews by plot ID (alias for society reviews since plots belong to societies)
+@review_bp.route('/plots/<plot_id>/reviews', methods=['GET'])
+def get_reviews_by_plot(plot_id):
+    """Get all reviews for a specific plot (returns society reviews for the plot's society)"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Get the society_id from the plot
+        from utils.db import get_db
+        from models.plot import plot_collection
+        db = get_db()
+        plots = plot_collection(db)
+        
+        # Find the plot to get its society_id
+        plot = plots.find_one({'_id': ObjectId(plot_id)})
+        if not plot:
+            return jsonify({
+                "success": True,
+                "data": [],
+                "message": "No reviews found for this plot"
+            }), 200
+        
+        # Get the society_id from the plot
+        society_id = plot.get('societyId')
+        if society_id:
+            society_id = str(society_id) if isinstance(society_id, ObjectId) else society_id
+            result = ReviewController.get_reviews_by_society(society_id, page=page, per_page=per_page)
+            return jsonify(result), 200
+        else:
+            return jsonify({
+                "success": True,
+                "data": [],
+                "message": "No society associated with this plot"
+            }), 200
+            
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Internal server error: {str(e)}"}), 500
+
 # READ - Get reviews by user
 @review_bp.route('/users/<user_email>/reviews', methods=['GET'])
 def get_reviews_by_user(user_email):

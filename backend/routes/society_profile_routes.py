@@ -586,19 +586,30 @@ def get_all_society_profiles():
         
         # Import plot collection to count plots
         from models.plot import plot_collection
+        from bson import ObjectId
         plots = plot_collection(db)
         
         # Add plot counts to each profile
         for profile in all_profiles:
+            # Store original ObjectId before converting to string for querying
+            original_id = profile['_id']
             profile['_id'] = str(profile['_id'])
-            society_id = profile['_id']
             
-            # Count total plots for this society
-            total_plots = plots.count_documents({'societyId': society_id})
+            # Query plots using ObjectId (since plots store societyId as ObjectId)
+            # Also check string version for backward compatibility
+            total_plots = plots.count_documents({
+                '$or': [
+                    {'societyId': original_id},
+                    {'societyId': profile['_id']}
+                ]
+            })
             
             # Count available plots (status = 'Available')
             available_plots = plots.count_documents({
-                'societyId': society_id,
+                '$or': [
+                    {'societyId': original_id},
+                    {'societyId': profile['_id']}
+                ],
                 'status': 'Available'
             })
             
@@ -650,6 +661,9 @@ def get_society_profile_by_id(society_id):
                 "error": "Society profile not found"
             }), 404
         
+        # Store original ObjectId before converting to string
+        original_id = profile['_id']
+        
         # Convert ObjectId to string
         profile['_id'] = str(profile['_id'])
         
@@ -657,14 +671,21 @@ def get_society_profile_by_id(society_id):
         from models.plot import plot_collection
         plots = plot_collection(db)
         
-        society_id_str = profile['_id']
-        
-        # Count total plots for this society
-        total_plots = plots.count_documents({'societyId': society_id_str})
+        # Query plots using ObjectId (since plots store societyId as ObjectId)
+        # Also check string version for backward compatibility
+        total_plots = plots.count_documents({
+            '$or': [
+                {'societyId': original_id},
+                {'societyId': profile['_id']}
+            ]
+        })
         
         # Count available plots (status = 'Available')
         available_plots = plots.count_documents({
-            'societyId': society_id_str,
+            '$or': [
+                {'societyId': original_id},
+                {'societyId': profile['_id']}
+            ],
             'status': 'Available'
         })
         

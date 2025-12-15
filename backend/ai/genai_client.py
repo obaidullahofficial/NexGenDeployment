@@ -8,7 +8,7 @@ Simple wrapper to call Google GenAI (Gemini) model.
 
 Usage (PowerShell):
   $env:GEMINI_API_KEY = "YOUR_KEY_HERE"
-  python .\backend\ai\genai_client.py
+  python .\\backend\\ai\\genai_client.py
 
 Or add GEMINI_API_KEY=your_key to backend/.env and install python-dotenv to load it automatically.
 

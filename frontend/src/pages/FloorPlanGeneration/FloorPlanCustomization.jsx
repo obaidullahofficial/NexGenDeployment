@@ -32,12 +32,88 @@ const FloorPlanCustomization = () => {
 
   // Get floor plan data from navigation state
   useEffect(() => {
-    if (location.state?.floorPlan) {
-      setFloorPlanData(location.state.floorPlan);
-    } else {
-      // If no floor plan data, redirect back to generator
-      navigate('/floor-plan/generate', { replace: true });
-    }
+    const initializeFloorPlan = async () => {
+      if (location.state?.floorPlan) {
+        const floorPlan = location.state.floorPlan;
+        
+        // If floor plan doesn't have a database ID (_id), save it to database first
+        // Note: floorPlan.id is just the GA-generated ID (1,2,3...), not a database ID
+        if (!floorPlan._id) {
+          console.log('🆕 Floor plan has no database ID, saving to database...');
+          console.log('Floor plan data:', floorPlan);
+          
+          try {
+            const userStr = localStorage.getItem('user');
+            const user = userStr ? JSON.parse(userStr) : null;
+            
+            console.log('User from localStorage:', user);
+            
+            if (!user || !user.id) {
+              console.error('❌ User not authenticated');
+              alert('User not authenticated. Please log in again.');
+              navigate('/login', { replace: true });
+              return;
+            }
+
+            const savePayload = {
+              user_id: user.id,
+              project_name: `Floor Plan ${new Date().toLocaleString()}`,
+              floor_plan_data: {
+                rooms: floorPlan.rooms || [],
+                mapData: floorPlan.mapData || [],
+                plotDimensions: floorPlan.plotDimensions || { width: 1000, height: 1000 }
+              }
+            };
+
+            console.log('📤 Sending save request:', savePayload);
+
+            // Save the floor plan to get an ID
+            const response = await fetch('/api/floorplan/save', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(savePayload),
+            });
+
+            console.log('📥 Save response status:', response.status);
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const text = await response.text();
+              console.error('❌ Non-JSON response:', text);
+              throw new Error('Server returned non-JSON response');
+            }
+
+            const result = await response.json();
+            console.log('📥 Save result:', result);
+            
+            if (response.ok && result.success) {
+              console.log('✅ Floor plan saved with ID:', result.floorplan_id);
+              // Add the ID to the floor plan data
+              floorPlan._id = result.floorplan_id;
+              setFloorPlanData(floorPlan);
+            } else {
+              throw new Error(result.error || 'Failed to save floor plan');
+            }
+          } catch (error) {
+            console.error('❌ Error auto-saving floor plan:', error);
+            alert(`Failed to initialize floor plan: ${error.message}`);
+            // Still set the floor plan data even if save failed
+            setFloorPlanData(floorPlan);
+          }
+        } else {
+          console.log('✅ Floor plan already has ID:', floorPlan._id || floorPlan.id);
+          setFloorPlanData(floorPlan);
+        }
+      } else {
+        console.log('❌ No floor plan in navigation state');
+        // If no floor plan data, redirect back to generator
+        navigate('/floor-plan/generate', { replace: true });
+      }
+    };
+
+    initializeFloorPlan();
   }, [location.state, navigate]);
 
   // Handle room updates
@@ -186,37 +262,126 @@ const FloorPlanCustomization = () => {
     setHasUnsavedChanges(true);
   }, []);
 
+  // Handle window changes from Konva editor
+  const handleWindowsChange = useCallback((updatedWindows) => {
+    setFloorPlanData(prevData => {
+      if (!prevData) return prevData;
+      
+      const margin = 40;
+      const plotWidth = 1000;
+      const plotHeight = 1000;
+      const scaleX = (800 - margin * 2) / plotWidth;
+      const scaleY = (600 - margin * 2) / plotHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      // Convert ALL Konva windows to backend format
+      const backendWindows = updatedWindows.map(window => {
+        return {
+          type: 'Window',
+          id: window.id,
+          x1: (window.points[0] - margin) / scale,
+          y1: (window.points[1] - margin) / scale,
+          x2: (window.points[2] - margin) / scale,
+          y2: (window.points[3] - margin) / scale
+        };
+      });
+      
+      // Keep only non-window items from mapData
+      const nonWindowMapData = (prevData.mapData || []).filter(item => 
+        item.type !== 'Window' && item.type !== 'window'
+      );
+      
+      return {
+        ...prevData,
+        mapData: [
+          ...nonWindowMapData,
+          ...backendWindows
+        ]
+      };
+    });
+    
+    setHasUnsavedChanges(true);
+  }, []);
+
   // Save floor plan
   const handleSave = async () => {
     if (!floorPlanData || !hasUnsavedChanges) return;
 
+    // Prompt user for project name
+    const currentName = floorPlanData.project_name || `Floor Plan ${new Date().toLocaleDateString()}`;
+    const projectName = prompt('Enter a name for your floor plan:', currentName);
+    
+    // If user cancels, don't save
+    if (projectName === null) return;
+    
+    // If user enters empty name, use default
+    const finalName = projectName.trim() || currentName;
+
     setIsSaving(true);
     try {
+      // Get user info from localStorage or auth context
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      
+      if (!user || !user.id) {
+        alert('User not authenticated. Please log in again.');
+        setIsSaving(false);
+        return;
+      }
+
+      // Prepare floor plan data for saving
+      const saveData = {
+        floorplan_id: floorPlanData._id || floorPlanData.id || floorPlanData.floorplan_id,
+        user_id: user.id,
+        project_name: finalName,
+        floor_plan_data: {
+          rooms: floorPlanData.rooms || [],
+          mapData: floorPlanData.mapData || [],
+          plotDimensions: floorPlanData.plotDimensions || { width: 1000, height: 1000 }
+        },
+        room_data: floorPlanData.rooms || [] // Include room data for room count
+      };
+
+      console.log('💾 Saving floor plan:', saveData);
+
       // Send updated floor plan data to backend
       const response = await fetch('/api/floorplan/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          planId: floorPlanData.id,
-          rooms: floorPlanData.rooms,
-          walls: floorPlanData.walls,
-          doors: floorPlanData.doors,
-          plotDimensions: floorPlanData.plotDimensions
-        }),
+        body: JSON.stringify(saveData),
       });
 
-      if (response.ok) {
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      // Check if response has content before parsing JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('Server returned non-JSON response');
+      }
+
+      const result = await response.json();
+      console.log('Save result:', result);
+
+      if (response.ok && result.success) {
         setHasUnsavedChanges(false);
+        // Update the project name in local state
+        setFloorPlanData(prev => ({
+          ...prev,
+          project_name: finalName
+        }));
         // Show success message
-        alert('Floor plan saved successfully!');
+        alert(`Floor plan "${finalName}" saved successfully!`);
       } else {
-        throw new Error('Failed to save floor plan');
+        throw new Error(result.error || 'Failed to save floor plan');
       }
     } catch (error) {
       console.error('Error saving floor plan:', error);
-      alert('Failed to save floor plan. Please try again.');
+      alert(`Failed to save floor plan: ${error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -392,6 +557,7 @@ const FloorPlanCustomization = () => {
                   onRoomsChange={handleRoomsChange}
                   onWallsChange={handleWallsChange}
                   onDoorsChange={handleDoorsChange}
+                  onWindowsChange={handleWindowsChange}
                 />
               ) : (
                 <div className="w-full h-[600px] rounded-lg overflow-hidden border border-[#ED7600]">

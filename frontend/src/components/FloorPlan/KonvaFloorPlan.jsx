@@ -9,27 +9,32 @@ const KonvaFloorPlan = ({
   onRoomsChange,
   onWallsChange,
   onDoorsChange,
+  onWindowsChange,
   isEditable = false 
 }) => {
   const [rooms, setRooms] = useState([]);
   const [walls, setWalls] = useState([]);
   const [doors, setDoors] = useState([]);
+  const [windows, setWindows] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedDoor, setSelectedDoor] = useState(null);
   const [selectedWall, setSelectedWall] = useState(null);
+  const [selectedWindow, setSelectedWindow] = useState(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragType, setDragType] = useState(null); // 'room', 'door', 'wall'
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [gridSize] = useState(25);
-  const [creationMode, setCreationMode] = useState(null); // 'door', 'wall', null
+  const [creationMode, setCreationMode] = useState(null); // 'door', 'wall', 'window', null
   const [isCreating, setIsCreating] = useState(false);
   const [newElementStart, setNewElementStart] = useState(null);
   const [showCustomizationPanel, setShowCustomizationPanel] = useState(false);
   const [doorColor, setDoorColor] = useState('#8B4513');
   const [wallColor, setWallColor] = useState('#000000');
+  const [windowColor, setWindowColor] = useState('#87CEEB');
   const [doorWidth, setDoorWidth] = useState(6);
   const [wallWidth, setWallWidth] = useState(4);
+  const [windowWidth, setWindowWidth] = useState(5);
   const [totalFloorArea, setTotalFloorArea] = useState(10000); // Total area in square units
   const [roomPercentages, setRoomPercentages] = useState({}); // Room ID -> percentage mapping
   const [availablePercentage, setAvailablePercentage] = useState(100);
@@ -68,6 +73,14 @@ const KonvaFloorPlan = ({
           const updatedWalls = walls.filter(w => w.id !== selectedWall);
           setWalls(updatedWalls);
           setSelectedWall(null);
+        } else if (selectedWindow) {
+          const updatedWindows = windows.filter(w => w.id !== selectedWindow);
+          setWindows(updatedWindows);
+          // Notify parent about window deletion
+          if (onWindowsChange) {
+            onWindowsChange(updatedWindows);
+          }
+          setSelectedWindow(null);
         }
       }
       
@@ -76,12 +89,13 @@ const KonvaFloorPlan = ({
         setSelectedRoom(null);
         setSelectedDoor(null);
         setSelectedWall(null);
+        setSelectedWindow(null);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditable, selectedRoom, selectedDoor, selectedWall, rooms, doors, walls]);
+  }, [isEditable, selectedRoom, selectedDoor, selectedWall, selectedWindow, rooms, doors, walls, windows]);
 
   // Convert backend data to Konva-friendly format
   useEffect(() => {
@@ -206,6 +220,47 @@ const KonvaFloorPlan = ({
 
       const finalDoorsData = doorsData;
       
+      // Convert windows data with proper scaling
+      let windowsData = [];
+      
+      // Check mapData for windows
+      if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+        const mapWindows = floorPlanData.mapData
+          .filter(item => item.type === 'Window')
+          .map((window, index) => ({
+            id: window.id || `window-${index}`,
+            points: [
+              (window.x1 || 0) * scale + margin, 
+              (window.y1 || 0) * scale + margin, 
+              (window.x2 || 0) * scale + margin, 
+              (window.y2 || 0) * scale + margin
+            ],
+            stroke: '#87CEEB',
+            strokeWidth: Math.max(5, 3 * scale),
+            lineCap: 'round'
+          }));
+        windowsData = [...windowsData, ...mapWindows];
+      }
+      
+      // Check direct windows array
+      if (floorPlanData.windows && Array.isArray(floorPlanData.windows)) {
+        const directWindows = floorPlanData.windows.map((window, index) => ({
+          id: window.id || `direct-window-${index}`,
+          points: [
+            (window.x1 || 0) * scale + margin, 
+            (window.y1 || 0) * scale + margin, 
+            (window.x2 || 0) * scale + margin, 
+            (window.y2 || 0) * scale + margin
+          ],
+          stroke: '#87CEEB',
+          strokeWidth: Math.max(5, 3 * scale),
+          lineCap: 'round'
+        }));
+        windowsData = [...windowsData, ...directWindows];
+      }
+
+      const finalWindowsData = windowsData;
+      
       // Merge with existing manually created rooms (those not from floorPlanData)
       setRooms(prevRooms => {
         // Find manually created rooms (IDs starting with 'new-room-' or 'created-room-')
@@ -243,6 +298,17 @@ const KonvaFloorPlan = ({
         
         // Combine: keep manual doors + add/update doors from floorPlanData
         return [...finalDoorsData, ...manualDoors];
+      });
+      
+      // Merge with existing manually created windows (those not from floorPlanData)
+      setWindows(prevWindows => {
+        // Find manually created windows (IDs starting with 'new-window-')
+        const manualWindows = prevWindows.filter(window => 
+          window.id && window.id.toString().startsWith('new-window-')
+        );
+        
+        // Combine: keep manual windows + add/update windows from floorPlanData
+        return [...finalWindowsData, ...manualWindows];
       });
     }
   }, [floorPlanData, isEditable]);
@@ -545,6 +611,83 @@ const KonvaFloorPlan = ({
       snapDistance: distance
     });
   }, [doors, width, height, isEditable, dragStart, findNearestWallEdge]);
+
+  // Handle window drag start
+  const handleWindowDragStart = useCallback((e, windowId) => {
+    if (!isEditable) return;
+    
+    const window = windows.find(w => w.id === windowId);
+    if (!window) return;
+    
+    setDragStart({ x: e.target.x(), y: e.target.y() });
+    setSelectedWindow(windowId);
+    setSelectedRoom(null);
+    setSelectedDoor(null);
+    setSelectedWall(null);
+    setIsDragging(true);
+    setDragType('window');
+  }, [windows, isEditable]);
+
+  // Handle window drag move
+  const handleWindowDragMove = useCallback((e, windowId) => {
+    if (!isEditable) return;
+    // Allow free movement
+  }, [isEditable]);
+
+  // Handle window drag end
+  const handleWindowDragEnd = useCallback((e, windowId) => {
+    if (!isEditable) return;
+
+    const window = windows.find(w => w.id === windowId);
+    if (!window) return;
+    
+    const dragOffsetX = e.target.x() - dragStart.x;
+    const dragOffsetY = e.target.y() - dragStart.y;
+    
+    const windowCenterX = (window.points[0] + window.points[2]) / 2 + dragOffsetX;
+    const windowCenterY = (window.points[1] + window.points[3]) / 2 + dragOffsetY;
+    
+    const windowLength = Math.sqrt(
+      (window.points[2] - window.points[0]) ** 2 + 
+      (window.points[3] - window.points[1]) ** 2
+    );
+    
+    const { nearestWall, snapPosition } = findNearestWallEdge(windowCenterX, windowCenterY, windowLength);
+    
+    let finalWindowPoints;
+    
+    if (nearestWall && snapPosition) {
+      finalWindowPoints = [snapPosition.x1, snapPosition.y1, snapPosition.x2, snapPosition.y2];
+    } else {
+      finalWindowPoints = window.points;
+    }
+    
+    const updatedWindows = windows.map(w => 
+      w.id === windowId 
+        ? { ...w, points: finalWindowPoints }
+        : w
+    );
+
+    setWindows(updatedWindows);
+    setIsDragging(false);
+    setDragType(null);
+    
+    if (onWindowsChange) {
+      onWindowsChange(updatedWindows);
+    }
+    
+    e.target.position({ x: 0, y: 0 });
+  }, [windows, isEditable, dragStart, findNearestWallEdge, onWindowsChange]);
+
+  // Handle window click
+  const handleWindowClick = useCallback((e, windowId) => {
+    if (!isEditable) return;
+    e.cancelBubble = true;
+    setSelectedWindow(windowId);
+    setSelectedRoom(null);
+    setSelectedDoor(null);
+    setSelectedWall(null);
+  }, [isEditable]);
 
   // Add new door
   const addNewDoor = useCallback(() => {
@@ -1183,22 +1326,59 @@ const KonvaFloorPlan = ({
           const newWall = {
             id: `created-wall-${Date.now()}`,
             points: [newElementStart.x, newElementStart.y, snappedX, snappedY],
-            stroke: '#000',
-            strokeWidth: 4,
-            lineCap: 'round'
+            stroke: wallColor,
+            strokeWidth: wallWidth,
+            lineCap: 'round',
+            type: 'Wall'
           };
-          setWalls(prev => [...prev, newWall]);
+          const updatedWalls = [...walls, newWall];
+          setWalls(updatedWalls);
           setSelectedWall(newWall.id);
+          
+          // Notify parent component
+          if (onWallsChange) {
+            onWallsChange(updatedWalls);
+          }
+          
           setIsCreating(false);
           setNewElementStart(null);
           setCreationMode(null);
         }
-      } else {
-        // Normal click - deselect all
-        setSelectedRoom(null);
-        setSelectedDoor(null);
-        setSelectedWall(null);
+      } else if (creationMode === 'window') {
+        if (!isCreating) {
+          // Start creating window
+          setNewElementStart({ x: snappedX, y: snappedY });
+          setIsCreating(true);
+        } else {
+          // Complete window creation
+          const newWindow = {
+            id: `new-window-${Date.now()}`,
+            points: [newElementStart.x, newElementStart.y, snappedX, snappedY],
+            stroke: windowColor,
+            strokeWidth: windowWidth,
+            lineCap: 'round',
+            type: 'Window'
+          };
+          const updatedWindows = [...windows, newWindow];
+          setWindows(updatedWindows);
+          setSelectedWindow(newWindow.id);
+          
+          // Notify parent component
+          if (onWindowsChange) {
+            onWindowsChange(updatedWindows);
+          }
+          
+          setIsCreating(false);
+          setNewElementStart(null);
+          setCreationMode(null);
+        }
       }
+    } else {
+      // Normal click - deselect all
+      setSelectedRoom(null);
+      setSelectedDoor(null);
+      setSelectedWall(null);
+      setSelectedWindow(null);
     }
   }, [isEditable, creationMode, isCreating, newElementStart, snapToGridCoordinate]);
 
@@ -1274,6 +1454,28 @@ const KonvaFloorPlan = ({
                 {creationMode === 'wall' ? '✓ Click to Place Wall' : '🧱 Add Wall'}
               </button>
               
+              {/* Add Window Button */}
+              <button
+                onClick={() => {
+                  if (creationMode === 'window') {
+                    setCreationMode(null);
+                    setIsCreating(false);
+                    setNewElementStart(null);
+                  } else {
+                    setCreationMode('window');
+                    setIsCreating(false);
+                    setNewElementStart(null);
+                  }
+                }}
+                className={`w-full px-3 py-2 text-xs rounded-lg border transition-colors ${
+                  creationMode === 'window'
+                    ? 'bg-cyan-100 border-cyan-300 text-cyan-800'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {creationMode === 'window' ? '✓ Click to Place Window' : '🪟 Add Window'}
+              </button>
+              
               {/* Add Room Button */}
               <button
                 onClick={() => {
@@ -1299,48 +1501,7 @@ const KonvaFloorPlan = ({
               {/* Quick Add Buttons */}
               <div className="border-t pt-2 mt-2">
                 <div className="text-xs text-gray-600 mb-2">Quick Add:</div>
-                <div className="grid grid-cols-3 gap-1">
-                  <button
-                    onClick={() => {
-                      const baseRoom = {
-                        id: `new-room-${Date.now()}`,
-                        x: 200,
-                        y: 200,
-                        width: 150,
-                        height: 100,
-                        fill: '#e3f2fd',
-                        stroke: '#333',
-                        strokeWidth: 2,
-                        draggable: isEditable,
-                        type: 'Room',
-                        tag: 'room',
-                        name: 'New Room',
-                        originalX: 200,
-                        originalY: 200,
-                        originalWidth: 150,
-                        originalHeight: 100,
-                        scale: 1
-                      };
-                      
-                      // Use area allocation system
-                      const roomWithArea = addRoomWithAreaAllocation(baseRoom, 20); // Request 20% default
-                      setRooms(prev => {
-                        const updatedRooms = [...prev, roomWithArea];
-                        // Notify parent component about the new room
-                        if (onRoomsChange) {
-                          onRoomsChange(updatedRooms);
-                        }
-                        return updatedRooms;
-                      });
-                      setSelectedRoom(baseRoom.id);
-                      setSelectedDoor(null);
-                      setSelectedWall(null);
-                    }}
-                    className="px-2 py-1 text-xs bg-blue-100 border border-blue-300 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-                    title="Add room at center"
-                  >
-                    + Room
-                  </button>
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={addNewDoor}
                     className="px-2 py-1 text-xs bg-amber-100 border border-amber-300 text-amber-800 rounded hover:bg-amber-200 transition-colors"
@@ -1354,6 +1515,32 @@ const KonvaFloorPlan = ({
                     title="Add wall at center"
                   >
                     + Wall
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newWindow = {
+                        id: `new-window-${Date.now()}`,
+                        points: [300, 200, 380, 200],
+                        stroke: windowColor,
+                        strokeWidth: windowWidth,
+                        lineCap: 'round',
+                        type: 'Window'
+                      };
+                      const updatedWindows = [...windows, newWindow];
+                      setWindows(updatedWindows);
+                      setSelectedWindow(newWindow.id);
+                      setSelectedDoor(null);
+                      setSelectedWall(null);
+                      setSelectedRoom(null);
+                      
+                      if (onWindowsChange) {
+                        onWindowsChange(updatedWindows);
+                      }
+                    }}
+                    className="px-2 py-1 text-xs bg-cyan-100 border border-cyan-300 text-cyan-800 rounded hover:bg-cyan-200 transition-colors col-span-2"
+                    title="Add window at center"
+                  >
+                    + Window
                   </button>
                 </div>
               </div>
@@ -2172,6 +2359,62 @@ const KonvaFloorPlan = ({
                       radius={6}
                       fill="#2196F3"
                       stroke="#1976D2"
+                      strokeWidth={2}
+                      draggable={true}
+                      style={{ cursor: 'move' }}
+                    />
+                  </>
+                )}
+              </Group>
+            );
+          })}
+
+          {/* Windows - render on top */}
+          {windows.map(window => {
+            const x1 = window.points[0];
+            const y1 = window.points[1];
+            const x2 = window.points[2];
+            const y2 = window.points[3];
+            
+            const isSelected = selectedWindow === window.id;
+            
+            return (
+              <Group key={window.id}>
+                {/* Window - light blue line */}
+                <Line
+                  points={[x1, y1, x2, y2]}
+                  stroke={isSelected ? "#2196F3" : "#87CEEB"}
+                  strokeWidth={Math.max(6, window.strokeWidth * 1.5)}
+                  lineCap="round"
+                  draggable={isEditable}
+                  onDragStart={(e) => handleWindowDragStart(e, window.id)}
+                  onDragMove={(e) => handleWindowDragMove(e, window.id)}
+                  onDragEnd={(e) => handleWindowDragEnd(e, window.id)}
+                  onClick={(e) => handleWindowClick(e, window.id)}
+                  style={{ cursor: isEditable ? 'move' : 'default' }}
+                />
+                
+                {/* Window selection indicators */}
+                {isSelected && isEditable && (
+                  <>
+                    {/* Start point handle */}
+                    <Circle
+                      x={x1}
+                      y={y1}
+                      radius={6}
+                      fill="#87CEEB"
+                      stroke="#4682B4"
+                      strokeWidth={2}
+                      draggable={true}
+                      style={{ cursor: 'move' }}
+                    />
+                    {/* End point handle */}
+                    <Circle
+                      x={x2}
+                      y={y2}
+                      radius={6}
+                      fill="#87CEEB"
+                      stroke="#4682B4"
                       strokeWidth={2}
                       draggable={true}
                       style={{ cursor: 'move' }}

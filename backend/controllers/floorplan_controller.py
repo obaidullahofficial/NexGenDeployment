@@ -449,10 +449,17 @@ def update_floorplan():
     """Update floor plan details"""
     try:
         data = request.get_json()
+        
+        print(f"\n{'='*60}")
+        print(f"📝 UPDATE FLOOR PLAN REQUEST")
+        print(f"Data received: {data}")
+        print(f"{'='*60}\n")
+        
         floorplan_id = data.get('floorplan_id')
         user_id = data.get('user_id')
         
         if not floorplan_id or not user_id:
+            print(f"❌ Missing required fields - floorplan_id: {floorplan_id}, user_id: {user_id}")
             return jsonify({
                 'success': False,
                 'error': 'Floor plan ID and user ID are required'
@@ -460,6 +467,7 @@ def update_floorplan():
         
         # Convert floorplan_id to string if it's an integer
         floorplan_id = str(floorplan_id)
+        print(f"🔍 Searching for floor plan ID: {floorplan_id}, User ID: {user_id}")
         
         # Prepare update data
         update_data = {
@@ -475,47 +483,63 @@ def update_floorplan():
             update_data['tags'] = data['tags']
         if 'floor_plan_data' in data:
             update_data['floor_plan_data'] = data['floor_plan_data']
+            print(f"📊 Updating floor_plan_data with rooms: {len(data['floor_plan_data'].get('rooms', []))}")
+            print(f"📊 mapData items: {len(data['floor_plan_data'].get('mapData', []))}")
+        if 'room_data' in data:
+            update_data['room_data'] = data['room_data']
+            print(f"📊 Updating room_data with {len(data['room_data'])} rooms")
         
         # Update in database
         db = get_db()
         collection = floorplan_collection(db)
         
         # Try to query by ObjectId first, if that fails, query by integer id field
+        result = None
         try:
+            print(f"🔍 Trying ObjectId query...")
             result = collection.update_one(
                 {'_id': ObjectId(floorplan_id), 'user_id': user_id},
                 {'$set': update_data}
             )
-        except:
+            print(f"✅ ObjectId query - matched: {result.matched_count}, modified: {result.modified_count}")
+        except Exception as e:
+            print(f"⚠️ ObjectId query failed: {str(e)}")
             # If ObjectId conversion fails, try with integer id
             try:
+                print(f"🔍 Trying integer ID query...")
                 floorplan_id_int = int(floorplan_id)
                 result = collection.update_one(
                     {'id': floorplan_id_int, 'user_id': user_id},
                     {'$set': update_data}
                 )
-            except:
+                print(f"✅ Integer ID query - matched: {result.matched_count}, modified: {result.modified_count}")
+            except Exception as e2:
+                print(f"❌ Integer ID query also failed: {str(e2)}")
                 return jsonify({
                     'success': False,
                     'error': 'Invalid floor plan ID format'
                 }), 400
         
-        if result.matched_count == 0:
+        if result and result.matched_count == 0:
+            print(f"❌ Floor plan not found")
             return jsonify({
                 'success': False,
                 'error': 'Floor plan not found or unauthorized'
             }), 404
         
+        print(f"✅ Floor plan updated successfully")
         return jsonify({
             'success': True,
             'message': 'Floor plan updated successfully'
         })
         
     except Exception as e:
-        print(f"Error updating floor plan: {str(e)}")
+        print(f"❌ Error updating floor plan: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': 'Failed to update floor plan'
+            'error': f'Failed to update floor plan: {str(e)}'
         }), 500
 
 def update_floorplan_with_ga():

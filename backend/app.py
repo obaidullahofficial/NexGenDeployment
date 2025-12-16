@@ -21,6 +21,7 @@ app = Flask(__name__)
 CORS(app, 
      origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"], 
      supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"],
      expose_headers=["Content-Type", "Authorization"])
 

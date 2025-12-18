@@ -19,6 +19,7 @@ const SocietyPlots = () => {
     const { user } = useAuth();
     const [plots, setPlots] = useState([]);
     const [plotSearch, setPlotSearch] = useState("");
+    const [searchFilterType, setSearchFilterType] = useState("plot_number"); // 'plot_number' or 'plot_size'
     const [currentSociety, setCurrentSociety] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -263,15 +264,28 @@ const SocietyPlots = () => {
                     <h2 className="text-3xl font-bold text-[#2F3D57] mb-6">
                         Available Plots
                     </h2>
-                    {/* Search Bar for Plot Number */}
-                    <div className="mb-6 flex items-center gap-3">
-                        <input
-                            type="text"
-                            value={plotSearch}
-                            onChange={e => setPlotSearch(e.target.value)}
-                            placeholder="Search by plot number..."
-                            className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-[#ED7600] outline-none"
-                        />
+                    {/* Search Bar with Filter Options */}
+                    <div className="mb-6 flex flex-col md:flex-row items-start md:items-center gap-3">
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <select
+                                value={searchFilterType}
+                                onChange={e => {
+                                    setSearchFilterType(e.target.value);
+                                    setPlotSearch(""); // Clear search when filter type changes
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-[#ED7600] outline-none bg-white min-w-[140px]"
+                            >
+                                <option value="plot_number">Plot Number</option>
+                                <option value="plot_size">Plot Size</option>
+                            </select>
+                            <input
+                                type="text"
+                                value={plotSearch}
+                                onChange={e => setPlotSearch(e.target.value)}
+                                placeholder={searchFilterType === 'plot_number' ? 'Search by plot number...' : 'Search by plot size (e.g., 5 Marla)...'}
+                                className="flex-1 md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ED7600] focus:border-[#ED7600] outline-none"
+                            />
+                        </div>
                     </div>
                     {plots.length === 0 ? (
                         <div className="col-span-full text-center py-12">
@@ -280,10 +294,20 @@ const SocietyPlots = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {plots
-                                .filter(plot =>
-                                    plotSearch.trim() === "" ||
-                                    (plot.plot_number && plot.plot_number.toString().toLowerCase().includes(plotSearch.trim().toLowerCase()))
-                                )
+                                .filter(plot => {
+                                    if (plotSearch.trim() === "") return true;
+                                    const searchTerm = plotSearch.trim().toLowerCase();
+                                    
+                                    if (searchFilterType === 'plot_number') {
+                                        return plot.plot_number && 
+                                            plot.plot_number.toString().toLowerCase().includes(searchTerm);
+                                    } else if (searchFilterType === 'plot_size') {
+                                        return plot.marla_size && 
+                                            plot.marla_size.toString().toLowerCase().includes(searchTerm);
+                                    }
+                                    
+                                    return false;
+                                })
                                 .map((plot) => (
                                 <div key={plot.plot_id || plot._id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
                                     <div className="p-6">
@@ -304,6 +328,9 @@ const SocietyPlots = () => {
                                             )}
                                             {plot.area && (
                                                 <p><span className="font-medium">Area:</span> {plot.area}</p>
+                                            )}
+                                            {plot.marla_size && (
+                                                <p><span className="font-medium">Plot Size:</span> {plot.marla_size}</p>
                                             )}
                                             <p><span className="font-medium">Price:</span> PKR {plot.price}</p>
                                             {plot.type && (

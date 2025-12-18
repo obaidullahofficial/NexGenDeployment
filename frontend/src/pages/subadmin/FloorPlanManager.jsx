@@ -378,13 +378,6 @@ const FloorPlanManager = () => {
               
               <div className="flex gap-3">
                 <button
-                  onClick={handleCreateTemplate}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
-                >
-                  <FiCheckCircle size={20} />
-                  Create Template
-                </button>
-                <button
                   onClick={handleGenerateFloorPlan}
                   className="bg-[#ED7600] hover:bg-[#d46000] text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-all shadow-lg hover:shadow-xl"
                 >

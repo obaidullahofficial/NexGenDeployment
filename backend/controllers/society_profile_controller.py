@@ -196,3 +196,66 @@ class SocietyProfileController:
             
         except Exception as e:
             return [], f"Error getting missing fields: {str(e)}"
+    
+    @staticmethod
+    def delete_profile_by_user_id(user_id):
+        """Delete society profile by user ID"""
+        try:
+            db = get_db()
+            profiles = society_profile_collection(db)
+            
+            # Find the profile first to get details for logging
+            # Try both user_id as string and as ObjectId since profiles might use either
+            profile = None
+            delete_query = None
+            
+            # Try finding by user_id as string first
+            profile = profiles.find_one({'user_id': str(user_id)})
+            if profile:
+                delete_query = {'user_id': str(user_id)}
+            else:
+                # Try as ObjectId if user_id is a valid ObjectId
+                try:
+                    if ObjectId.is_valid(user_id):
+                        profile = profiles.find_one({'user_id': ObjectId(user_id)})
+                        if profile:
+                            delete_query = {'user_id': ObjectId(user_id)}
+                except:
+                    pass
+            
+            if not profile:
+                return True, "Profile not found (already deleted)"
+            
+            # Delete the profile using the appropriate query
+            result = profiles.delete_one(delete_query)
+            
+            if result.deleted_count > 0:
+                return True, f"Society profile for '{profile.get('name', 'Unknown')}' deleted successfully"
+            else:
+                return False, "Failed to delete society profile"
+                
+        except Exception as e:
+            return False, f"Error deleting society profile: {str(e)}"
+    
+    @staticmethod
+    def delete_profile_by_user_email(user_email):
+        """Delete society profile by user email (fallback method)"""
+        try:
+            db = get_db()
+            profiles = society_profile_collection(db)
+            
+            # Find the profile first to get details for logging
+            profile = profiles.find_one({'user_email': user_email})
+            if not profile:
+                return True, "Profile not found (already deleted)"
+            
+            # Delete the profile
+            result = profiles.delete_one({'user_email': user_email})
+            
+            if result.deleted_count > 0:
+                return True, f"Society profile for '{profile.get('name', 'Unknown')}' deleted successfully"
+            else:
+                return False, "Failed to delete society profile"
+                
+        except Exception as e:
+            return False, f"Error deleting society profile: {str(e)}"

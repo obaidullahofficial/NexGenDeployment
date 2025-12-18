@@ -251,13 +251,41 @@ class SocietyRegistrationFormController:
             if not form:
                 return False, "Registration form not found"
             
+            # Get user_id for cascading delete
+            user_id = form.get('user_id')
+            
             # Delete the registration form
             result = reg_forms.delete_one({'_id': ObjectId(form_id)})
             
             if result.deleted_count == 0:
                 return False, "Failed to delete registration form"
             
-            return True, f"Registration form for '{form.get('name', 'Unknown')}' deleted successfully"
+            # Cascading delete: Delete related society profile if it exists
+            try:
+                from controllers.society_profile_controller import SocietyProfileController
+                profile_deleted = False
+                profile_message = ""
+                
+                # Try deleting by user_id first
+                if user_id:
+                    profile_deleted, profile_message = SocietyProfileController.delete_profile_by_user_id(user_id)
+                
+                # If deletion by user_id failed, try by user_email as fallback
+                if not profile_deleted and form.get('user_email'):
+                    user_email = form.get('user_email')
+                    profile_deleted, profile_message = SocietyProfileController.delete_profile_by_user_email(user_email)
+                    print(f"[CASCADE DELETE FALLBACK] Tried deletion by email: {user_email}, Result: {profile_message}")
+                
+                if profile_deleted:
+                    print(f"[CASCADE DELETE SUCCESS] {profile_message}")
+                    return True, f"Registration form for '{form.get('name', 'Unknown')}' and related society profile deleted successfully"
+                else:
+                    print(f"[CASCADE DELETE INFO] Registration form deleted. Profile deletion status: {profile_message}")
+                    return True, f"Registration form for '{form.get('name', 'Unknown')}' deleted successfully"
+                    
+            except Exception as cascade_error:
+                print(f"[CASCADE DELETE ERROR] {str(cascade_error)}")
+                return True, f"Registration form for '{form.get('name', 'Unknown')}' deleted successfully (Warning: Could not delete related society profile)"
         except Exception as e:
             print(f"[DELETE REGISTRATION FORM ERROR] {str(e)}")
             return False, f"Failed to delete registration form: {str(e)}"

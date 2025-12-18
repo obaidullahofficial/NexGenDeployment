@@ -273,12 +273,12 @@ const PlotDetail = () => {
                     <p className="font-bold text-orange-600">{complianceRules.max_ground_coverage}%</p>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <p className="text-xs text-gray-500 mb-1">Max Floors</p>
-                    <p className="font-bold text-orange-600">{complianceRules.max_floors}</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 shadow-sm">
                     <p className="text-xs text-gray-500 mb-1">Building Height</p>
                     <p className="font-bold text-orange-600">{complianceRules.max_building_height} ft</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1">Room Height</p>
+                    <p className="font-bold text-orange-600">{complianceRules.min_room_height} ft</p>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
                     <p className="text-xs text-gray-500 mb-1">Front Setback</p>
@@ -289,8 +289,54 @@ const PlotDetail = () => {
                     <p className="font-bold text-orange-600">{complianceRules.rear_setback} ft</p>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <p className="text-xs text-gray-500 mb-1">Parking Spaces</p>
-                    <p className="font-bold text-orange-600">{complianceRules.parking_spaces_required}</p>
+                    <p className="text-xs text-gray-500 mb-1">Open Space</p>
+                    <p className="font-bold text-orange-600">{complianceRules.min_open_space}%</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1">Left Setback</p>
+                    <p className="font-bold text-orange-600">{complianceRules.side_setback_left} ft</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1">Right Setback</p>
+                    <p className="font-bold text-orange-600">{complianceRules.side_setback_right} ft</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1">Building Type</p>
+                    <p className="font-bold text-orange-600">{complianceRules.building_type_allowed}</p>
+                  </div>
+                </div>
+
+                {/* Room Size Requirements */}
+                <div className="bg-white rounded-lg p-4 mb-4">
+                  <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <FiHome className="text-orange-600" />
+                    Minimum Room Sizes
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Bathroom</p>
+                      <p className="font-bold text-gray-700">{complianceRules.min_bathroom_size} sq ft</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Kitchen</p>
+                      <p className="font-bold text-gray-700">{complianceRules.min_kitchen_size} sq ft</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Bedroom</p>
+                      <p className="font-bold text-gray-700">{complianceRules.min_bedroom_size} sq ft</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Living Room</p>
+                      <p className="font-bold text-gray-700">{complianceRules.min_living_room_size} sq ft</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Garden</p>
+                      <p className="font-bold text-gray-700">{complianceRules.fixed_garden_area} sq ft</p>
+                    </div>
+                    <div className="bg-gray-50 rounded p-2">
+                      <p className="text-xs text-gray-500">Car Porch</p>
+                      <p className="font-bold text-gray-700">{complianceRules.fixed_carporch_area} sq ft</p>
+                    </div>
                   </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import {
   FiUser,
@@ -11,17 +12,21 @@ import {
 import logo from '../../assets/logo2.png';
 
 const UserProfile = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
+  
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    navigate(`/userprofile?tab=${tab}`);
   };
+  
   const handleLogout = async () => {
     await logout();
     window.location.href = '/login';
   };
 
   return (
-      <aside className="w-64 bg-[#2F3D57] text-white flex flex-col z-10">
+      <aside className="w-full h-screen bg-[#2F3D57] text-white flex flex-col sticky top-0 overflow-y-auto">
       <div className="p-6 border-b border-gray-700">
         <div className="flex items-center space-x-3">
           <img src={logo} alt="Logo" className="h-8 w-8" />
@@ -29,7 +34,7 @@ const UserProfile = ({ activeTab, setActiveTab }) => {
         </div>
         <div className="text-sm text-gray-300 mt-2">User Profile</div>
       </div>
-      <nav className="flex flex-col mt-6 space-y-1 flex-grow">
+      <nav className="flex flex-col mt-6 space-y-1 flex-1">
         {/* Your navigation buttons */}
         <button
           onClick={() => handleTabClick('personalInfo')}

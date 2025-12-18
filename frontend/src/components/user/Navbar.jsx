@@ -122,7 +122,7 @@ const Navbar = () => {
 
                 {/* Profile Menu Items */}
                 <Link
-                  to="/userprofile"
+                  to="/userprofile?tab=personalInfo"
                   onClick={() => setShowDropdown(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
@@ -133,7 +133,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/userprofile"
+                  to="/userprofile?tab=approvalRequests"
                   onClick={() => setShowDropdown(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
@@ -144,7 +144,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/userprofile"
+                  to="/userprofile?tab=progress"
                   onClick={() => setShowDropdown(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
@@ -155,7 +155,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/userprofile"
+                  to="/userprofile?tab=approvalRequest"
                   onClick={() => setShowDropdown(false)}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >

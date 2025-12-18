@@ -34,8 +34,14 @@ def get_approval_requests():
                 'message': 'User not found',
             }), 404
 
+
         user_id = str(user['_id'])
         requests = ApprovalRequestController.get_user_approval_requests(user_id)
+
+        # Attach user's email to each request
+        user_email = user.get('email', '')
+        for req in requests:
+            req['requested_by_email'] = user_email
 
         return jsonify({
             'success': True,
@@ -333,32 +339,31 @@ def get_all_approval_requests():
         all_requests = list(requests_collection.find(query).sort('created_at', -1))
         print(f"🔍 [Approval Requests] Query: {query}, Found: {len(all_requests)} requests")
 
-        # Build a map from user_id -> username/email so we can show
-        # the requester name in the admin/subadmin approvals panel.
-        # Note: in approval_requests, user_id is stored as a STRING, not ObjectId,
-        # so we need to convert it back to ObjectId for the users collection.
-        user_id_strs = set()
+        # Build a map from user_id -> email so we can show
+        # the requester email in the admin/subadmin approvals panel.
+        # user_id could be stored as ObjectId or string, handle both cases
+        user_object_ids = set()
         for req in all_requests:
             uid = req.get('user_id')
-            if isinstance(uid, str) and uid:
-                user_id_strs.add(uid)
+            print(f"🔍 [DEBUG] Processing user_id: {uid}, type: {type(uid)}")
+            if uid:
+                if isinstance(uid, ObjectId):
+                    user_object_ids.add(uid)
+                elif isinstance(uid, str) and uid:
+                    try:
+                        user_object_ids.add(ObjectId(uid))
+                    except Exception as e:
+                        print(f"⚠️ [DEBUG] Failed to convert user_id '{uid}' to ObjectId: {e}")
+                        continue
 
         users_map = {}
-        if user_id_strs:
-            object_ids = []
-            for uid_str in user_id_strs:
-                try:
-                    object_ids.append(ObjectId(uid_str))
-                except Exception:
-                    # Skip invalid ids
-                    continue
-
-            if object_ids:
-                users_cursor = users.find({'_id': {'$in': object_ids}})
-                for u in users_cursor:
-                    users_map[str(u['_id'])] = (
-                        u.get('username') or u.get('email') or ''
-                    )
+        if user_object_ids:
+            print(f"🔍 [DEBUG] Looking up {len(user_object_ids)} users: {[str(oid) for oid in user_object_ids]}")
+            users_cursor = users.find({'_id': {'$in': list(user_object_ids)}})
+            for u in users_cursor:
+                email = u.get('email') or ''
+                print(f"🔍 [DEBUG] User {str(u['_id'])}: email='{email}', username='{u.get('username', '')}' ")
+                users_map[str(u['_id'])] = email
 
         # Build a map from plot_id -> plot_number so subadmin panel can show plot numbers
         plot_id_strs = set()
@@ -387,7 +392,9 @@ def get_all_approval_requests():
         for req in all_requests:
             uid = req.get('user_id')
             uid_str = str(uid) if uid is not None else ''
-            req['requested_by_name'] = users_map.get(uid_str, '')
+            requester_email = users_map.get(uid_str, '')
+            print(f"🔍 [DEBUG] Request {req.get('_id')}: user_id='{uid_str}' -> email='{requester_email}'")
+            req['requested_by_name'] = requester_email
             req['user_id'] = uid_str
 
             pid = req.get('plot_id')

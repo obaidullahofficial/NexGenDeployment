@@ -138,6 +138,7 @@ const UserDesignStatus = () => {
                     <th className="px-6 py-4 text-left font-semibold">Plot Info</th>
                     <th className="px-6 py-4 text-left font-semibold">Design Type</th>
                     <th className="px-6 py-4 text-left font-semibold">Request Date</th>
+                    <th className="px-6 py-4 text-left font-semibold">Requested By (Email)</th>
                     <th className="px-6 py-4 text-left font-semibold">Status</th>
                     <th className="px-6 py-4 text-left font-semibold">Actions</th>
                   </tr>
@@ -178,6 +179,11 @@ const UserDesignStatus = () => {
                             {formatDate(req.request_date || req.created_at)}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs text-gray-700">
+                          {req.requested_by_email || "-"}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span

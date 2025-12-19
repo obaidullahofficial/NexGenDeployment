@@ -25,6 +25,13 @@ const FloorPlanGenerator = () => {
   const [generatingEngine, setGeneratingEngine] = useState(null); // Track which engine is currently generating: 'ga' or 'genai'
   const [societyCompliances, setSocietyCompliances] = useState([]);
   const [loadingCompliances, setLoadingCompliances] = useState(true);
+  
+  // Genetic Algorithm Parameters State
+  const [gaParams, setGaParams] = useState({
+    populationSize: 20,
+    mutationRate: 0.1,
+    crossoverRate: 0.7
+  });
 
   const [formData, setFormData] = useState({
     // Use sensible default strings to avoid controlled/uncontrolled warnings in number inputs
@@ -956,7 +963,11 @@ const FloorPlanGenerator = () => {
         gar_per: averageAreas.garden || 2,
         room_areas: roomAreaMap, // Send individual room areas
         use_genai: useGenAIFlag, // Send GenAI toggle flag
-        num_plans: 5 // Request 5 floor plan variations
+        num_plans: 5, // Request 5 floor plan variations
+        // Genetic Algorithm Parameters
+        population_size: gaParams.populationSize,
+        mutation_rate: gaParams.mutationRate,
+        crossover_rate: gaParams.crossoverRate
       };
 
       console.log('Room configuration:', formData.roomConfiguration);
@@ -1636,7 +1647,6 @@ const FloorPlanGenerator = () => {
                                 Variation
                               </span>
                             )}
-                            Fitness: {(generatedPlans[currentPlanIndex]?.fitness ?? 0).toFixed(2)}
                           </div>
                         </div>
 
@@ -1945,7 +1955,8 @@ const FloorPlanGenerator = () => {
                                 type="number"
                                 min="10"
                                 max="100"
-                                defaultValue="20"
+                                value={gaParams.populationSize}
+                                onChange={(e) => setGaParams({...gaParams, populationSize: parseInt(e.target.value) || 20})}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
                               />
                             </div>
@@ -1957,10 +1968,11 @@ const FloorPlanGenerator = () => {
                                 min="0.01"
                                 max="0.5"
                                 step="0.01"
-                                defaultValue="0.1"
+                                value={gaParams.mutationRate}
+                                onChange={(e) => setGaParams({...gaParams, mutationRate: parseFloat(e.target.value)})}
                                 className="w-full"
                               />
-                              <div className="text-xs text-gray-500 mt-1">10%</div>
+                              <div className="text-xs text-gray-500 mt-1">{(gaParams.mutationRate * 100).toFixed(0)}%</div>
                             </div>
 
                             <div>
@@ -1970,10 +1982,11 @@ const FloorPlanGenerator = () => {
                                 min="0.5"
                                 max="1.0"
                                 step="0.05"
-                                defaultValue="0.7"
+                                value={gaParams.crossoverRate}
+                                onChange={(e) => setGaParams({...gaParams, crossoverRate: parseFloat(e.target.value)})}
                                 className="w-full"
                               />
-                              <div className="text-xs text-gray-500 mt-1">70%</div>
+                              <div className="text-xs text-gray-500 mt-1">{(gaParams.crossoverRate * 100).toFixed(0)}%</div>
                             </div>
                           </div>
                         </div>

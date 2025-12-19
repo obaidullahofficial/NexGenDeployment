@@ -469,41 +469,65 @@ const generateSmartDoors = (rooms, bounds, detectedDoors = []) => {
         const room2World = convertToWorld3D(connectedRooms[1].room.x, connectedRooms[1].room.y, 
                                           connectedRooms[1].room.width, connectedRooms[1].room.height, bounds);
         
+        const wallThickness = 0.08; // Must match Room3D wall thickness
+        
+        // Calculate room centers for proper wall boundary positioning
+        const room1CenterX = room1World.x + room1World.width / 2;
+        const room1CenterZ = room1World.z + room1World.height / 2;
+        
         // Determine wall orientation and set exact boundary position
+        // Position door at wall center (matching Room3D wall positions)
         if (connectedRooms[0].wall === 'north' || connectedRooms[0].wall === 'south') {
           // Horizontal wall - door spans in X direction
           if (connectedRooms[0].wall === 'north') {
-            globalDoorZ = room1World.z; // Exact north wall position
+            // North wall is at room center Z - height/2 + wallThickness/2
+            globalDoorZ = room1CenterZ - room1World.height/2 + wallThickness/2;
           } else {
-            globalDoorZ = room1World.z + room1World.height; // Exact south wall position
+            // South wall is at room center Z + height/2 - wallThickness/2
+            globalDoorZ = room1CenterZ + room1World.height/2 - wallThickness/2;
           }
           doorRotation = [0, 0, 0]; // Door faces north/south
         } else {
           // Vertical wall - door spans in Z direction  
           if (connectedRooms[0].wall === 'east') {
-            globalDoorX = room1World.x + room1World.width; // Exact east wall position
+            // East wall is at room center X + width/2 - wallThickness/2
+            globalDoorX = room1CenterX + room1World.width/2 - wallThickness/2;
           } else {
-            globalDoorX = room1World.x; // Exact west wall position
+            // West wall is at room center X - width/2 + wallThickness/2
+            globalDoorX = room1CenterX - room1World.width/2 + wallThickness/2;
           }
           doorRotation = [0, Math.PI/2, 0]; // Door faces east/west
         }
       } else {
-        // Single room door - position at room boundary
+        // Single room door (exterior) - position at room boundary wall CENTER
         const roomWorld = convertToWorld3D(connectedRooms[0].room.x, connectedRooms[0].room.y, 
                                          connectedRooms[0].room.width, connectedRooms[0].room.height, bounds);
         
-        // Position at the closest room boundary
+        const wallThickness = 0.08; // Must match Room3D wall thickness
+        
+        // Room3D positions walls relative to room center:
+        // - roomX/roomZ is the center of the room (roomWorld.x + roomWorld.width/2)
+        // - Walls are positioned at ±world.height/2 or ±world.width/2 from center
+        // So exterior doors should be positioned at the room boundary from its center
+        const roomCenterX = roomWorld.x + roomWorld.width / 2;
+        const roomCenterZ = roomWorld.z + roomWorld.height / 2;
+        
+        // Position at the room boundary wall (matching Room3D wall positions)
         if (connectedRooms[0].wall === 'north') {
-          globalDoorZ = roomWorld.z;
+          // North wall is at room center Z - height/2 + wallThickness/2
+          globalDoorZ = roomCenterZ - roomWorld.height/2 + wallThickness/2;
           doorRotation = [0, 0, 0];
         } else if (connectedRooms[0].wall === 'south') {
-          globalDoorZ = roomWorld.z + roomWorld.height;
+          // South wall is at room center Z + height/2 - wallThickness/2
+          globalDoorZ = roomCenterZ + roomWorld.height/2 - wallThickness/2;
           doorRotation = [0, Math.PI, 0];
         } else if (connectedRooms[0].wall === 'east') {
-          globalDoorX = roomWorld.x + roomWorld.width;
+          // East wall is at room center X + width/2 - wallThickness/2
+          globalDoorX = roomCenterX + roomWorld.width/2 - wallThickness/2;
           doorRotation = [0, -Math.PI/2, 0];
         } else if (connectedRooms[0].wall === 'west') {
-          globalDoorX = roomWorld.x;
+          // West wall is at room center X - width/2 + wallThickness/2
+          globalDoorX = roomCenterX - roomWorld.width/2 + wallThickness/2;
           doorRotation = [0, Math.PI/2, 0];
         }
       }
@@ -636,6 +660,7 @@ const generateSmartDoors = (rooms, bounds, detectedDoors = []) => {
         
         // Check if rooms are adjacent (share a wall)
         const tolerance = 0.3;
+        const wallThickness = 0.08; // Must match Room3D wall thickness
         let doorPosition = null;
         let doorRotation = [0, 0, 0];
         let sharedWallLength = 0;
@@ -650,10 +675,11 @@ const generateSmartDoors = (rooms, bounds, detectedDoors = []) => {
           
           if (overlapEnd > overlapStart && (overlapEnd - overlapStart) > 1.5) {
             sharedWallLength = overlapEnd - overlapStart;
-            // Place door in the middle of the shared wall
+            // Place door in the middle of the shared wall, inset to wall center
             const doorZ = overlapStart + (overlapEnd - overlapStart) / 2;
+            // Door positioned at wall center (between the two rooms)
             const doorX = Math.abs((world1.x + world1.width) - world2.x) < tolerance ? 
-                         world2.x : world1.x;
+                         world2.x + wallThickness/2 : world1.x + wallThickness/2;
             
             doorPosition = [doorX, 0, doorZ];
             doorRotation = [0, Math.PI/2, 0];
@@ -670,10 +696,11 @@ const generateSmartDoors = (rooms, bounds, detectedDoors = []) => {
           
           if (overlapEnd > overlapStart && (overlapEnd - overlapStart) > 1.5) {
             sharedWallLength = overlapEnd - overlapStart;
-            // Place door in the middle of the shared wall
+            // Place door in the middle of the shared wall, inset to wall center
             const doorX = overlapStart + (overlapEnd - overlapStart) / 2;
+            // Door positioned at wall center (between the two rooms)
             const doorZ = Math.abs((world1.z + world1.height) - world2.z) < tolerance ? 
-                         world2.z : world1.z;
+                         world2.z + wallThickness/2 : world1.z + wallThickness/2;
             
             doorPosition = [doorX, 0, doorZ];
             doorRotation = [0, 0, 0];
@@ -752,11 +779,12 @@ const generateSmartDoors = (rooms, bounds, detectedDoors = []) => {
       
       if (entryRoom && doorCount[entryRoom.id] < 2) {
         const roomWorld = convertToWorld3D(entryRoom.x, entryRoom.y, entryRoom.width, entryRoom.height, bounds);
+        const wallThickness = 0.08; // Must match Room3D wall thickness
         
-        // Place entrance door on the front wall (bottom edge)
+        // Place entrance door on the front wall (bottom edge), inset to wall center
         doors.push({
           id: `entrance-door-${entryRoom.id}`,
-          globalPosition: [roomWorld.x + roomWorld.width / 2, 0, roomWorld.z + roomWorld.height],
+          globalPosition: [roomWorld.x + roomWorld.width / 2, 0, roomWorld.z + roomWorld.height - wallThickness/2],
           connectedRooms: [entryRoom.id],
           width: 0.9,
           height: 2.1,
@@ -809,6 +837,8 @@ const generateSmartWindows = (rooms, bounds, detectedWindows = []) => {
   
   // Process detected windows from the 2D floor plan
   if (detectedWindows && detectedWindows.length > 0) {
+    const wallThickness = 0.08; // Must match Room3D wall thickness
+    
     detectedWindows.forEach((window, idx) => {
       console.log(`🪟 Processing detected window ${idx}:`, window);
       
@@ -829,12 +859,39 @@ const generateSmartWindows = (rooms, bounds, detectedWindows = []) => {
       // Determine window orientation (horizontal or vertical)
       const isHorizontal = windowWidth > windowHeight;
       
+      // Find the nearest room wall and adjust position to sit on wall
+      let adjustedX = worldPos.x;
+      let adjustedZ = worldPos.z;
+      
+      // Find nearest room to determine wall position
+      const tolerance = 0.5;
+      rooms.forEach(room => {
+        const roomWorld = convertToWorld3D(room.x, room.y, room.width, room.height, bounds);
+        
+        // Check if window is near room boundaries and snap to wall center
+        if (Math.abs(worldPos.z - roomWorld.z) < tolerance) {
+          // Near north wall
+          adjustedZ = roomWorld.z + wallThickness/2;
+        } else if (Math.abs(worldPos.z - (roomWorld.z + roomWorld.height)) < tolerance) {
+          // Near south wall
+          adjustedZ = roomWorld.z + roomWorld.height - wallThickness/2;
+        }
+        
+        if (Math.abs(worldPos.x - roomWorld.x) < tolerance) {
+          // Near west wall
+          adjustedX = roomWorld.x + wallThickness/2;
+        } else if (Math.abs(worldPos.x - (roomWorld.x + roomWorld.width)) < tolerance) {
+          // Near east wall
+          adjustedX = roomWorld.x + roomWorld.width - wallThickness/2;
+        }
+      });
+      
       // Use unique ID combining original ID and index to prevent duplicates
       const uniqueId = `detected-window-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       windows.push({
         id: uniqueId,
-        position: [worldPos.x, 1.2, worldPos.z], // Position at standard window height
+        position: [adjustedX, 1.2, adjustedZ], // Position at standard window height, adjusted to wall
         rotation: isHorizontal ? [0, 0, 0] : [0, Math.PI/2, 0],
         width: Math.max(0.6, (isHorizontal ? windowWidth : windowHeight) / 100),
         height: 1.2,
@@ -980,6 +1037,7 @@ const analyzeFloorPlanData = (data) => {
       // Extract wall data
       else if ((item.type === 'wall' || item.type === 'Wall') && item.x1 !== undefined) {
         const wallData = {
+          id: item.id || `wall-${walls.length}`, // Preserve wall ID for filtering
           x1: parseFloat(item.x1 || 0),
           y1: parseFloat(item.y1 || 0),
           x2: parseFloat(item.x2 || 100),
@@ -1152,6 +1210,7 @@ const analyzeFloorPlanData = (data) => {
     walls = data.walls.map((wall, idx) => {
       if (wall.points && Array.isArray(wall.points) && wall.points.length >= 4) {
         const wallData = {
+          id: wall.id || `wall-${idx}`, // Preserve wall ID for filtering
           x1: parseFloat(wall.points[0]),
           y1: parseFloat(wall.points[1]),
           x2: parseFloat(wall.points[2]),
@@ -1161,6 +1220,7 @@ const analyzeFloorPlanData = (data) => {
         return wallData;
       }
       return {
+        id: wall.id || `wall-${idx}`, // Preserve wall ID for filtering
         x1: parseFloat(wall.x1 || 0),
         y1: parseFloat(wall.y1 || 0),
         x2: parseFloat(wall.x2 || 0),
@@ -2317,18 +2377,20 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
         />
       </mesh>
       
-      {/* Render standalone custom walls from 2D editor - ALL walls exactly as in 2D */}
-      {console.log('🔧 About to render walls:', walls?.length, walls)}
-      {walls && walls.length > 0 && walls.map((wall, index) => {
-        console.log(`🧱 Rendering wall ${index}:`, wall);
-        return (
-          <Wall3D 
-            key={`custom-wall-${index}`}
-            wall={wall}
-            bounds={bounds}
-          />
-        );
-      })}
+      {/* Render ONLY manually added walls from 2D editor (IDs starting with 'new-wall-') */}
+      {/* Room boundary walls are rendered by Room3D, so we only render user-created custom walls */}
+      {walls && walls.length > 0 && walls
+        .filter(wall => wall.id && wall.id.toString().startsWith('new-wall-'))
+        .map((wall, index) => {
+          return (
+            <Wall3D 
+              key={`custom-wall-${wall.id || index}`}
+              wall={wall}
+              bounds={bounds}
+            />
+          );
+        })
+      }
       
       {/* Render doors from 2D editor - DISABLED, using smart doors instead */}
       {/* SimpleDoor3D is only for user-placed doors in customization mode */}

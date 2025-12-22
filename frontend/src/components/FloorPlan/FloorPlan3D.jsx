@@ -7,9 +7,10 @@ import {
   PointerLockControls
 } from '@react-three/drei';
 import * as THREE from 'three';
+import ColorCustomizer from './ColorCustomizer';
 
 // Enhanced Door Component with bi-directional visibility and proper wall penetration
-const Door3D = memo(({ position, rotation = [0, 0, 0], width = 0.9, height = 2.1, isOpen = false, onToggle, playerPosition, autoOpen = true, wallThickness = 0.2 }) => {
+const Door3D = memo(({ position, rotation = [0, 0, 0], width = 0.9, height = 2.1, isOpen = false, onToggle, playerPosition, autoOpen = true, wallThickness = 0.2, customColor }) => {
   const [localIsOpen, setLocalIsOpen] = useState(isOpen);
   const doorRef = useRef();
   const frameRef = useRef();
@@ -20,15 +21,18 @@ const Door3D = memo(({ position, rotation = [0, 0, 0], width = 0.9, height = 2.1
   const openDistance = 1.5; // Closer proximity for more natural feel
   const closeDistance = 2.5; // Larger close distance to prevent flickering
   
+  // Use custom color or default brown
+  const doorColor = customColor || '#8B4513';
+  
   // Memoized materials to prevent unnecessary re-creation and improve performance
   const materials = useMemo(() => ({
-    frame: { color: "#8B4513", roughness: 0.6 },
-    panel: { color: "#8B4513", roughness: 0.8, metalness: 0.1 },
+    frame: { color: doorColor, roughness: 0.6 },
+    panel: { color: doorColor, roughness: 0.8, metalness: 0.1 },
     handle: { color: "#FFD700", roughness: 0.3, metalness: 0.8 },
-    threshold: { color: "#A0522D", roughness: 0.8 },
+    threshold: { color: doorColor, roughness: 0.8 },
     shadow: { color: "#654321", roughness: 0.95, transparent: true, opacity: 0.8 },
     indicator: { color: "#00FF7F", transparent: true, opacity: 0.6 }
-  }), []);
+  }), [doorColor]);
   
   // Smooth door animation with useFrame
   useFrame((state, delta) => {
@@ -178,7 +182,7 @@ const Door3D = memo(({ position, rotation = [0, 0, 0], width = 0.9, height = 2.1
 
 // Window Component with FIXED positioning - no longer floating above walls
 // Enhanced Window3D component with anti-flickering and proper sizing
-const Window3D = memo(({ position, rotation = [0, 0, 0], width = 1.2, height = 1.0, roomType = 'default' }) => {
+const Window3D = memo(({ position, rotation = [0, 0, 0], width = 1.2, height = 1.0, roomType = 'default', customColors }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openAngle, setOpenAngle] = useState(0);
   const leftPaneRef = useRef();
@@ -212,6 +216,16 @@ const Window3D = memo(({ position, rotation = [0, 0, 0], width = 1.2, height = 1
   
   // Room-type specific styling with stable colors - memoized for performance
   const styling = useMemo(() => {
+    // If custom colors are provided, use them
+    if (customColors?.windows) {
+      return {
+        frameColor: customColors.windows,
+        glassColor: customColors.windows,
+        glassOpacity: 0.3,
+        dividerColor: customColors.windows
+      };
+    }
+    
     const getWindowStyling = (roomType) => {
       const type = roomType.toLowerCase();
       
@@ -247,7 +261,7 @@ const Window3D = memo(({ position, rotation = [0, 0, 0], width = 1.2, height = 1
     };
     
     return getWindowStyling(roomType);
-  }, [roomType]);
+  }, [roomType, customColors]);
   
   return (
     <group position={position} rotation={rotation}>
@@ -1346,9 +1360,10 @@ const calculateBounds = (rooms) => {
 };
 
 // Standalone Wall Component - Renders custom walls from 2D editor
-const Wall3D = ({ wall, bounds }) => {
+const Wall3D = ({ wall, bounds, customColors }) => {
   const wallHeight = 2.7; // Match room boundary walls
   const wallThickness = 0.08; // Match room boundary walls
+  const wallColor = customColors?.walls || '#FAFAFA';
   
   console.log('🧱 Rendering wall:', wall, 'bounds:', bounds);
   
@@ -1376,7 +1391,7 @@ const Wall3D = ({ wall, bounds }) => {
     >
       <boxGeometry args={[length, wallHeight, wallThickness]} />
       {/* Custom walls with same styling as room boundary walls */}
-      <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+      <meshStandardMaterial color={wallColor} roughness={0.8} metalness={0.0} />
     </mesh>
   );
 };
@@ -1490,8 +1505,14 @@ const SimpleDoor3D = ({ door, bounds }) => {
 };
 
 // Enhanced Room Component - FIXED positioning with doors and windows
-const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], walls = [] }) => {
-  const roomColors = {
+const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], walls = [], customColors, roomColors = {} }) => {
+  // Normalize room ID to string for consistent lookup
+  const roomIdString = String(room.id);
+  
+  // Check if this room has a specific color, otherwise use global wall color
+  const wallColor = roomColors[roomIdString] || customColors?.walls || '#FAFAFA';
+  
+  const floorColors = {
     'livingroom': '#F4E4C7', // Warm beige
     'living': '#F4E4C7',
     'bedroom': '#E8F4F8', // Soft blue
@@ -1512,7 +1533,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
     .replace(/[-\d\s]/g, '') 
     .replace('room', '') || 'room';
   
-  const roomColor = roomColors[normalizedType] || '#F5F5F5';
+  const roomColor = floorColors[normalizedType] || '#F5F5F5';
   
   // Convert to world coordinates - FIXED to maintain exact 2D positioning
   const world = convertToWorld3D(room.x, room.y, room.width, room.height, bounds);
@@ -1621,7 +1642,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
                   receiveShadow
                 >
                   <boxGeometry args={[segment.length, wallHeight, wallThickness]} />
-                  <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+                  <meshStandardMaterial color={wallColor} roughness={0.8} metalness={0.0} />
                 </mesh>
               ))}
               
@@ -1634,7 +1655,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
                   receiveShadow
                 >
                   <boxGeometry args={[segment.length, wallHeight, wallThickness]} />
-                  <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+                  <meshStandardMaterial color={wallColor} roughness={0.8} metalness={0.0} />
                 </mesh>
               ))}
               
@@ -1647,7 +1668,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
                   receiveShadow
                 >
                   <boxGeometry args={[wallThickness, wallHeight, segment.length]} />
-                  <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+                  <meshStandardMaterial color={wallColor} roughness={0.8} metalness={0.0} />
                 </mesh>
               ))}
               
@@ -1660,7 +1681,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
                   receiveShadow
                 >
                   <boxGeometry args={[wallThickness, wallHeight, segment.length]} />
-                  <meshStandardMaterial color="#FAFAFA" roughness={0.8} metalness={0.0} />
+                  <meshStandardMaterial color={wallColor} roughness={0.8} metalness={0.0} />
                 </mesh>
               ))}
             </>
@@ -1722,6 +1743,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
             width={window.width || 1.4}
             height={window.height || 1.2}
             roomType={window.roomType || room.type || 'default'}
+            customColors={customColors}
           />
         );
       })}
@@ -2244,9 +2266,18 @@ const CameraController3D = ({ mode, bounds, rooms, onPlayerPositionChange }) => 
 };
 
 // Main 3D Scene Component - Enhanced with doors and windows
-const FloorPlan3DScene = ({ floorPlanData, mode }) => {
+const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, doorColors = {}, onRoomsAnalyzed, onDoorsAnalyzed }) => {
   const [doorStates, setDoorStates] = useState({});
   const [playerPosition, setPlayerPosition] = useState([0, 1.7, 0]);
+  
+  // Default colors if not provided
+  const colors = customColors || {
+    walls: '#FAFAFA',
+    windows: '#87CEEB',
+    ground: '#90EE90',
+    foundation: '#D3D3D3',
+    doors: '#8B4513'
+  };
   
   // Analyze and extract data - memoized to prevent infinite loops
   const analysisData = useMemo(() => {
@@ -2269,6 +2300,13 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
   
   const { rooms, walls, doors, windows } = analysisData;
   
+  // Notify parent component about analyzed rooms so ColorCustomizer uses same IDs
+  useEffect(() => {
+    if (rooms && rooms.length > 0 && onRoomsAnalyzed) {
+      onRoomsAnalyzed(rooms);
+    }
+  }, [rooms, onRoomsAnalyzed]);
+  
   console.log('📊 Extracted data:', { 
     rooms: rooms.length, 
     walls: walls.length, 
@@ -2289,6 +2327,13 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
     console.log('🚪 Generating smart doors for', rooms.length, 'rooms, detected 2D doors:', doors.length);
     return generateSmartDoors(rooms, bounds, doors);
   }, [rooms, bounds, doors]);
+  
+  // Notify parent about analyzed doors (must be after smartDoors is declared)
+  useEffect(() => {
+    if (smartDoors && smartDoors.length > 0 && onDoorsAnalyzed) {
+      onDoorsAnalyzed(smartDoors);
+    }
+  }, [smartDoors, onDoorsAnalyzed]);
   
   const smartWindows = useMemo(() => {
     console.log('🪟 Generating smart windows for', rooms.length, 'rooms, detected windows:', windows.length);
@@ -2350,7 +2395,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
       <mesh position={[0, -0.15, 0]} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
         <planeGeometry args={[80, 80]} />
         <meshStandardMaterial 
-          color="#90EE90" 
+          color={colors.ground} 
           roughness={0.8}
           metalness={0.0}
         />
@@ -2371,7 +2416,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
           buildingData.worldSize.height + 2
         ]} />
         <meshStandardMaterial 
-          color="#D3D3D3" 
+          color={colors.foundation} 
           roughness={0.9}
           metalness={0.0}
         />
@@ -2387,6 +2432,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
               key={`custom-wall-${wall.id || index}`}
               wall={wall}
               bounds={bounds}
+              customColors={colors}
             />
           );
         })
@@ -2407,22 +2453,29 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
       })}
       
       {/* Render rooms with doors and windows */}
-      {rooms.map((room, index) => (
-        <Room3D 
-          key={`room-${room.id || index}`} 
-          room={room} 
-          bounds={bounds}
-          showLabels={mode === 'overview'}
-          doors={smartDoors}
-          windows={smartWindows}
-          walls={walls}
-        />
-      ))}
+      {rooms.map((room, index) => {
+        const roomIdString = String(room.id || index);
+        return (
+          <Room3D 
+            key={`room-${roomIdString}-${roomColors[roomIdString] || 'default'}`} 
+            room={room} 
+            bounds={bounds}
+            showLabels={mode === 'overview'}
+            doors={smartDoors}
+            windows={smartWindows}
+            walls={walls}
+            customColors={colors}
+            roomColors={roomColors}
+          />
+        );
+      })}
       
       {/* Render smart doors globally - visible from both connected rooms */}
       {smartDoors.map((door) => {
         // Use global position for doors to ensure they're visible from both sides
         const position = door.globalPosition || door.position || [0, 0, 0];
+        const doorIdString = String(door.id);
+        const doorColor = doorColors[doorIdString] || colors.doors;
         
         // For doors connecting multiple rooms, use the first room's rotation or calculate average
         let rotation = [0, 0, 0];
@@ -2434,7 +2487,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
         
         return (
           <Door3D
-            key={door.id}
+            key={`${door.id}-${doorColor}`}
             position={position}
             rotation={rotation}
             width={door.width}
@@ -2443,6 +2496,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
             onToggle={(isOpen) => handleDoorToggle(door.id, isOpen)}
             playerPosition={playerPosition}
             autoOpen={mode === 'walk'} // Only auto-open in walk mode
+            customColor={doorColor}
           />
         );
       })}
@@ -2456,6 +2510,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode }) => {
           width={window.width}
           height={window.height}
           roomType={window.roomType || 'default'}
+          customColors={colors}
         />
       ))}
       
@@ -2480,14 +2535,93 @@ const LoadingSpinner3D = () => (
 
 // Main component export with enhanced UI
 const FloorPlan3D = ({ floorPlanData, className = "" }) => {
-  const [viewMode, setViewMode] = useState('overview');
-  const [autoRotate, setAutoRotate] = useState(false);
+  // Generate unique save key based on floor plan data
+  const saveKey = useMemo(() => {
+    if (floorPlanData?.id) return `floorplan-3d-${floorPlanData.id}`;
+    // Fallback: generate key from room data
+    const roomsHash = floorPlanData?.rooms?.map(r => r.id).join('-') || 'default';
+    return `floorplan-3d-${roomsHash}`;
+  }, [floorPlanData]);
+  
+  // Load saved state from localStorage
+  const loadSavedState = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(saveKey);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Failed to load saved 3D state:', error);
+    }
+    return null;
+  }, [saveKey]);
+  
+  const savedState = loadSavedState();
+  
+  const [viewMode, setViewMode] = useState(savedState?.viewMode || 'overview');
+  const [autoRotate, setAutoRotate] = useState(savedState?.autoRotate || false);
   const [walkModeStatus, setWalkModeStatus] = useState('inactive');
+  const [customColors, setCustomColors] = useState(savedState?.customColors || {
+    walls: '#FAFAFA',
+    windows: '#87CEEB',
+    ground: '#90EE90',
+    foundation: '#D3D3D3',
+    doors: '#8B4513'
+  });
+  const [roomColors, setRoomColors] = useState(savedState?.roomColors || {});
+  const [doorColors, setDoorColors] = useState(savedState?.doorColors || {});
+  const [analyzedRooms, setAnalyzedRooms] = useState([]);
+  const [analyzedDoors, setAnalyzedDoors] = useState([]);
+  
+  // Use analyzed rooms from 3D scene for color customizer (ensures ID consistency)
+  const rooms = analyzedRooms.length > 0 ? analyzedRooms : (floorPlanData?.rooms || []);
+  
+  const handleRoomsAnalyzed = useCallback((rooms) => {
+    setAnalyzedRooms(rooms);
+  }, []);
+  
+  const handleDoorsAnalyzed = useCallback((doors) => {
+    setAnalyzedDoors(doors);
+  }, []);
   
   // Handle empty or invalid data
   if (!floorPlanData) {
     console.warn('No floor plan data provided to FloorPlan3D');
   }
+  
+  const handleColorsChange = (newColors, newRoomColors = {}, newDoorColors = {}) => {
+    setCustomColors(newColors);
+    setRoomColors(newRoomColors);
+    setDoorColors(newDoorColors);
+  };
+  
+  // Save state to localStorage
+  const saveState = useCallback(() => {
+    try {
+      const stateToSave = {
+        viewMode,
+        autoRotate,
+        customColors,
+        roomColors,
+        doorColors,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(saveKey, JSON.stringify(stateToSave));
+      return true;
+    } catch (error) {
+      console.error('Failed to save 3D state:', error);
+      return false;
+    }
+  }, [saveKey, viewMode, autoRotate, customColors, roomColors, doorColors]);
+  
+  // Auto-save whenever state changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      saveState();
+    }, 1000); // Debounce saves by 1 second
+    
+    return () => clearTimeout(timeoutId);
+  }, [customColors, roomColors, doorColors, viewMode, autoRotate, saveState]);
   
   return (
     <div className={`relative ${className}`}>
@@ -2547,6 +2681,30 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
             </div>
           </div>
         )}
+      </div>
+      
+      {/* Save Progress Button */}
+      <div className="absolute top-4 right-56 z-10">
+        <button
+          onClick={() => {
+            const success = saveState();
+            if (success) {
+              // Show success feedback
+              const btn = document.getElementById('save-btn');
+              if (btn) {
+                btn.textContent = '✅ Saved!';
+                setTimeout(() => {
+                  btn.textContent = '💾 Save Progress';
+                }, 2000);
+              }
+            }
+          }}
+          id="save-btn"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg shadow-lg font-medium text-sm transition-all duration-300 hover:scale-105"
+          title="Save your 3D customizations"
+        >
+          💾 Save Progress
+        </button>
       </div>
 
 
@@ -2639,9 +2797,21 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
         
         <Suspense fallback={<LoadingSpinner3D />}>
           <Environment preset="city" background={false} intensity={0.4} />
-          <FloorPlan3DScene floorPlanData={floorPlanData} mode={viewMode} autoRotate={autoRotate} />
+          <FloorPlan3DScene 
+            floorPlanData={floorPlanData} 
+            mode={viewMode} 
+            autoRotate={autoRotate} 
+            customColors={customColors} 
+            roomColors={roomColors}
+            doorColors={doorColors}
+            onRoomsAnalyzed={handleRoomsAnalyzed}
+            onDoorsAnalyzed={handleDoorsAnalyzed}
+          />
         </Suspense>
       </Canvas>
+
+      {/* Color Customizer Panel */}
+      <ColorCustomizer onColorsChange={handleColorsChange} rooms={rooms} doors={analyzedDoors} />
     </div>
   );
 };

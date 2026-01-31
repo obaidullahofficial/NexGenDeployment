@@ -23,6 +23,7 @@ const FloorPlanGenerator = () => {
   const [availableAreaPercentage, setAvailableAreaPercentage] = useState(100);
   const [areaDistributionMode, setAreaDistributionMode] = useState('auto'); // 'auto' or 'manual'
   const [generatingEngine, setGeneratingEngine] = useState(null); // Track which engine is currently generating: 'ga' or 'genai'
+  const [selectedEngine, setSelectedEngine] = useState('ga'); // 'ga' | 'genai'
   const [societyCompliances, setSocietyCompliances] = useState([]);
   const [loadingCompliances, setLoadingCompliances] = useState(true);
   
@@ -1091,9 +1092,14 @@ const FloorPlanGenerator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#2F3D57]">
+    <div className="min-h-screen bg-linear-to-b from-[#2F3D57] via-[#2b3a52] to-[#1e2a3a] relative overflow-hidden">
+      {/* subtle background texture for wide screens */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(900px_circle_at_20%_10%,rgba(237,118,0,0.18),transparent_60%),radial-gradient(900px_circle_at_80%_20%,rgba(59,130,246,0.18),transparent_60%)]"
+      />
       {/* Clean Header */}
-      <div className="bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a] border-b border-[#ED7600] shadow-xl">
+      <div className="bg-linear-to-r from-[#2F3D57] to-[#1e2a3a] border-b border-white/10 shadow-xl">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -1120,12 +1126,12 @@ const FloorPlanGenerator = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-full mx-auto px-6 py-8">
+      <div className="relative max-w-400 mx-auto px-6 py-8">
         <div className="grid grid-cols-12 gap-6">
           {/* Left Sidebar - Basic Configuration */}
           <div className="col-span-12 lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-xl border-4 border-[#ED7600] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a]">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 bg-linear-to-r from-[#2F3D57] to-[#1e2a3a]">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-[#ED7600] rounded-xl flex items-center justify-center shadow-lg">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -1147,7 +1153,7 @@ const FloorPlanGenerator = () => {
                     <button
                       type="button"
                       onClick={() => toggleSection('dimensions')}
-                      className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a] rounded-xl hover:from-[#1e2a3a] hover:to-[#2F3D57] transition-all duration-300 shadow-lg"
+                      className="w-full flex items-center justify-between p-4 bg-linear-to-r from-[#2F3D57] to-[#1e2a3a] rounded-xl hover:from-[#1e2a3a] hover:to-[#2F3D57] transition-all duration-300 shadow-lg"
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-[#ED7600] text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-md">1</div>
@@ -1191,7 +1197,7 @@ const FloorPlanGenerator = () => {
                     <button
                       type="button"
                       onClick={() => toggleSection('plot-size')}
-                      className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a] rounded-xl hover:from-[#1e2a3a] hover:to-[#2F3D57] transition-all duration-300 shadow-lg"
+                      className="w-full flex items-center justify-between p-4 bg-linear-to-r from-[#2F3D57] to-[#1e2a3a] rounded-xl hover:from-[#1e2a3a] hover:to-[#2F3D57] transition-all duration-300 shadow-lg"
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-[#ED7600] text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-md">📐</div>
@@ -1234,7 +1240,7 @@ const FloorPlanGenerator = () => {
                               </select>
                               {societyCompliances.length > 0 && (
                                 <div className="flex items-start gap-2 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
                                   </svg>
                                   <p className="text-xs text-blue-800">
@@ -1244,7 +1250,7 @@ const FloorPlanGenerator = () => {
                               )}
                               {societyCompliances.length === 0 && (
                                 <div className="flex items-start gap-2 mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                  <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <svg className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                                   </svg>
                                   <p className="text-xs text-yellow-800">
@@ -1374,7 +1380,7 @@ const FloorPlanGenerator = () => {
                     {!collapsedSections.rooms && (
                       <div className="space-y-4">
                         {/* Area Distribution Status */}
-                        <div className="bg-gradient-to-r from-[#ED7600]/10 to-[#2F3D57]/10 rounded-lg p-4 border border-[#ED7600]/30">
+                        <div className="bg-linear-to-r from-[#ED7600]/10 to-[#2F3D57]/10 rounded-lg p-4 border border-[#ED7600]/30">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-900">Area Distribution</h4>
                             <div className="flex items-center space-x-2">
@@ -1496,7 +1502,7 @@ const FloorPlanGenerator = () => {
                                   <div className="grid grid-cols-1 gap-2">
                                     {Array.from({ length: formData.roomConfiguration[roomType.key].count }, (_, index) => (
                                       <div key={index} className="flex items-center space-x-2">
-                                        <span className="text-sm text-gray-600 w-16 flex-shrink-0">
+                                        <span className="text-sm text-gray-600 w-16 shrink-0">
                                           {roomType.label} {index + 1}:
                                         </span>
                                         <input
@@ -1553,8 +1559,8 @@ const FloorPlanGenerator = () => {
 
           {/* Center Panel - Visualization */}
           <div className="col-span-12 lg:col-span-6">
-            <div className="bg-white rounded-2xl shadow-xl border-4 border-[#ED7600] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a]">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 bg-linear-to-r from-[#2F3D57] to-[#1e2a3a]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-[#ED7600] rounded-xl flex items-center justify-center shadow-lg">
@@ -1570,7 +1576,7 @@ const FloorPlanGenerator = () => {
                 </div>
               </div>
 
-              <div className="p-6 min-h-[32rem]">
+              <div className="p-6 min-h-128">
                 {generatedPlans.length > 0 ? (
                   <div className="space-y-6">
                     {/* Navigation Header */}
@@ -1681,7 +1687,7 @@ const FloorPlanGenerator = () => {
                         {generatedPlans.map((plan, index) => (
                           <div
                             key={`plan-${plan.id}-${index}-${plan.fitness}`}
-                            className="flex-shrink-0 text-center"
+                            className="shrink-0 text-center"
                           >
                             <button
                               onClick={() => setCurrentPlanIndex(index)}
@@ -1767,18 +1773,63 @@ const FloorPlanGenerator = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-96">
-                    <div className="text-center space-y-4">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg mx-auto flex items-center justify-center">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-medium text-gray-900">Ready to Generate</h3>
-                        <p className="text-gray-600 max-w-md mx-auto text-sm">
-                          Configure your space requirements and generate AI-powered floor plan variations
-                        </p>
+                  <div className="flex items-center justify-center min-h-96">
+                    <div className="w-full max-w-4xl">
+                      <div className="relative overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-10">
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 opacity-[0.35] bg-[linear-gradient(to_right,rgba(17,24,39,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(17,24,39,0.08)_1px,transparent_1px)] bg-size-[28px_28px]"
+                        />
+                        <div className="relative flex items-start gap-4">
+                          <div className="w-14 h-14 bg-white rounded-xl border border-gray-200 flex items-center justify-center shadow-sm">
+                            <svg className="w-7 h-7 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-gray-900">Ready to generate</h3>
+                            <p className="text-gray-600 text-sm mt-1">
+                              Add rooms and press <span className="font-semibold">Generate</span> to see variations here.
+                            </p>
+
+                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div className="bg-white rounded-xl border border-gray-200 p-3">
+                                <div className="text-xs font-semibold text-gray-700">Step 1</div>
+                                <div className="text-sm font-medium text-gray-900">Set plot & rooms</div>
+                                <div className="text-xs text-gray-600 mt-1">Choose plot size and room counts.</div>
+                              </div>
+                              <div className="bg-white rounded-xl border border-gray-200 p-3">
+                                <div className="text-xs font-semibold text-gray-700">Step 2</div>
+                                <div className="text-sm font-medium text-gray-900">Optional connections</div>
+                                <div className="text-xs text-gray-600 mt-1">Define adjacency for better layouts.</div>
+                              </div>
+                              <div className="bg-white rounded-xl border border-gray-200 p-3">
+                                <div className="text-xs font-semibold text-gray-700">Step 3</div>
+                                <div className="text-sm font-medium text-gray-900">Generate</div>
+                                <div className="text-xs text-gray-600 mt-1">Review, compare, and customize.</div>
+                              </div>
+                            </div>
+
+                            <div className="mt-5 flex items-center justify-between gap-3 bg-white rounded-xl border border-gray-200 p-3">
+                              <div className="text-sm text-gray-700">
+                                Rooms selected: <span className="font-semibold">{getSelectedRooms().length}</span>
+                                <span className="mx-2 text-gray-300">|</span>
+                                Area coverage: <span className={`font-semibold ${getTotalAreaPercentage() > 100 ? 'text-red-600' : 'text-green-700'}`}>{getTotalAreaPercentage().toFixed(1)}%</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // nudge users to the controls panel
+                                  const el = document.querySelector('[data-generation-controls]');
+                                  if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }}
+                                className="px-3 py-2 rounded-lg text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800"
+                              >
+                                Go to Generate
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1789,8 +1840,8 @@ const FloorPlanGenerator = () => {
 
           {/* Right Sidebar - Advanced Configuration */}
           <div className="col-span-12 lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-xl border-4 border-[#ED7600] overflow-hidden">
-              <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a]">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 bg-linear-to-r from-[#2F3D57] to-[#1e2a3a]">
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 bg-[#ED7600] rounded-xl flex items-center justify-center shadow-lg">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -1996,7 +2047,7 @@ const FloorPlanGenerator = () => {
 
                   {/* Generation Controls */}
                   <div className="space-y-4">
-                    <div className="p-3 bg-gray-50 rounded-lg">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200" data-generation-controls>
                       <div className="flex items-center space-x-3 mb-3">
                         <div className="w-7 h-7 bg-green-600 text-white rounded-md flex items-center justify-center text-sm font-medium">2</div>
                         <span className="font-medium text-gray-900">Generation Controls</span>
@@ -2024,63 +2075,70 @@ const FloorPlanGenerator = () => {
                         </div>
                       </div>
 
-                      {/* Two Separate Generate Buttons */}
+                      {/* Engine selection + single primary Generate */}
                       <div className="space-y-3">
-                        {/* Genetic Algorithm Button */}
-                        <button
-                          type="button"
-                          onClick={handleSubmit}
-                          disabled={(isGenerating && generatingEngine === 'ga') || getSelectedRooms().length === 0 || getTotalAreaPercentage() > 100}
-                          className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg transform hover:scale-105 disabled:hover:scale-100"
-                        >
-                          {isGenerating && generatingEngine === 'ga' ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Generating with Genetic Algorithm...</span>
-                            </>
-                          ) : (
-                            <>
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
-                              </svg>
-                              <span>Generate with Genetic Algorithm 🧬</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Divider with OR */}
-                        <div className="flex items-center">
-                          <div className="flex-1 border-t-2 border-gray-300"></div>
-                          <span className="px-4 text-gray-500 font-semibold text-sm">OR</span>
-                          <div className="flex-1 border-t-2 border-gray-300"></div>
+                        <div className="bg-white rounded-xl border border-gray-200 p-2">
+                          <div className="text-xs font-semibold text-gray-700 px-1 pb-2">Engine</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEngine('ga')}
+                              disabled={isGenerating}
+                              className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                                selectedEngine === 'ga'
+                                  ? 'bg-gray-900 text-white border-gray-900'
+                                  : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'
+                              } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                              🧬 Genetic
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedEngine('genai')}
+                              disabled={isGenerating}
+                              className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                                selectedEngine === 'genai'
+                                  ? 'bg-gray-900 text-white border-gray-900'
+                                  : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'
+                              } ${isGenerating ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                              ✨ Generative
+                            </button>
+                          </div>
+                          <div className="px-1 pt-2 text-[11px] text-gray-600">
+                            Genetic = fast optimization. Generative = more creative layouts.
+                          </div>
                         </div>
 
-                        {/* Generative AI Button */}
                         <button
                           type="button"
-                          onClick={handleGenAISubmit}
-                          disabled={(isGenerating && generatingEngine === 'genai') || getSelectedRooms().length === 0 || getTotalAreaPercentage() > 100}
-                          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg transform hover:scale-105 disabled:hover:scale-100"
+                          onClick={selectedEngine === 'ga' ? handleSubmit : handleGenAISubmit}
+                          disabled={isGenerating || getSelectedRooms().length === 0 || getTotalAreaPercentage() > 100}
+                          className="w-full bg-[#ED7600] hover:bg-[#D56900] disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg"
                         >
-                          {isGenerating && generatingEngine === 'genai' ? (
+                          {isGenerating ? (
                             <>
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Generating with Generative AI...</span>
+                              <span>
+                                {generatingEngine === 'genai'
+                                  ? 'Generating with Generative AI...'
+                                  : 'Generating with Genetic Algorithm...'}
+                              </span>
                             </>
                           ) : (
                             <>
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span>Generate with Generative AI ✨</span>
+                              <span>Generate</span>
+                              <span className="text-white/80 text-sm font-semibold">
+                                ({selectedEngine === 'ga' ? 'Genetic' : 'Generative'})
+                              </span>
                             </>
                           )}
                         </button>
 
                         {/* Info Box */}
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl">
                           <div className="flex">
-                            <svg className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 text-blue-500 mt-0.5 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             <div className="text-xs text-blue-800">

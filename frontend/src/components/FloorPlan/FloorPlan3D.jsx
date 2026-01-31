@@ -4,10 +4,294 @@ import {
   OrbitControls, 
   Environment, 
   Text,
-  PointerLockControls
+  PointerLockControls,
+  SoftShadows,
+  ContactShadows,
+  Line
 } from '@react-three/drei';
+import { EffectComposer, Bloom, SMAA, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import SunCalc from 'suncalc';
 import ColorCustomizer from './ColorCustomizer';
+
+const ENABLE_POSTPROCESSING = true;
+
+const DEFAULT_SUN_SETTINGS = {
+  enabled: true,
+  showPath: true,
+  lat: 0,
+  lng: 0,
+  northOffsetDeg: 0,
+  date: new Date().toISOString().slice(0, 10),
+  time: new Date().toTimeString().slice(0, 5)
+};
+
+const clampNumber = (value, min, max) => {
+  const num = Number(value);
+  if (Number.isNaN(num)) return min;
+  return Math.min(max, Math.max(min, num));
+};
+
+const degToRad = (deg) => (deg * Math.PI) / 180;
+
+// Solar visualization + dynamic sunlight
+const SunSystem3D = memo(({ target = [0, 0, 0], settings }) => {
+  const { scene } = useThree();
+  const lightRef = useRef();
+
+  const {
+    enabled,
+    showPath,
+    lat,
+    lng,
+    northOffsetDeg,
+    date,
+    time
+  } = settings || DEFAULT_SUN_SETTINGS;
+
+  const dateTime = useMemo(() => {
+    try {
+      return new Date(`${date}T${time}:00`);
+    } catch {
+      return new Date();
+    }
+  }, [date, time]);
+
+  const solar = useMemo(() => {
+    if (!enabled) return null;
+
+    const latitude = clampNumber(lat, -90, 90);
+    const longitude = clampNumber(lng, -180, 180);
+    const northOffset = degToRad(clampNumber(northOffsetDeg, -180, 180));
+
+    const pos = SunCalc.getPosition(dateTime, latitude, longitude);
+    const altitude = pos.altitude;
+    const bearing = pos.azimuth + Math.PI + northOffset; // bearing from north, clockwise
+
+    const radius = 90;
+    const horizontal = Math.cos(altitude) * radius;
+    const sunX = horizontal * Math.sin(bearing);
+    const sunY = Math.sin(altitude) * radius;
+    const sunZ = horizontal * -Math.cos(bearing); // north = -Z
+
+    const dayFactor = THREE.MathUtils.clamp(altitude / (Math.PI / 2), 0, 1);
+    const visible = altitude > -0.08;
+    const intensity = visible ? (0.15 + dayFactor * 1.35) : 0;
+
+    const noonWhite = new THREE.Color('#FFF8DC');
+    const horizonWarm = new THREE.Color('#FFB07C');
+    const warmMix = THREE.MathUtils.clamp(1 - dayFactor * 2.2, 0, 1);
+    const color = noonWhite.clone().lerp(horizonWarm, warmMix);
+
+    const times = SunCalc.getTimes(new Date(`${date}T00:00:00`), latitude, longitude);
+    const sunrise = times?.sunrise instanceof Date ? times.sunrise : null;
+    const sunset = times?.sunset instanceof Date ? times.sunset : null;
+
+    const markerAtTime = (t) => {
+      if (!(t instanceof Date)) return null;
+      const p = SunCalc.getPosition(t, latitude, longitude);
+      const b = p.azimuth + Math.PI + northOffset;
+      const r = 85;
+      const h = Math.cos(p.altitude) * r;
+      return {
+        position: [h * Math.sin(b), 0.6, h * -Math.cos(b)],
+        bearing: b,
+        time: t
+      };
+    };
+
+    const sunriseMarker = markerAtTime(sunrise);
+    const sunsetMarker = markerAtTime(sunset);
+
+    // Build a path line (sunrise -> sunset). Fallback: +/- 6 hours around selected time.
+    const points = [];
+    const addPoint = (t) => {
+      const p = SunCalc.getPosition(t, latitude, longitude);
+      const b = p.azimuth + Math.PI + northOffset;
+      const r = 90;
+      const h = Math.cos(p.altitude) * r;
+      const x = h * Math.sin(b);
+      const y = Math.sin(p.altitude) * r;
+      const z = h * -Math.cos(b);
+      if (y > -3) points.push([x, Math.max(0, y), z]);
+    };
+
+    if (sunrise && sunset && sunset.getTime() > sunrise.getTime()) {
+      const steps = 40;
+      const start = sunrise.getTime();
+      const end = sunset.getTime();
+      for (let i = 0; i <= steps; i++) {
+        addPoint(new Date(start + ((end - start) * i) / steps));
+      }
+    } else {
+      const steps = 36;
+      const start = new Date(dateTime.getTime() - 6 * 60 * 60 * 1000);
+      const end = new Date(dateTime.getTime() + 6 * 60 * 60 * 1000);
+      for (let i = 0; i <= steps; i++) {
+        addPoint(new Date(start.getTime() + ((end.getTime() - start.getTime()) * i) / steps));
+      }
+    }
+
+    return {
+      sunPosition: [sunX, Math.max(0.5, sunY), sunZ],
+      sunVisible: visible,
+      sunIntensity: intensity,
+      sunColor: `#${color.getHexString()}`,
+      sunriseMarker,
+      sunsetMarker,
+      pathPoints: points,
+      northOffset
+    };
+  }, [enabled, lat, lng, northOffsetDeg, date, time, dateTime]);
+
+  useEffect(() => {
+    if (!lightRef.current || !scene) return;
+    // Ensure the target exists in the scene so updates apply
+    if (lightRef.current.target && !lightRef.current.target.parent) {
+      scene.add(lightRef.current.target);
+    }
+    if (lightRef.current.target) {
+      lightRef.current.target.position.set(target[0], target[1], target[2]);
+      lightRef.current.target.updateMatrixWorld();
+    }
+  }, [scene, target]);
+
+  if (!solar) return null;
+
+  const compassRadius = 14;
+  const compass = (label, bearingRad) => {
+    const x = compassRadius * Math.sin(bearingRad);
+    const z = compassRadius * -Math.cos(bearingRad);
+    return (
+      <Text
+        key={label}
+        position={[x, 0.15, z]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.65}
+        color={label === 'N' ? '#2563EB' : '#111827'}
+        outlineWidth={0.01}
+        outlineColor="#FFFFFF"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {label}
+      </Text>
+    );
+  };
+
+  const northOffset = solar.northOffset || 0;
+  const northBearing = 0 + northOffset;
+  const eastBearing = Math.PI / 2 + northOffset;
+  const southBearing = Math.PI + northOffset;
+  const westBearing = (3 * Math.PI) / 2 + northOffset;
+
+  return (
+    <>
+      {/* Dynamic sunlight */}
+      <directionalLight
+        ref={lightRef}
+        position={solar.sunPosition}
+        intensity={solar.sunIntensity}
+        color={solar.sunColor}
+        castShadow
+        shadow-mapSize-width={4096}
+        shadow-mapSize-height={4096}
+        shadow-camera-near={0.1}
+        shadow-camera-far={220}
+        shadow-camera-left={-55}
+        shadow-camera-right={55}
+        shadow-camera-top={55}
+        shadow-camera-bottom={-55}
+        shadow-bias={-0.00008}
+      />
+
+      {/* Sun visual */}
+      {solar.sunVisible && (
+        <mesh position={solar.sunPosition}>
+          <sphereGeometry args={[1.8, 24, 24]} />
+          <meshStandardMaterial
+            color={solar.sunColor}
+            emissive={solar.sunColor}
+            emissiveIntensity={1.4}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
+
+      {/* Sun direction on ground */}
+      <Line
+        points={[
+          [0, 0.06, 0],
+          [solar.sunPosition[0] * 0.25, 0.06, solar.sunPosition[2] * 0.25]
+        ]}
+        color="#F59E0B"
+        lineWidth={2}
+        transparent
+        opacity={0.9}
+      />
+
+      {/* Sunrise / Sunset markers */}
+      {solar.sunriseMarker && (
+        <group>
+          <mesh position={solar.sunriseMarker.position}>
+            <sphereGeometry args={[0.65, 18, 18]} />
+            <meshStandardMaterial color="#34D399" emissive="#34D399" emissiveIntensity={0.8} toneMapped={false} />
+          </mesh>
+          <Text
+            position={[solar.sunriseMarker.position[0], 1.6, solar.sunriseMarker.position[2]]}
+            fontSize={0.4}
+            color="#065F46"
+            outlineWidth={0.01}
+            outlineColor="#FFFFFF"
+            anchorX="center"
+            anchorY="middle"
+          >
+            Sunrise
+          </Text>
+        </group>
+      )}
+      {solar.sunsetMarker && (
+        <group>
+          <mesh position={solar.sunsetMarker.position}>
+            <sphereGeometry args={[0.65, 18, 18]} />
+            <meshStandardMaterial color="#FB7185" emissive="#FB7185" emissiveIntensity={0.8} toneMapped={false} />
+          </mesh>
+          <Text
+            position={[solar.sunsetMarker.position[0], 1.6, solar.sunsetMarker.position[2]]}
+            fontSize={0.4}
+            color="#9F1239"
+            outlineWidth={0.01}
+            outlineColor="#FFFFFF"
+            anchorX="center"
+            anchorY="middle"
+          >
+            Sunset
+          </Text>
+        </group>
+      )}
+
+      {/* Sun path */}
+      {showPath && solar.pathPoints && solar.pathPoints.length > 2 && (
+        <Line
+          points={solar.pathPoints}
+          color="#FBBF24"
+          lineWidth={1.5}
+          dashed
+          dashSize={1.2}
+          gapSize={0.6}
+          transparent
+          opacity={0.85}
+        />
+      )}
+
+      {/* Compass (N/E/S/W) */}
+      {compass('N', northBearing)}
+      {compass('E', eastBearing)}
+      {compass('S', southBearing)}
+      {compass('W', westBearing)}
+    </>
+  );
+});
 
 // Enhanced Door Component with bi-directional visibility and proper wall penetration
 const Door3D = memo(({ position, rotation = [0, 0, 0], width = 0.9, height = 2.1, isOpen = false, onToggle, playerPosition, autoOpen = true, wallThickness = 0.2, customColor }) => {
@@ -1803,27 +2087,31 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
 };
 
 // Professional lighting setup with improved realism
-const Lighting3D = () => (
+const Lighting3D = ({ sunSettings }) => (
   <>
     {/* Ambient light for overall illumination */}
     <ambientLight intensity={0.3} color="#F5F5F5" />
-    
-    {/* Main directional light (sun) with warm color */}
-    <directionalLight
-      position={[25, 35, 20]}
-      intensity={1.2}
-      color="#FFF8DC"
-      castShadow
-      shadow-mapSize-width={4096}
-      shadow-mapSize-height={4096}
-      shadow-camera-near={0.1}
-      shadow-camera-far={150}
-      shadow-camera-left={-40}
-      shadow-camera-right={40}
-      shadow-camera-top={40}
-      shadow-camera-bottom={-40}
-      shadow-bias={-0.0001}
-    />
+
+    {/* Sun + compass + sunrise/sunset */}
+    {sunSettings?.enabled ? (
+      <SunSystem3D settings={sunSettings} />
+    ) : (
+      <directionalLight
+        position={[25, 35, 20]}
+        intensity={1.2}
+        color="#FFF8DC"
+        castShadow
+        shadow-mapSize-width={4096}
+        shadow-mapSize-height={4096}
+        shadow-camera-near={0.1}
+        shadow-camera-far={150}
+        shadow-camera-left={-40}
+        shadow-camera-right={40}
+        shadow-camera-top={40}
+        shadow-camera-bottom={-40}
+        shadow-bias={-0.0001}
+      />
+    )}
     
     {/* Secondary directional light for softer shadows */}
     <directionalLight
@@ -2266,7 +2554,7 @@ const CameraController3D = ({ mode, bounds, rooms, onPlayerPositionChange }) => 
 };
 
 // Main 3D Scene Component - Enhanced with doors and windows
-const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, doorColors = {}, onRoomsAnalyzed, onDoorsAnalyzed }) => {
+const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, doorColors = {}, onRoomsAnalyzed, onDoorsAnalyzed, sunSettings }) => {
   const [doorStates, setDoorStates] = useState({});
   const [playerPosition, setPlayerPosition] = useState([0, 1.7, 0]);
   
@@ -2514,7 +2802,7 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
         />
       ))}
       
-      <Lighting3D />
+      <Lighting3D sunSettings={sunSettings} />
       <CameraController3D 
         mode={mode} 
         bounds={bounds} 
@@ -2572,6 +2860,33 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
   const [doorColors, setDoorColors] = useState(savedState?.doorColors || {});
   const [analyzedRooms, setAnalyzedRooms] = useState([]);
   const [analyzedDoors, setAnalyzedDoors] = useState([]);
+  const [isSunPanelOpen, setIsSunPanelOpen] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState('idle');
+
+  // Sun / daylight visualization settings
+  const mergedDefaultSun = useMemo(() => {
+    const base = { ...DEFAULT_SUN_SETTINGS };
+    const saved = savedState?.sun || {};
+    return { ...base, ...saved };
+  }, [savedState]);
+
+  const [sunEnabled, setSunEnabled] = useState(mergedDefaultSun.enabled);
+  const [sunShowPath, setSunShowPath] = useState(mergedDefaultSun.showPath);
+  const [sunLat, setSunLat] = useState(mergedDefaultSun.lat);
+  const [sunLng, setSunLng] = useState(mergedDefaultSun.lng);
+  const [sunNorthOffsetDeg, setSunNorthOffsetDeg] = useState(mergedDefaultSun.northOffsetDeg);
+  const [sunDate, setSunDate] = useState(mergedDefaultSun.date);
+  const [sunTime, setSunTime] = useState(mergedDefaultSun.time);
+
+  const sunSettings = useMemo(() => ({
+    enabled: !!sunEnabled,
+    showPath: !!sunShowPath,
+    lat: clampNumber(sunLat, -90, 90),
+    lng: clampNumber(sunLng, -180, 180),
+    northOffsetDeg: clampNumber(sunNorthOffsetDeg, -180, 180),
+    date: sunDate,
+    time: sunTime
+  }), [sunEnabled, sunShowPath, sunLat, sunLng, sunNorthOffsetDeg, sunDate, sunTime]);
   
   // Use analyzed rooms from 3D scene for color customizer (ensures ID consistency)
   const rooms = analyzedRooms.length > 0 ? analyzedRooms : (floorPlanData?.rooms || []);
@@ -2604,6 +2919,7 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
         customColors,
         roomColors,
         doorColors,
+        sun: sunSettings,
         timestamp: Date.now()
       };
       localStorage.setItem(saveKey, JSON.stringify(stateToSave));
@@ -2612,7 +2928,15 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
       console.error('Failed to save 3D state:', error);
       return false;
     }
-  }, [saveKey, viewMode, autoRotate, customColors, roomColors, doorColors]);
+  }, [saveKey, viewMode, autoRotate, customColors, roomColors, doorColors, sunSettings]);
+
+  const handleSaveProgress = useCallback(() => {
+    const success = saveState();
+    if (!success) return;
+
+    setSaveFeedback('saved');
+    window.setTimeout(() => setSaveFeedback('idle'), 2000);
+  }, [saveState]);
   
   // Auto-save whenever state changes
   useEffect(() => {
@@ -2621,90 +2945,198 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
     }, 1000); // Debounce saves by 1 second
     
     return () => clearTimeout(timeoutId);
-  }, [customColors, roomColors, doorColors, viewMode, autoRotate, saveState]);
+  }, [customColors, roomColors, doorColors, viewMode, autoRotate, sunSettings, saveState]);
   
   return (
     <div className={`relative ${className}`}>
-      {/* Enhanced Controls */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col space-y-2">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setViewMode('overview')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              viewMode === 'overview'
-                ? 'bg-blue-600 text-white shadow-lg transform scale-105'
-                : 'bg-white/90 text-gray-700 hover:bg-white hover:scale-102'
-            }`}
-          >
-            🏗️ Overview
-          </button>
-          <button
-            onClick={() => setViewMode('walk')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-              viewMode === 'walk'
-                ? 'bg-green-600 text-white shadow-lg transform scale-105'
-                : 'bg-white/90 text-gray-700 hover:bg-white hover:scale-102'
-            }`}
-          >
-            🚶 Walk Through
-          </button>
-        </div>
-        
-        {/* Auto-rotate toggle for overview mode */}
-        {viewMode === 'overview' && (
-          <button
-            onClick={() => setAutoRotate(!autoRotate)}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
-              autoRotate
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'bg-white/80 text-gray-600 hover:bg-white'
-            }`}
-          >
-            🔄 Auto Rotate
-          </button>
-        )}
-      </div>
-
-
-
-      {/* Quality indicator */}
-      <div className="absolute top-4 right-4 z-10 bg-black/70 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>3D Rendering Active</span>
-        </div>
-        {viewMode === 'walk' && (
-          <div className="mt-2 pt-2 border-t border-white/20">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="text-xs">Walk Mode: Try WASD Keys!</span>
+      {/* Compact HUD */}
+      <div className="absolute top-4 left-4 z-10 w-90 max-w-[calc(100vw-2rem)]">
+        <div className="rounded-2xl border border-gray-200 bg-white/85 backdrop-blur-md shadow-xl">
+          <div className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-slate-900">3D Controls</div>
+              <button
+                onClick={handleSaveProgress}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors border ${
+                  saveFeedback === 'saved'
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
+                }`}
+                title="Save your 3D customizations"
+              >
+                {saveFeedback === 'saved' ? '✅ Saved' : '💾 Save'}
+              </button>
             </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setViewMode('overview')}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition-colors border ${
+                  viewMode === 'overview'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-slate-800 border-gray-200 hover:bg-slate-50'
+                }`}
+              >
+                🏗️ Overview
+              </button>
+              <button
+                onClick={() => setViewMode('walk')}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition-colors border ${
+                  viewMode === 'walk'
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-white text-slate-800 border-gray-200 hover:bg-slate-50'
+                }`}
+              >
+                🚶 Walk
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <button
+                onClick={() => setIsSunPanelOpen(!isSunPanelOpen)}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold border border-gray-200 bg-white hover:bg-slate-50 text-slate-800"
+              >
+                ☀️ Sun settings
+              </button>
+
+              {viewMode === 'overview' && (
+                <button
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                    autoRotate
+                      ? 'bg-violet-600 text-white border-violet-600'
+                      : 'bg-white text-slate-800 border-gray-200 hover:bg-slate-50'
+                  }`}
+                >
+                  🔄 Auto-rotate
+                </button>
+              )}
+            </div>
+
+            {isSunPanelOpen && (
+              <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-slate-900">Sun / Daylight</div>
+                  <button
+                    onClick={() => setSunEnabled(!sunEnabled)}
+                    className={`px-2 py-1 rounded-md text-xs font-semibold transition-colors border ${
+                      sunEnabled
+                        ? 'bg-amber-500 text-white border-amber-500'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                    title="Toggle sun visualization"
+                  >
+                    {sunEnabled ? 'On' : 'Off'}
+                  </button>
+                </div>
+
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <label className="text-xs text-slate-700">
+                    Latitude
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={sunLat}
+                      onChange={(e) => setSunLat(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs text-slate-700">
+                    Longitude
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={sunLng}
+                      onChange={(e) => setSunLng(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs text-slate-700">
+                    Date
+                    <input
+                      type="date"
+                      value={sunDate}
+                      onChange={(e) => setSunDate(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs text-slate-700">
+                    Time
+                    <input
+                      type="time"
+                      value={sunTime}
+                      onChange={(e) => setSunTime(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-gray-200 px-2 py-1 text-sm"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-700">North Offset</span>
+                    <span className="text-xs font-semibold text-slate-900">{Math.round(Number(sunNorthOffsetDeg) || 0)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={-180}
+                    max={180}
+                    value={sunNorthOffsetDeg}
+                    onChange={(e) => setSunNorthOffsetDeg(e.target.value)}
+                    className="w-full"
+                  />
+                  <div className="text-[11px] text-slate-600 leading-snug">
+                    Tip: adjust until the “N” marker matches your plot’s north.
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <label className="flex items-center gap-2 text-xs text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={sunShowPath}
+                      onChange={(e) => setSunShowPath(e.target.checked)}
+                    />
+                    Show sun path
+                  </label>
+                  <button
+                    onClick={() => {
+                      if (!navigator?.geolocation) return;
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          setSunLat(pos.coords.latitude);
+                          setSunLng(pos.coords.longitude);
+                        },
+                        () => {
+                          // ignore
+                        },
+                        { enableHighAccuracy: true, timeout: 8000 }
+                      );
+                    }}
+                    className="px-2 py-1 rounded-md text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800"
+                    title="Use browser location (permission required)"
+                  >
+                    Use location
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-      
-      {/* Save Progress Button */}
-      <div className="absolute top-4 right-56 z-10">
-        <button
-          onClick={() => {
-            const success = saveState();
-            if (success) {
-              // Show success feedback
-              const btn = document.getElementById('save-btn');
-              if (btn) {
-                btn.textContent = '✅ Saved!';
-                setTimeout(() => {
-                  btn.textContent = '💾 Save Progress';
-                }, 2000);
-              }
-            }
-          }}
-          id="save-btn"
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg shadow-lg font-medium text-sm transition-all duration-300 hover:scale-105"
-          title="Save your 3D customizations"
-        >
-          💾 Save Progress
-        </button>
+
+      {/* Status badge */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="bg-white/85 backdrop-blur-md border border-gray-200 rounded-xl px-3 py-2 shadow-lg">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
+            <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full"></span>
+            <span>3D rendering</span>
+          </div>
+          {viewMode === 'walk' && (
+            <div className="mt-1 text-[11px] text-slate-600">
+              Walk mode: WASD + mouse
+            </div>
+          )}
+        </div>
       </div>
 
 
@@ -2713,7 +3145,7 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
       {viewMode === 'walk' && (
         <div 
           id="walk-mode-trigger" 
-          className="absolute inset-0 z-0 cursor-crosshair bg-gradient-to-br from-blue-900/10 to-purple-900/10"
+          className="absolute inset-0 z-0 cursor-crosshair bg-linear-to-br from-blue-900/10 to-purple-900/10"
           title="Try WASD keys to move, Arrow keys to look around if mouse doesn't work"
           onClick={() => {
             const canvas = document.querySelector('canvas');
@@ -2734,7 +3166,7 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
             zIndex: 0
           }}
         >
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-md rounded-2xl p-10 pointer-events-none border-2 border-blue-400/40 shadow-2xl">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-linear-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-md rounded-2xl p-10 pointer-events-none border-2 border-blue-400/40 shadow-2xl">
             <div className="text-white text-center">
               <div className="text-5xl mb-4 animate-pulse">🎮</div>
               <div className="text-xl font-bold mb-3 text-blue-200">First Person Walk-Through</div>
@@ -2764,6 +3196,8 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
       {/* Enhanced 3D Canvas with optimized camera settings */}
       <Canvas
         shadows
+        dpr={[1, 2]}
+        gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ 
           position: [25, 18, 25], // Better initial positioning for architectural overview
           fov: 55, // Slightly tighter field of view for better perspective
@@ -2778,7 +3212,15 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.1; // Slightly adjusted exposure
+          gl.toneMappingExposure = 1.05; // Slightly adjusted exposure
+
+          // Ensure correct color output (Three r152+ uses outputColorSpace)
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+
+          // Prefer physically-correct lighting model when available
+          if ('useLegacyLights' in gl) {
+            gl.useLegacyLights = false;
+          }
           
           // Focus the canvas for keyboard input
           const canvas = gl.domElement;
@@ -2796,7 +3238,8 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
         <color attach="background" args={['#87CEEB']} />
         
         <Suspense fallback={<LoadingSpinner3D />}>
-          <Environment preset="city" background={false} intensity={0.4} />
+          <SoftShadows size={18} samples={24} focus={0.6} />
+          <Environment preset="apartment" background={false} intensity={0.75} blur={0.25} />
           <FloorPlan3DScene 
             floorPlanData={floorPlanData} 
             mode={viewMode} 
@@ -2806,7 +3249,32 @@ const FloorPlan3D = ({ floorPlanData, className = "" }) => {
             doorColors={doorColors}
             onRoomsAnalyzed={handleRoomsAnalyzed}
             onDoorsAnalyzed={handleDoorsAnalyzed}
+            sunSettings={sunSettings}
           />
+
+          {/* Subtle grounding shadows for a more realistic “anchored” look */}
+          <ContactShadows
+            position={[0, 0.01, 0]}
+            opacity={0.35}
+            scale={85}
+            blur={2.2}
+            far={55}
+            resolution={1024}
+            frames={1}
+          />
+
+          {ENABLE_POSTPROCESSING && (
+            <EffectComposer multisampling={0}>
+              <SMAA />
+              <Bloom
+                intensity={0.25}
+                luminanceThreshold={0.85}
+                luminanceSmoothing={0.2}
+                mipmapBlur
+              />
+              <Vignette eskil={false} offset={0.12} darkness={0.95} />
+            </EffectComposer>
+          )}
         </Suspense>
       </Canvas>
 

@@ -154,7 +154,7 @@ const ColorCustomizer = ({ onColorsChange, rooms = [], doors = [] }) => {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center space-x-2 font-semibold"
+        className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2 font-semibold"
         title="Customize 3D Colors"
       >
         <span className="text-xl">🎨</span>
@@ -163,22 +163,22 @@ const ColorCustomizer = ({ onColorsChange, rooms = [], doors = [] }) => {
 
       {/* Customization Panel */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-orange-500 p-6 w-80 max-h-[500px] overflow-y-auto">
+        <div className="absolute bottom-16 right-0 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 p-5 w-80 max-h-125 overflow-y-auto">
           <div className="space-y-4">
             {/* Header */}
-            <div className="border-b border-gray-300 pb-3">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center space-x-2">
+            <div className="border-b border-gray-200 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center space-x-2">
                 <span className="text-2xl">🎨</span>
                 <span>3D Color Customizer</span>
               </h3>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Personalize your floor plan appearance
               </p>
             </div>
 
             {/* Color Presets */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 🌟 Quick Presets
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -191,7 +191,7 @@ const ColorCustomizer = ({ onColorsChange, rooms = [], doors = [] }) => {
                       resetAllDoorColors(); // Reset door colors when applying preset
                       onColorsChange(preset.colors, {}, {});
                     }}
-                    className="px-3 py-2 text-xs font-medium bg-gradient-to-r from-gray-100 to-gray-200 hover:from-orange-100 hover:to-orange-200 text-gray-800 rounded-lg border border-gray-300 hover:border-orange-500 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="px-3 py-2 text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-lg border border-slate-200 transition-colors"
                   >
                     {preset.name}
                   </button>
@@ -200,61 +200,61 @@ const ColorCustomizer = ({ onColorsChange, rooms = [], doors = [] }) => {
             </div>
 
             {/* Individual Color Controls */}
-            <div className="space-y-3 pt-2 border-t border-gray-300">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <div className="space-y-3 pt-2 border-t border-gray-200">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 🎯 Custom Colors
               </label>
 
               {/* Walls Color */}
-              <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🏠</span>
                   <div>
-                    <div className="text-sm font-medium text-gray-800">Walls</div>
-                    <div className="text-xs text-gray-500">Interior walls color</div>
+                    <div className="text-sm font-semibold text-slate-900">Walls</div>
+                    <div className="text-xs text-slate-500">Interior walls color</div>
                   </div>
                 </div>
                 <input
                   type="color"
                   value={colors.walls}
                   onChange={(e) => handleColorChange('walls', e.target.value)}
-                  className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-orange-500 transition-all"
+                  className="w-12 h-12 rounded-lg cursor-pointer border border-slate-300"
                   title="Choose wall color"
                 />
               </div>
 
               {/* Windows Color */}
-              <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🪟</span>
                   <div>
-                    <div className="text-sm font-medium text-gray-800">Windows</div>
-                    <div className="text-xs text-gray-500">Window frames color</div>
+                    <div className="text-sm font-semibold text-slate-900">Windows</div>
+                    <div className="text-xs text-slate-500">Window frames color</div>
                   </div>
                 </div>
                 <input
                   type="color"
                   value={colors.windows}
                   onChange={(e) => handleColorChange('windows', e.target.value)}
-                  className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-orange-500 transition-all"
+                  className="w-12 h-12 rounded-lg cursor-pointer border border-slate-300"
                   title="Choose window color"
                 />
               </div>
 
               {/* Ground Color */}
-              <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">🌿</span>
                   <div>
-                    <div className="text-sm font-medium text-gray-800">Ground</div>
-                    <div className="text-xs text-gray-500">Outdoor ground color</div>
+                    <div className="text-sm font-semibold text-slate-900">Ground</div>
+                    <div className="text-xs text-slate-500">Outdoor ground color</div>
                   </div>
                 </div>
                 <input
                   type="color"
                   value={colors.ground}
                   onChange={(e) => handleColorChange('ground', e.target.value)}
-                  className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-300 hover:border-orange-500 transition-all"
+                  className="w-12 h-12 rounded-lg cursor-pointer border border-slate-300"
                   title="Choose ground color"
                 />
               </div>
@@ -431,7 +431,7 @@ const ColorCustomizer = ({ onColorsChange, rooms = [], doors = [] }) => {
             {/* Reset Button */}
             <button
               onClick={resetColors}
-              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+              className="w-full bg-linear-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
             >
               <span>🔄</span>
               <span>Reset to Default</span>

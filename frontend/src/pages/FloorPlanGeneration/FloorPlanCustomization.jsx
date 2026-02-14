@@ -515,14 +515,14 @@ const FloorPlanCustomization = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-[#1e2a3a] rounded-lg shadow-xl border border-[#ED7600]">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-lg font-medium text-white">
+                <h2 className="text-lg font-semibold text-slate-900">
                   {viewMode === '2d' ? 'Interactive Floor Plan Editor' : '3D Floor Plan Viewer'}
                 </h2>
-                <p className="text-sm text-gray-300 mt-1">
+                <p className="text-sm text-slate-600 mt-1">
                   {viewMode === '2d' 
                     ? 'Drag rooms to reposition them, drag corners to resize, or click to select and view details.'
                     : 'Experience your floor plan in 3D with realistic lighting, furniture, and walk-through mode.'
@@ -531,13 +531,13 @@ const FloorPlanCustomization = () => {
               </div>
               
               {viewMode === '2d' && (
-                <div className="flex items-center space-x-4 text-sm text-gray-300">
+                <div className="flex items-center space-x-4 text-sm text-slate-600">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-gray-500 rounded mr-2"></div>
                     <span>25px Grid</span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-[#ED7600] rounded mr-2"></div>
+                    <div className="w-3 h-3 bg-blue-600 rounded mr-2"></div>
                     <span>Selected Room</span>
                   </div>
                 </div>
@@ -559,13 +559,13 @@ const FloorPlanCustomization = () => {
                   onWindowsChange={handleWindowsChange}
                 />
               ) : (
-                <div className="w-full h-[600px] rounded-lg overflow-hidden border border-[#ED7600]">
+                <div className="w-full h-150 rounded-xl overflow-hidden border border-gray-200">
                   <React.Suspense 
                     fallback={
-                      <div className="flex items-center justify-center h-full bg-[#2F3D57]">
+                      <div className="flex items-center justify-center h-full bg-slate-50">
                         <div className="text-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ED7600] mx-auto mb-4"></div>
-                          <p className="text-gray-300">Loading 3D Viewer...</p>
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                          <p className="text-slate-600">Loading 3D Viewer...</p>
                         </div>
                       </div>
                     }
@@ -582,9 +582,9 @@ const FloorPlanCustomization = () => {
         </div>
 
         {/* Instructions Panel */}
-        <div className="mt-8 bg-[#1e2a3a] border border-[#ED7600] rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4 flex items-center">
-            <span className="bg-[#ED7600] w-8 h-8 rounded-full flex items-center justify-center mr-3 text-white font-bold">
+        <div className="mt-8 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+            <span className="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-white font-bold">
               {viewMode === '2d' ? '📐' : '🏗️'}
             </span>
             {viewMode === '2d' ? 'Customization Instructions' : '3D Viewer Features'}
@@ -592,31 +592,31 @@ const FloorPlanCustomization = () => {
           
           {viewMode === '2d' ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">🔄</span> Moving Rooms
                 </h4>
-                <ul className="text-gray-300 space-y-1">
+                <ul className="text-slate-600 space-y-1">
                   <li>• Click and drag any room to move it</li>
                   <li>• Rooms snap to a 25px grid for alignment</li>
                   <li>• Rooms are constrained within plot boundaries</li>
                 </ul>
               </div>
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">🔧</span> Resizing Rooms
                 </h4>
-                <ul className="text-gray-300 space-y-1">
+                <ul className="text-slate-600 space-y-1">
                   <li>• Select a room by clicking on it</li>
                   <li>• Drag the orange handles to resize</li>
                   <li>• Minimum room size is enforced</li>
                 </ul>
               </div>
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">💾</span> Saving Changes
                 </h4>
-                <ul className="text-gray-300 space-y-1">
+                <ul className="text-slate-600 space-y-1">
                   <li>• Changes are tracked automatically</li>
                   <li>• Click "Save Changes" to persist updates</li>
                   <li>• Export your design as JSON file</li>
@@ -625,36 +625,36 @@ const FloorPlanCustomization = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">🪟</span> 3D Features
                 </h4>
-                <ul className="text-gray-300 space-y-1">
+                <ul className="text-slate-600 space-y-1">
                   <li>• Realistic windows with light yellow glass</li>
                   <li>• Interactive doors that open/close on click</li>
                   <li>• Soft shadows and realistic lighting</li>
                   <li>• Color-coded rooms for easy identification</li>
                 </ul>
               </div>
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">🕹️</span> Controls
                 </h4>
-                <ul className="text-gray-300 space-y-1">
-                  <li>• <strong className="text-[#ED7600]">Overview Mode:</strong> Drag to orbit, scroll to zoom</li>
-                  <li>• <strong className="text-[#ED7600]">Walk Mode:</strong> WASD keys + mouse look</li>
+                <ul className="text-slate-600 space-y-1">
+                  <li>• <strong className="text-slate-900">Overview Mode:</strong> Drag to orbit, scroll to zoom</li>
+                  <li>• <strong className="text-slate-900">Walk Mode:</strong> WASD keys + mouse look</li>
                   <li>• Switch between modes with buttons</li>
                   <li>• City skybox environment for realism</li>
                 </ul>
               </div>
-              <div className="bg-[#2F3D57] p-4 rounded-lg border border-[#ED7600]/30">
-                <h4 className="font-medium text-[#ED7600] mb-2 flex items-center">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-2 flex items-center">
                   <span className="mr-2">📦</span> Export Options
                 </h4>
-                <ul className="text-gray-300 space-y-1">
+                <ul className="text-slate-600 space-y-1">
                   <li>• Take screenshots of your 3D model</li>
                   <li>• Share your design with others</li>
-                  <li>• <span className="text-[#ED7600]">🪑</span> Furniture automatically placed by room type</li>
+                  <li>• <span className="text-slate-900">🪑</span> Furniture automatically placed by room type</li>
                   <li>• Perfect for design presentations</li>
                 </ul>
               </div>

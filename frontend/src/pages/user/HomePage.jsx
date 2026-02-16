@@ -1,12 +1,89 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments, FaBullhorn, FaPhone, FaEye, FaStar } from 'react-icons/fa';
+import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
+import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments, FaBullhorn, FaPhone, FaEye, FaStar, FaRocket, FaArrowRight, FaChevronDown, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import homepagePic1 from '../../assets/homepage-pic1.png';
 import homepagePic3 from '../../assets/homepage-pic3.png';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 import advertisementAPI from '../../services/advertisementAPI';
+import reviewAPI from '../../services/reviewAPI';
+
+// Animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const fadeInLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const fadeInRight = {
+  hidden: { opacity: 0, x: 40 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 }
+  }
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } }
+};
+
+// Animated section component
+const AnimatedSection = ({ children, className = "" }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={fadeInUp}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Section Counter Component
+const SectionCounter = ({ number, total = "04", light = false }) => (
+  <div className="absolute left-8 top-1/2 -translate-y-1/2 hidden lg:flex flex-col items-center gap-2 z-20">
+    <span className={`text-sm font-bold ${light ? 'text-white' : 'text-[#2F3D57]'}`}>{number}</span>
+    <div className={`w-px h-8 ${light ? 'bg-white/30' : 'bg-[#2F3D57]/20'}`}></div>
+    <span className={`text-sm ${light ? 'text-white/60' : 'text-gray-400'}`}>{total}</span>
+  </div>
+);
+
+// Scroll Indicator Component  
+const ScrollIndicator = ({ onClick, light = false }) => (
+  <motion.div 
+    className="absolute bottom-8 left-8 flex flex-col items-center cursor-pointer z-20"
+    onClick={onClick}
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 1 }}
+  >
+    <motion.div
+      animate={{ y: [0, 8, 0] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+    >
+      <FaChevronDown className={`text-xl ${light ? 'text-white' : 'text-[#2F3D57]'}`} />
+    </motion.div>
+    <span className={`text-xs mt-2 tracking-widest uppercase ${light ? 'text-white/60' : 'text-[#2F3D57]/60'}`}>Scroll</span>
+  </motion.div>
+);
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -24,6 +101,8 @@ const HomePage = () => {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [popupCycleInterval, setPopupCycleInterval] = useState(null);
   const allAdsRef = useRef([]); // Ref to store current ads for interval access
+  const [mainView, setMainView] = useState('3d'); // Track which view is in main position
+  const [platformStats, setPlatformStats] = useState({ averageRating: 4.8, totalReviews: 150, totalUsers: 1000 });
 
   const slides = [
     { image: homepagePic1, alt: "Modern architectural design 1" },
@@ -72,6 +151,21 @@ const HomePage = () => {
     };
 
     fetchFeaturedAds();
+  }, []);
+
+  // Fetch platform stats (average rating, total users)
+  useEffect(() => {
+    const fetchPlatformStats = async () => {
+      try {
+        const result = await reviewAPI.getPlatformStats();
+        if (result.success || result.data) {
+          setPlatformStats(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching platform stats:', error);
+      }
+    };
+    fetchPlatformStats();
   }, []);
 
   // Fetch random advertisement for popup
@@ -236,161 +330,860 @@ const HomePage = () => {
     { icon: FaComments, title: "Feedback System", description: "Provide your valuable feedback to help us improve" }
   ];
 
+  // Parallax scroll hooks
+  const containerRef = useRef(null);
+  const section2Ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+  
+  // Section 2 specific scroll progress
+  const { scrollYProgress: section2Progress } = useScroll({
+    target: section2Ref,
+    offset: ["start end", "end start"]
+  });
+  
+  // Smooth spring animations for parallax - softer springs for flowing motion
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 50, damping: 20, mass: 0.5 });
+  const smoothSection2 = useSpring(section2Progress, { stiffness: 40, damping: 18, mass: 0.8 });
+  
+  // Section 2 TIDY-style transforms - smoother flowing transitions
+  const mockupX = useTransform(smoothSection2, [0, 0.15, 0.35, 0.55], ['0%', '0%', '10%', '25%']);
+  const mockupScale = useTransform(smoothSection2, [0, 0.15, 0.35, 0.55], [0.85, 1.1, 1.2, 0.95]);
+  const mockupWidth = useTransform(smoothSection2, [0, 0.15, 0.35, 0.55], ['75%', '85%', '75%', '55%']);
+  // Text reveals from left with smoother easing
+  const textX = useTransform(smoothSection2, [0.25, 0.45, 0.55], ['-80%', '-20%', '0%']);
+  const textOpacity = useTransform(smoothSection2, [0.25, 0.4, 0.55], [0, 0.5, 1]);
+  // Background color transition - smoother gradient
+  const section2Bg = useTransform(smoothSection2, [0.1, 0.25, 0.4], ['#ffffff', '#4a5a73', '#2F3D57']);
+  
+  // Parallax transforms - smoother flowing motion
+  const heroY = useTransform(smoothProgress, [0, 0.15, 0.3], [0, -50, -150]);
+  const heroOpacity = useTransform(smoothProgress, [0, 0.1, 0.2], [1, 0.7, 0]);
+  const mockupY = useTransform(smoothProgress, [0, 0.2, 0.4], [0, -30, -80]);
+  const mockupRotate = useTransform(smoothProgress, [0, 0.15, 0.3], [0, -2, -5]);
+  const featuresY = useTransform(smoothProgress, [0.2, 0.35, 0.5], [100, 40, 0]);
+  const featuresOpacity = useTransform(smoothProgress, [0.2, 0.28, 0.35], [0, 0.5, 1]);
+  
+  // Hero mockup scale - smoother enlargement as user scrolls
+  const heroMockupScale = useTransform(smoothProgress, [0, 0.08, 0.15], [1, 1.15, 1.3]);
+
+  // Scroll to next section
+  const scrollToSection = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen bg-[#2F3D57] text-white flex flex-col relative">
+    <div ref={containerRef} className="min-h-screen bg-[#f8f9fa] flex flex-col relative">
       {/* Navbar */}
       <div className="fixed w-full top-0 z-50">
         <Navbar />
       </div>
 
-      {/* Main content */}
-      <div className="flex-grow pt-16">
-        {/* Hero Section */}
-        <div className="container mx-auto px-6 py-35 flex flex-col md:flex-row items-center justify-between">
-          <div className="md:w-1/2 mb-12 md:mb-0 pl-12 md:pl-20 lg:pl-28 xl:pl-36">
-            {/* Welcome message */}
+      {/* ===== SECTION 1: HERO WITH 3D MOCKUP ===== */}
+      <section className="min-h-screen relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#f8f9fa] to-white pt-16">
+        {/* Dot Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.4]" style={{
+          backgroundImage: 'radial-gradient(circle, #2F3D57 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+        
+        {/* Section Counter */}
+        <SectionCounter number="01" />
+        
+        {/* Scroll Indicator */}
+        <ScrollIndicator onClick={() => scrollToSection('mockup-section')} />
+
+        <motion.div 
+          className="container mx-auto px-6 flex flex-col lg:flex-row items-center justify-between relative z-10"
+          style={{ y: heroY, opacity: heroOpacity }}
+        >
+          {/* Left Content */}
+          <div className="lg:w-1/2 mb-12 lg:mb-0 lg:pr-12">
+            {/* Welcome Badge */}
             {user && (
-              <div className="mb-4 p-4 bg-[#1E2936] rounded-lg border border-[#ED7600]">
-                <p className="text-sm text-gray-300">Welcome back, <span className="text-[#ED7600] font-semibold">
+              <motion.div 
+                className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-[#2F3D57] rounded-full"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <span className="w-2 h-2 bg-[#ED7600] rounded-full animate-pulse"></span>
+                <p className="text-sm text-white font-medium">Welcome back, <span className="font-bold">
                   {user.firstName && user.lastName 
                     ? `${user.firstName} ${user.lastName}` 
                     : user.username || user.email}
-                </span>!</p>
-              </div>
+                </span></p>
+              </motion.div>
             )}
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              <div className="block">You Dream It.</div>
-              <div className="block text-[#ED7600]">We Design It.</div>
-              <div className="block">You Own It.</div>
-            </h1>
-            <p className="text-lg text-gray-300 mb-8">
-              NextGenArchitect: Your AI-Powered Gateway to<br />
-              Custom Floor Plans & Seamless Plot Purchasing
-            </p>
-            <button 
-              onClick={handleGenerateNow}
-              className="px-8 py-3 bg-[#ED7600] text-white rounded-lg text-lg font-semibold hover:bg-[#D56900] transition-colors"
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
             >
-              Generate Now
-            </button>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#2F3D57] leading-[1.1] mb-8">
+                <span className="block">You Dream It.</span>
+                <span className="block text-[#ED7600]">We Design It.</span>
+                <span className="block">You Own It.</span>
+              </h1>
+            </motion.div>
+            
+            <motion.p 
+              className="text-xl text-gray-600 mb-10 max-w-lg leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              NextGenArchitect: Your AI-Powered Gateway to
+              Custom Floor Plans & Seamless Plot Purchasing
+            </motion.p>
+            
+            <motion.div 
+              className="flex flex-wrap gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <motion.button 
+                onClick={handleGenerateNow}
+                className="group px-8 py-4 bg-[#ED7600] text-white rounded-full font-semibold text-lg hover:bg-[#d66a00] transition-all shadow-xl shadow-orange-500/20 flex items-center gap-3"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaRocket className="group-hover:animate-bounce" />
+                <span>Generate Now</span>
+                <FaArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+              
+              <motion.button 
+                onClick={() => navigate('/societies')}
+                className="px-8 py-4 bg-transparent border-2 border-[#2F3D57] text-[#2F3D57] rounded-full font-semibold text-lg hover:bg-[#2F3D57] hover:text-white transition-all flex items-center gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaBuilding />
+                <span>Explore Societies</span>
+              </motion.button>
+            </motion.div>
+
+            {/* Rating Display Section */}
+            <motion.div 
+              className="mt-16 pt-8 border-t border-gray-200"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              <p className="text-sm text-[#ED7600] font-semibold tracking-wider uppercase mb-3">Trusted by Architects & Homeowners</p>
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* User avatars */}
+                <div className="flex -space-x-2">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className={`w-8 h-8 rounded-full border-2 border-white ${
+                      i === 1 ? 'bg-[#ED7600]' : 
+                      i === 2 ? 'bg-[#2F3D57]' : 
+                      i === 3 ? 'bg-[#ED7600]/70' : 'bg-[#2F3D57]/70'
+                    } flex items-center justify-center text-white text-xs font-bold`}>
+                      {i === 4 ? '+' : ''}
+                    </div>
+                  ))}
+                </div>
+                {/* Real-time Rating Display */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const rating = platformStats.averageRating;
+                      if (star <= Math.floor(rating)) {
+                        return <FaStar key={star} className="text-[#ED7600] text-sm" />;
+                      } else if (star === Math.ceil(rating) && rating % 1 !== 0) {
+                        return <FaStarHalfAlt key={star} className="text-[#ED7600] text-sm" />;
+                      } else {
+                        return <FaRegStar key={star} className="text-[#ED7600] text-sm" />;
+                      }
+                    })}
+                  </div>
+                  <span className="text-sm font-semibold text-[#2F3D57]">{platformStats.averageRating}</span>
+                  <span className="text-sm text-gray-500">({platformStats.totalUsers}+ users)</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Slideshow */}
-          <div className="md:w-1/2">
-            <div className="relative w-full max-w-md mx-auto h-[400px] overflow-hidden rounded-lg">
-              <div className="relative h-full w-full">
-                {slides.map((slide, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-all duration-500 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                  >
-                    <img src={slide.image} alt={slide.alt} className="w-full h-full object-contain" />
+          {/* Right: 3D Perspective Mockup */}
+          <div className="lg:w-1/2 relative">
+            <motion.div 
+              className="relative origin-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.4 }}
+              style={{ 
+                perspective: '1500px',
+                transformStyle: 'preserve-3d',
+                scale: heroMockupScale
+              }}
+            >
+              {/* 3D Tilted Device Mockup */}
+              <motion.div
+                className="relative"
+                style={{
+                  transform: 'rotateY(-15deg) rotateX(10deg)',
+                  transformStyle: 'preserve-3d'
+                }}
+                animate={{ 
+                  rotateY: [-15, -12, -15],
+                  rotateX: [10, 8, 10]
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {/* Shadow underneath */}
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-[80%] h-8 bg-black/10 blur-2xl rounded-full"></div>
+                
+                {/* Main Device Frame */}
+                <div className="bg-white rounded-[40px] shadow-2xl p-4 border border-gray-100">
+                  {/* Device Header */}
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <span className="text-xs text-gray-400">NextGenArchitect</span>
+                    <div className="w-20"></div>
                   </div>
-                ))}
-              </div>
+                  
+                  {/* Screen Content */}
+                  <div className="mt-4 relative overflow-hidden rounded-2xl bg-gray-50">
+                    {/* Dashboard Preview */}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-semibold text-[#2F3D57]">Dashboard</span>
+                        <div className="flex gap-2">
+                          {[1,2,3].map(i => (
+                            <div key={i} className="w-6 h-6 rounded-full bg-gray-200"></div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Floor Plan Cards Grid - Like TIDY app cards */}
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        {/* Card 1 - 2D Plan */}
+                        <motion.div 
+                          className="bg-[#2F3D57]/5 border border-[#2F3D57]/20 rounded-xl p-3 cursor-pointer"
+                          whileHover={{ scale: 1.05, y: -5 }}
+                          onClick={() => setMainView('2d')}
+                        >
+                          <div className="bg-white rounded-lg p-2 mb-2">
+                            <div className="border-2 border-[#2F3D57] rounded h-16 p-1">
+                              <div className="bg-[#ED7600]/20 border border-[#2F3D57] h-1/2 mb-0.5"></div>
+                              <div className="flex gap-0.5 h-1/2">
+                                <div className="bg-[#2F3D57]/10 border border-[#2F3D57] flex-1"></div>
+                                <div className="bg-[#2F3D57]/20 border border-[#2F3D57] flex-1"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-semibold text-[#2F3D57]">2D Plan</span>
+                        </motion.div>
+                        
+                        {/* Card 2 - 3D Model */}
+                        <motion.div 
+                          className="bg-[#2F3D57]/5 border border-[#2F3D57]/20 rounded-xl p-3 cursor-pointer"
+                          whileHover={{ scale: 1.05, y: -5 }}
+                          onClick={() => setMainView('3d')}
+                        >
+                          <div className="bg-white rounded-lg p-2 mb-2 h-16 flex items-center justify-center">
+                            <img src={homepagePic3} alt="3D" className="w-full h-full object-contain" />
+                          </div>
+                          <span className="text-[10px] font-semibold text-[#2F3D57]">3D Model</span>
+                        </motion.div>
+                        
+                        {/* Card 3 - Features */}
+                        <motion.div 
+                          className="bg-[#ED7600]/10 border border-[#ED7600]/30 rounded-xl p-3 cursor-pointer"
+                          whileHover={{ scale: 1.05, y: -5 }}
+                          onClick={handleGenerateNow}
+                        >
+                          <div className="bg-white rounded-lg p-2 mb-2 h-16 flex items-center justify-center">
+                            <FaCube className="text-[#ED7600] text-2xl" />
+                          </div>
+                          <span className="text-[10px] font-semibold text-[#2F3D57]">Try Now</span>
+                        </motion.div>
+                      </div>
+                      
+                      {/* Stats Row */}
+                      <div className="flex gap-2">
+                        <div className="flex-1 bg-white rounded-xl p-3 text-center shadow-sm">
+                          <div className="text-lg font-bold text-[#ED7600]">500+</div>
+                          <div className="text-[9px] text-gray-500">Floor Plans</div>
+                        </div>
+                        <div className="flex-1 bg-white rounded-xl p-3 text-center shadow-sm">
+                          <div className="text-lg font-bold text-[#2F3D57]">50+</div>
+                          <div className="text-[9px] text-gray-500">Societies</div>
+                        </div>
+                        <div className="flex-1 bg-white rounded-xl p-3 text-center shadow-sm">
+                          <div className="text-lg font-bold text-[#ED7600]">1000+</div>
+                          <div className="text-[9px] text-gray-500">Users</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Floating Cards Around Device */}
+                <motion.div 
+                  className="absolute -right-12 top-8 bg-white rounded-xl shadow-xl p-3 w-32"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <FaClipboardCheck className="text-white text-xs" />
+                    </div>
+                    <span className="text-[10px] font-semibold">Approved</span>
+                  </div>
+                  <div className="h-1 bg-green-200 rounded-full">
+                    <div className="h-full w-full bg-green-500 rounded-full"></div>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute -left-8 bottom-16 bg-white rounded-xl shadow-xl p-3 w-28"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#ED7600] rounded-full flex items-center justify-center">
+                      <FaRocket className="text-white text-xs" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold block">AI Ready</span>
+                      <span className="text-[8px] text-gray-400">Instant</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
 
-              {/* Slide indicators */}
-              <div className="flex justify-center mt-4 space-x-3">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-3 h-3 rounded-full transition-all ${index === currentSlide ? 'bg-[#ED7600] w-6' : 'bg-gray-400'}`}
-                  />
-                ))}
+      {/* ===== SECTION 2: 3D MOCKUP PARALLAX SECTION (TIDY-STYLE) ===== */}
+      <section ref={section2Ref} id="mockup-section" className="min-h-[200vh] relative">
+        {/* Sticky Container with animated background */}
+        <motion.div 
+          className="sticky top-0 h-screen flex items-center overflow-hidden"
+          style={{ backgroundColor: section2Bg }}
+        >
+          {/* Dot Grid */}
+          <div 
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)',
+              backgroundSize: '40px 40px'
+            }}
+          />
+          
+          {/* Subtle Gradient Orbs */}
+          <motion.div 
+            className="absolute top-20 right-20 w-48 h-48 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(237,118,0,0.15) 0%, transparent 70%)' }}
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+            className="absolute bottom-20 left-20 w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)' }}
+            animate={{ scale: [1.1, 1, 1.1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          
+          {/* Section Counter */}
+          <SectionCounter number="02" light />
+          
+          {/* Scroll Indicator */}
+          <ScrollIndicator onClick={() => scrollToSection('features-section')} light />
+
+          <div className="container mx-auto px-6 relative z-10 flex items-center justify-center">
+            {/* Left Side - Text Content (appears on scroll) - Absolute positioned */}
+            <motion.div 
+              className="absolute left-6 lg:left-12 w-[35%] pr-8 hidden lg:block z-20"
+              style={{ x: textX, opacity: textOpacity }}
+            >
+              <motion.span 
+                className="inline-block px-4 py-2 bg-[#ED7600]/20 text-[#ED7600] rounded-full text-sm font-semibold mb-6"
+              >
+                AI-Powered Design
+              </motion.span>
+              
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 tracking-tight">
+                <span className="block text-white">CREATE FLOOR PLANS,</span>
+                <span className="block text-[#ED7600]">VISUALIZE IN 3D,</span>
+                <span className="block text-white">CHECK COMPLIANCE.</span>
+              </h2>
+              
+              <p className="text-base text-gray-300 mb-8 leading-relaxed">
+                Move beyond simple sketches. Visualize your
+                dream home and check compliance instantly
+                with our AI-powered platform.
+              </p>
+              
+              <div className="flex flex-col gap-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#ED7600] rounded-lg flex items-center justify-center">
+                    <FaCube className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">3D Visualization</p>
+                    <p className="text-sm text-gray-400">One-click 3D rendering</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                    <FaClipboardCheck className="text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Compliance Check</p>
+                    <p className="text-sm text-gray-400">Instant verification</p>
+                  </div>
+                </div>
               </div>
+              
+              <motion.button
+                onClick={handleGenerateNow}
+                className="px-8 py-4 bg-[#ED7600] text-white rounded-full font-semibold shadow-xl shadow-orange-500/30 flex items-center gap-3"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaRocket />
+                Start Designing Now
+                <FaArrowRight />
+              </motion.button>
+            </motion.div>
+            
+            {/* Right Side - Floor Plan Mockup (starts centered, enlarges, then moves right) */}
+            <motion.div 
+              className="w-full flex items-center justify-center"
+              style={{ 
+                x: mockupX,
+                scale: mockupScale,
+                width: mockupWidth,
+                margin: '0 auto'
+              }}
+            >
+              <motion.div
+                className="relative w-full max-w-2xl"
+                style={{ perspective: '1500px' }}
+              >
+                {/* Dramatic Light Rays */}
+                <div className="absolute -top-32 -right-32 w-96 h-96 opacity-30 pointer-events-none">
+                  <div className="absolute inset-0 bg-[#ED7600] rounded-full blur-[100px]"></div>
+                </div>
+                <div className="absolute -bottom-20 -left-20 w-64 h-64 opacity-20 pointer-events-none">
+                  <div className="absolute inset-0 bg-[#2F3D57] rounded-full blur-[80px]"></div>
+                </div>
+
+                {/* Floating Info Cards */}
+                <motion.div 
+                  className="absolute -left-16 top-[20%] bg-white rounded-2xl shadow-xl p-4 z-30 hidden lg:block border border-gray-100 animate-float-slow"
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#ED7600] to-[#FF9933] rounded-xl flex items-center justify-center">
+                      <FaCube className="text-white text-sm" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#2F3D57]">3D Ready</p>
+                      <p className="text-xs text-gray-500">One-click render</p>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute -right-12 top-[25%] bg-white rounded-2xl shadow-xl p-4 z-30 hidden lg:block border border-gray-100 animate-float-slower"
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 1 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#2F3D57] to-[#4a5d7a] rounded-xl flex items-center justify-center">
+                      <FaClipboardCheck className="text-white text-sm" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#2F3D57]">Compliant</p>
+                      <p className="text-xs text-gray-500">Auto-verified</p>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="absolute -right-8 bottom-[20%] bg-gradient-to-br from-[#2F3D57] to-[#1e2a3e] rounded-2xl shadow-xl p-4 z-30 hidden lg:block animate-float-delayed-3"
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 1.2 }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const rating = platformStats.averageRating;
+                      if (star <= Math.floor(rating)) {
+                        return <FaStar key={star} className="text-[#ED7600] text-sm" />;
+                      } else if (star === Math.ceil(rating) && rating % 1 !== 0) {
+                        return <FaStarHalfAlt key={star} className="text-[#ED7600] text-sm" />;
+                      } else {
+                        return <FaRegStar key={star} className="text-[#ED7600] text-sm" />;
+                      }
+                    })}
+                    <span className="text-sm text-white font-bold ml-1">{platformStats.averageRating}</span>
+                  </div>
+                  <p className="text-xs text-white/70">{platformStats.totalUsers}+ Happy Users</p>
+                </motion.div>
+
+                {/* Main Floor Plan Card */}
+                <motion.div
+                  className="relative bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
+                  initial={{ opacity: 0, y: 60, rotateX: 10 }}
+                  whileInView={{ opacity: 1, y: 0, rotateX: 3 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  whileHover={{ y: -5, scale: 1.01 }}
+                  style={{ transformStyle: 'preserve-3d', boxShadow: '0 25px 60px -15px rgba(0,0,0,0.15)' }}
+                >
+                  {/* Shadow Layer */}
+                  <div className="absolute -bottom-4 left-[5%] right-[5%] h-8 bg-black/10 blur-xl rounded-full -z-10"></div>
+                  
+                  {/* Floor Plan Content */}
+                  <div className="p-6 bg-gradient-to-b from-gray-50 to-white">
+                    {/* Interactive Floor Plan Grid */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Main Room - Living Room */}
+                      <motion.div 
+                        className="col-span-2 relative bg-gradient-to-br from-[#ED7600]/15 to-[#ED7600]/5 rounded-xl p-4 h-36 flex items-center justify-center border-2 border-[#2F3D57] cursor-pointer overflow-hidden group"
+                        whileHover={{ scale: 1.02, boxShadow: "0 10px 40px rgba(237,118,0,0.15)" }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleGenerateNow}
+                      >
+                        <motion.div 
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12"
+                          animate={{ x: ['-200%', '200%'] }}
+                          transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
+                        />
+                        <span className="text-base font-bold text-[#2F3D57] relative z-10">LIVING ROOM</span>
+                        <motion.div className="absolute bottom-2 right-2 bg-[#ED7600] text-white text-[9px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity font-medium">
+                          Click to design
+                        </motion.div>
+                      </motion.div>
+                      
+                      {/* Side Column */}
+                      <div className="space-y-3">
+                        <motion.div 
+                          className="relative bg-gradient-to-br from-[#2F3D57]/10 to-[#2F3D57]/5 rounded-xl p-2 h-[66px] flex items-center justify-center border-2 border-[#2F3D57] cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleGenerateNow}
+                        >
+                          <span className="text-xs font-bold text-[#2F3D57]">BEDROOM</span>
+                        </motion.div>
+                        <motion.div 
+                          className="relative bg-gradient-to-br from-[#2F3D57]/15 to-[#2F3D57]/5 rounded-xl p-2 h-[66px] flex items-center justify-center border-2 border-[#2F3D57] cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleGenerateNow}
+                        >
+                          <span className="text-xs font-bold text-[#2F3D57]">BATH</span>
+                        </motion.div>
+                      </div>
+                      
+                      {/* Bottom Row */}
+                      <motion.div 
+                        className="relative bg-gradient-to-br from-[#2F3D57]/8 to-transparent rounded-xl p-3 flex items-center justify-center border-2 border-[#2F3D57] cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleGenerateNow}
+                      >
+                        <span className="text-xs font-bold text-[#2F3D57]">KITCHEN</span>
+                      </motion.div>
+                      <motion.div 
+                        className="relative bg-gradient-to-br from-[#ED7600]/10 to-transparent rounded-xl p-3 flex items-center justify-center border-2 border-[#2F3D57] cursor-pointer"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleGenerateNow}
+                      >
+                        <span className="text-xs font-bold text-[#2F3D57]">DINING</span>
+                      </motion.div>
+                      <motion.div 
+                        className="relative bg-gradient-to-br from-[#ED7600]/8 to-transparent rounded-xl p-3 flex items-center justify-center border-2 border-[#ED7600] border-dashed cursor-pointer group"
+                        whileHover={{ scale: 1.05, borderStyle: 'solid' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleGenerateNow}
+                      >
+                        <span className="text-xs font-bold text-[#ED7600] flex items-center gap-1">
+                          <span className="text-sm">+</span> ADD
+                        </span>
+                      </motion.div>
+                    </div>
+                    
+                    {/* Dimension Labels */}
+                    <div className="flex justify-between mt-4 px-2">
+                      <span className="text-xs text-gray-400 font-medium">40 × 60 ft</span>
+                      <span className="text-xs text-[#ED7600] font-semibold">2400 sq.ft</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+            
+            {/* Mobile Text (always visible on mobile) */}
+            <div className="absolute bottom-8 left-0 right-0 text-center lg:hidden px-6">
+              <motion.button
+                onClick={handleGenerateNow}
+                className="px-6 py-3 bg-[#ED7600] text-white rounded-full font-semibold shadow-xl shadow-orange-500/30 flex items-center gap-2 mx-auto"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaRocket />
+                Start Designing
+                <FaArrowRight />
+              </motion.button>
             </div>
           </div>
-        </div>
+        </motion.div>
+      </section>
 
-        {/* Features */}
-        <div className="bg-white py-20 px-6">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
+      {/* ===== SECTION 3: FEATURES ===== */}
+      <section id="features-section" className="min-h-screen relative py-24 bg-[#f8f9fa] overflow-hidden">
+        {/* Dot Grid */}
+        <div className="absolute inset-0 opacity-[0.3]" style={{
+          backgroundImage: 'radial-gradient(circle, #2F3D57 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+        
+        {/* Section Counter */}
+        <SectionCounter number="03" />
+        
+        {/* Scroll Indicator */}
+        <ScrollIndicator onClick={() => scrollToSection('ads-section')} />
+          
+          <div className="container mx-auto relative z-10">
+            <AnimatedSection className="text-center mb-16">
+              <motion.span 
+                className="inline-block px-4 py-2 bg-[#ED7600]/10 text-[#ED7600] rounded-full text-sm font-semibold mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                What We Offer
+              </motion.span>
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#2F3D57] leading-tight">
-                Platform Features
+                Platform <span className="text-gradient">Features</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Everything you need to design, validate, and approve your architectural project
               </p>
-              <div className="w-24 h-1 bg-[#ED7600] mx-auto mt-6 rounded-full"></div>
-            </div>
+              <div className="w-24 h-1 bg-gradient-to-r from-[#ED7600] to-[#FF9933] mx-auto mt-6 rounded-full"></div>
+            </AnimatedSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={staggerContainer}
+            >
               {features.map((feature, index) => {
                 const IconComponent = feature.icon;
                 return (
-                  <div key={index} className="bg-gray-50 p-8 rounded-2xl border border-gray-200 shadow-lg">
-                    <div className="w-16 h-16 bg-[#ED7600] rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-                      <IconComponent className="text-white text-2xl" />
+                  <motion.div 
+                    key={index} 
+                    className="group relative bg-white p-8 rounded-3xl border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500"
+                    variants={scaleIn}
+                    whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                  >
+                    {/* Hover gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#ED7600]/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div className="relative z-10">
+                      <motion.div 
+                        className="w-16 h-16 bg-gradient-to-br from-[#ED7600] to-[#FF9933] rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/20"
+                        whileHover={{ rotate: [0, -10, 10, 0], transition: { duration: 0.5 } }}
+                      >
+                        <IconComponent className="text-white text-2xl" />
+                      </motion.div>
+                      <h3 className="text-2xl font-bold mb-4 text-[#2F3D57] group-hover:text-[#ED7600] transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed text-lg">{feature.description}</p>
                     </div>
-                    <h3 className="text-2xl font-bold mb-4 text-[#2F3D57]">{feature.title}</h3>
-                    <p className="text-gray-600 leading-relaxed text-lg">{feature.description}</p>
-                  </div>
+                    
+                    {/* Animated border on hover */}
+                    <div className="absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-[#ED7600]/30 transition-colors duration-500"></div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           </div>
-        </div>
+      </section>
 
-        {/* Featured Advertisements Section */}
-        <div className="bg-gray-50 py-20 px-6">
-          <div className="container mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-[#2F3D57] leading-tight">
-                Featured Advertisements
+      {/* ===== SECTION 4: FEATURED ADVERTISEMENTS ===== */}
+      <section id="ads-section" className="min-h-screen relative py-24 bg-[#2F3D57] overflow-hidden">
+        {/* Dot Grid */}
+        <div className="absolute inset-0 opacity-[0.15]" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+        
+        {/* Section Counter */}
+        <SectionCounter number="04" light />
+        
+        {/* Background decoration */}
+        <div className="absolute top-20 right-0 w-96 h-96 bg-[#ED7600]/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-0 w-72 h-72 bg-[#FF9933]/10 rounded-full blur-3xl"></div>
+          
+          <div className="container mx-auto relative z-10">
+            <AnimatedSection className="text-center mb-16">
+              <motion.span 
+                className="inline-block px-4 py-2 bg-[#ED7600]/20 text-[#ED7600] rounded-full text-sm font-semibold mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                Discover Properties
+              </motion.span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white leading-tight">
+                Featured <span className="text-[#ED7600]">Advertisements</span>
               </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 Click on any advertisement to visit the website
               </p>
-              <div className="w-24 h-1 bg-[#ED7600] mx-auto mt-6 rounded-full"></div>
-            </div>
+              <div className="w-24 h-1 bg-gradient-to-r from-[#ED7600] to-[#FF9933] mx-auto mt-6 rounded-full"></div>
+            </AnimatedSection>
 
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#ED7600]"></div>
+                <motion.div 
+                  className="w-16 h-16 border-4 border-white/20 border-t-[#ED7600] rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
               </div>
             ) : featuredAds.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredAds.map((ad) => (
-                  <div 
+              <motion.div 
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={staggerContainer}
+              >
+                {featuredAds.map((ad, index) => (
+                  <motion.div 
                     key={ad._id} 
-                    className="group relative rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer"
+                    className="group relative rounded-3xl shadow-lg overflow-hidden cursor-pointer bg-white"
+                    variants={scaleIn}
+                    whileHover={{ y: -8, transition: { duration: 0.3 } }}
                     onClick={() => handleAdClick(ad)}
                   >
-                    {/* Advertisement Poster/Banner - Full image only */}
-                    <div className="relative w-full h-[400px] overflow-hidden bg-gray-100">
+                    {/* Gradient border on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#ED7600] to-[#FF9933] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm scale-105"></div>
+                    
+                    {/* Advertisement Poster/Banner */}
+                    <div className="relative w-full h-[400px] overflow-hidden bg-gray-50 rounded-3xl">
                       {ad.featured_image ? (
-                        <img 
+                        <motion.img 
                           src={ad.featured_image} 
                           alt={ad.title}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain transition-transform duration-500"
+                          whileHover={{ scale: 1.05 }}
                           onError={(e) => {
                             e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23e5e7eb" width="400" height="400"/%3E%3Ctext fill="%23999" font-size="20" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EAdvertisement%3C/text%3E%3C/svg%3E';
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                           <FaBullhorn className="text-6xl text-gray-400" />
                         </div>
                       )}
+                      
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
+                        <motion.span 
+                          className="px-6 py-2 bg-white/90 backdrop-blur-sm rounded-full text-[#2F3D57] font-semibold flex items-center gap-2"
+                          initial={{ y: 20, opacity: 0 }}
+                          whileHover={{ y: 0, opacity: 1 }}
+                        >
+                          <FaEye /> View Details
+                        </motion.span>
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
-              <div className="text-center py-20">
-                <div className="text-6xl text-gray-300 mb-4">
+              <motion.div 
+                className="text-center py-20"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="text-6xl text-white/30 mb-4 flex justify-center">
                   <FaBuilding />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-500 mb-2">No Featured Properties Available</h3>
+                <h3 className="text-2xl font-bold text-white/70 mb-2">No Featured Properties Available</h3>
                 <p className="text-gray-400">Check back later for exciting property opportunities!</p>
-              </div>
+              </motion.div>
             )}
           </div>
+      </section>
+
+      {/* ===== CALL TO ACTION SECTION ===== */}
+      <section className="relative py-32 bg-gradient-to-b from-[#2F3D57] via-[#3d4f6f] to-white overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div 
+            className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, #ED7600 0%, transparent 70%)',
+              filter: 'blur(80px)',
+              opacity: 0.3
+            }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity }}
+          />
+          <motion.div 
+            className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, #FF9933 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              opacity: 0.2
+            }}
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 8, repeat: Infinity }}
+          />
         </div>
-      </div>
+        
+        <div className="container mx-auto px-6 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-8">
+              Are you ready to take the first step and<br />
+              <span className="text-[#ED7600]">start your journey today?</span>
+            </h2>
+            <motion.button
+              onClick={handleGenerateNow}
+              className="px-10 py-5 bg-[#ED7600] text-white rounded-full font-semibold text-lg shadow-2xl shadow-orange-500/30 hover:bg-[#d66a00] transition-all"
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Get Started
+            </motion.button>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Advertisement Details Modal */}
       {showDetailModal && selectedAd && (
@@ -422,45 +1215,60 @@ const HomePage = () => {
       {/* Floating Advertisement Icon */}
       <div className="fixed bottom-6 right-6 z-50">
         {showPopup && advertisement && (
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-96 relative border-2 border-[#ED7600] overflow-hidden">
+          <motion.div 
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-96 relative border border-[#ED7600]/20 overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            {/* Gradient top border */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ED7600] to-[#FF9933]"></div>
+            
             {/* Header with navigation */}
             <div className="flex items-center justify-between p-4 pb-2">
               <div className="flex items-center space-x-2">
                 {allAds.length > 1 && (
                   <>
-                    <button
+                    <motion.button
                       onClick={goToPrevAd}
-                      className="p-1 bg-gray-200 hover:bg-gray-300 rounded-full text-[#2F3D57] transition-colors"
+                      className="p-2 bg-gray-100 hover:bg-[#ED7600] hover:text-white rounded-full text-[#2F3D57] transition-all duration-300"
                       title="Previous Ad"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       ←
-                    </button>
-                    <span className="text-xs text-gray-500">
-                      {currentAdIndex + 1} of {allAds.length}
+                    </motion.button>
+                    <span className="text-xs text-gray-500 font-medium px-2">
+                      {currentAdIndex + 1} / {allAds.length}
                     </span>
-                    <button
+                    <motion.button
                       onClick={goToNextAd}
-                      className="p-1 bg-gray-200 hover:bg-gray-300 rounded-full text-[#2F3D57] transition-colors"
+                      className="p-2 bg-gray-100 hover:bg-[#ED7600] hover:text-white rounded-full text-[#2F3D57] transition-all duration-300"
                       title="Next Ad"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
                       →
-                    </button>
+                    </motion.button>
                   </>
                 )}
               </div>
-              <button
+              <motion.button
                 onClick={() => setShowPopup(false)}
-                className="text-gray-500 hover:text-gray-800 text-xl font-bold"
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
               >
-                ✖
-              </button>
+                ✕
+              </motion.button>
             </div>
 
             {/* Ad indicators */}
             {allAds.length > 1 && (
-              <div className="flex justify-center px-4 pb-2 space-x-1">
+              <div className="flex justify-center px-4 pb-2 space-x-1.5">
                 {allAds.map((_, index) => (
-                  <button
+                  <motion.button
                     key={index}
                     onClick={() => {
                       setCurrentAdIndex(index);
@@ -474,24 +1282,29 @@ const HomePage = () => {
                         link: selectedAd.link_url
                       });
                     }}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentAdIndex ? 'bg-[#ED7600] w-4' : 'bg-gray-300'
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentAdIndex 
+                        ? 'bg-gradient-to-r from-[#ED7600] to-[#FF9933] w-6' 
+                        : 'bg-gray-200 w-2 hover:bg-gray-300'
                     }`}
+                    whileHover={{ scale: 1.2 }}
                   />
                 ))}
               </div>
             )}
             
-            {/* Advertisement Image - Full Display */}
+            {/* Advertisement Image */}
             {advertisement.image && (
-              <div 
-                className="w-full cursor-pointer"
+              <motion.div 
+                className="w-full cursor-pointer overflow-hidden"
                 onClick={() => {
                   if (randomAd) {
                     handleAdClick(randomAd);
                   }
                   setShowPopup(false);
                 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
               >
                 <img 
                   src={advertisement.image} 
@@ -501,53 +1314,63 @@ const HomePage = () => {
                     e.target.style.display = 'none';
                   }}
                 />
-              </div>
+              </motion.div>
             )}
 
             {/* Footer with title and buttons */}
-            <div className="p-4 pt-3 bg-gray-50">
+            <div className="p-4 pt-3 bg-gradient-to-b from-gray-50 to-white">
               <h3 className="font-bold text-lg mb-2 text-[#2F3D57] line-clamp-1">{advertisement.title}</h3>
-              <p className="text-gray-600 mb-3 text-xs">{advertisement.message}</p>
+              <p className="text-gray-500 mb-4 text-sm">{advertisement.message}</p>
 
-              <div className="flex gap-2">
-                <button
+              <div className="flex gap-3">
+                <motion.button
                   onClick={() => {
                     if (randomAd) {
                       handleAdClick(randomAd);
                     }
                     setShowPopup(false);
                   }}
-                  className="flex-1 bg-[#ED7600] text-white py-2 px-3 rounded-lg text-sm font-semibold hover:bg-[#D56900] transition-colors flex items-center justify-center"
+                  className="flex-1 btn-primary py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <FaBullhorn className="mr-2" />
+                  <FaBullhorn />
                   Learn More
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => {
                     if (advertisement.id) {
                       handleViewClick(advertisement.id);
                     }
                     setShowPopup(false);
                   }}
-                  className="flex-1 bg-[#2F3D57] text-white py-2 px-3 rounded-lg text-sm font-semibold hover:bg-[#1e2a3a] transition-colors flex items-center justify-center"
+                  className="flex-1 bg-[#2F3D57] text-white py-2.5 px-4 rounded-xl text-sm font-semibold hover:bg-[#1e2a3a] transition-all duration-300 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <FaEye className="mr-2" />
+                  <FaEye />
                   View
-                </button>
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         
         {/* Reopen Button */}
         {!showPopup && advertisement && (
-          <button
+          <motion.button
             onClick={() => setShowPopup(true)}
-            className="bg-[#ED7600] text-white p-4 rounded-full shadow-lg hover:bg-[#D56900] transition-all duration-300 hover:scale-110"
+            className="relative bg-gradient-to-r from-[#ED7600] to-[#FF9933] text-white p-4 rounded-full shadow-lg shadow-orange-500/30"
             title="View Advertisement"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <FaBullhorn className="text-2xl" />
-          </button>
+            {/* Pulse ring */}
+            <span className="absolute inset-0 rounded-full bg-[#ED7600] animate-ping opacity-25"></span>
+            <FaBullhorn className="text-2xl relative z-10" />
+          </motion.button>
         )}
       </div>
 

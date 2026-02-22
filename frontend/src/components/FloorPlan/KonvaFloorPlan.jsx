@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Stage, Layer, Rect, Text, Line, Group, Arc, Circle } from 'react-konva';
 
-const KonvaFloorPlan = ({ 
+const KonvaFloorPlan = forwardRef(({ 
   floorPlanData, 
   width = 800, 
   height = 600, 
@@ -11,7 +11,7 @@ const KonvaFloorPlan = ({
   onDoorsChange,
   onWindowsChange,
   isEditable = false 
-}) => {
+}, ref) => {
   const [rooms, setRooms] = useState([]);
   const [walls, setWalls] = useState([]);
   const [doors, setDoors] = useState([]);
@@ -44,6 +44,9 @@ const KonvaFloorPlan = ({
   const [resizeHandle, setResizeHandle] = useState(null); // Track which handle is being used
   const resizeThrottleRef = useRef(null); // Throttle resize updates
   const isUserInteracting = useRef(false); // Flag to prevent updates during user interaction
+
+  // Expose the stage ref to parent component
+  useImperativeHandle(ref, () => stageRef.current);
 
   // Snap to grid helper function
   const snapToGridCoordinate = useCallback((value) => {
@@ -2478,6 +2481,8 @@ const KonvaFloorPlan = ({
     </div>
     </div>
   );
-};
+});
+
+KonvaFloorPlan.displayName = 'KonvaFloorPlan';
 
 export default KonvaFloorPlan;

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import KonvaFloorPlan from '../../components/FloorPlan/KonvaFloorPlan';
+import jsPDF from 'jspdf';
 
 // Dynamic import for 3D component with fallback
 const FloorPlan3D = React.lazy(() => 
@@ -25,6 +26,7 @@ const FloorPlan3D = React.lazy(() =>
 const FloorPlanCustomization = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const stageRef = useRef(null);
   const [floorPlanData, setFloorPlanData] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -256,6 +258,240 @@ const FloorPlanCustomization = () => {
     setHasUnsavedChanges(true);
   }, []);
 
+  // Download floorplan as PDF in black and white format
+  const downloadPDF = useCallback(() => {
+    if (!floorPlanData) {
+      alert('No floorplan to download');
+      return;
+    }
+
+    try {
+      // Create canvas for architectural drawing
+      const canvasWidth = 1200;
+      const canvasHeight = 1200;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+      const ctx = canvas.getContext('2d');
+      
+      // Fill white background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      
+      // Calculate scaling
+      const margin = 80;
+      const plotWidth = floorPlanData.plotWidth || 1000;
+      const plotHeight = floorPlanData.plotHeight || 1000;
+      const scaleX = (canvasWidth - 2 * margin) / plotWidth;
+      const scaleY = (canvasHeight - 2 * margin) / plotHeight;
+      const scale = Math.min(scaleX, scaleY);
+      
+      // Helper function to scale coordinates
+      const sx = (x) => x * scale + margin;
+      const sy = (y) => y * scale + margin;
+      
+      // Helper function to draw thick wall as filled rectangle
+      const drawWallRect = (x1, y1, x2, y2, thickness) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        
+        ctx.save();
+        ctx.translate(x1, y1);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#808080'; // Grey fill
+        ctx.fillRect(0, -thickness / 2, length, thickness);
+        ctx.strokeStyle = '#000000'; // Black border
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(0, -thickness / 2, length, thickness);
+        ctx.restore();
+      };
+      
+      const outerWallThickness = 12;
+      const innerWallThickness = 6;
+      
+      // Draw outer boundary (thicker rectangle walls)
+      const bx = sx(0);
+      const by = sy(0);
+      const bw = plotWidth * scale;
+      const bh = plotHeight * scale;
+      
+      // Top wall
+      drawWallRect(bx, by, bx + bw, by, outerWallThickness);
+      // Right wall
+      drawWallRect(bx + bw, by, bx + bw, by + bh, outerWallThickness);
+      // Bottom wall
+      drawWallRect(bx + bw, by + bh, bx, by + bh, outerWallThickness);
+      // Left wall
+      drawWallRect(bx, by + bh, bx, by, outerWallThickness);
+      
+      // Draw rooms (walls as rectangles)
+      if (floorPlanData.rooms && Array.isArray(floorPlanData.rooms)) {
+        floorPlanData.rooms.forEach(room => {
+          const x = sx(room.x || 0);
+          const y = sy(room.y || 0);
+          const w = (room.width || 0) * scale;
+          const h = (room.height || 0) * scale;
+          
+          // Draw room walls as filled rectangles
+          // Top wall
+          drawWallRect(x, y, x + w, y, innerWallThickness);
+          // Right wall
+          drawWallRect(x + w, y, x + w, y + h, innerWallThickness);
+          // Bottom wall
+          drawWallRect(x + w, y + h, x, y + h, innerWallThickness);
+          // Left wall
+          drawWallRect(x, y + h, x, y, innerWallThickness);
+          
+          // Draw room label
+          ctx.fillStyle = '#000000';
+          ctx.font = '12px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const label = room.name || room.type || 'Room';
+          const dimensions = `${Math.round(room.width)}' x ${Math.round(room.height)}'`;
+          ctx.fillText(label, x + w / 2, y + h / 2 - 8);
+          ctx.font = '10px Arial';
+          ctx.fillText(dimensions, x + w / 2, y + h / 2 + 8);
+        });
+      }
+      
+      // Draw walls (internal) as rectangles
+      if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+        const walls = floorPlanData.mapData.filter(item => item.type === 'Wall');
+        
+        walls.forEach(wall => {
+          drawWallRect(sx(wall.x1 || 0), sy(wall.y1 || 0), sx(wall.x2 || 0), sy(wall.y2 || 0), innerWallThickness);
+        });
+      }
+      
+      // Draw doors (as arcs - architectural style)
+      if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+        const doors = floorPlanData.mapData.filter(item => item.type === 'Door');
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        
+        doors.forEach(door => {
+          const x1 = sx(door.x1 || 0);
+          const y1 = sy(door.y1 || 0);
+          const x2 = sx(door.x2 || 0);
+          const y2 = sy(door.y2 || 0);
+          
+          // Draw door frame line (hinge side)
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          
+          // Calculate door swing arc
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const doorLength = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx);
+          
+          // Draw arc swing (90 degrees from hinge)
+          ctx.beginPath();
+          ctx.arc(x1, y1, doorLength, angle, angle + Math.PI / 2, false);
+          ctx.stroke();
+          
+          // Draw door panel line
+          ctx.beginPath();
+          const endX = x1 + doorLength * Math.cos(angle + Math.PI / 2);
+          const endY = y1 + doorLength * Math.sin(angle + Math.PI / 2);
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+          
+          // Draw connection circles at door endpoints
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(x1, y1, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x2, y2, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
+      // Draw windows (as rectangles with white fill)
+      if (floorPlanData.mapData && Array.isArray(floorPlanData.mapData)) {
+        const windows = floorPlanData.mapData.filter(item => item.type === 'Window');
+        
+        windows.forEach(window => {
+          const wx1 = sx(window.x1 || 0);
+          const wy1 = sy(window.y1 || 0);
+          const wx2 = sx(window.x2 || 0);
+          const wy2 = sy(window.y2 || 0);
+          
+          // Calculate window rectangle
+          const dx = wx2 - wx1;
+          const dy = wy2 - wy1;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const angle = Math.atan2(dy, dx);
+          const windowThickness = 4;
+          
+          ctx.save();
+          ctx.translate(wx1, wy1);
+          ctx.rotate(angle);
+          
+          // Fill white
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, -windowThickness / 2, length, windowThickness);
+          
+          // Black border
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(0, -windowThickness / 2, length, windowThickness);
+          
+          ctx.restore();
+          
+          // Draw connection circles at window endpoints
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(wx1, wy1, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(wx2, wy2, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      
+      // Convert to grayscale (ensure pure black and white)
+      const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+      const data = imageData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvasWidth / 2, canvasHeight / 2]
+      });
+      
+      // Add the architectural drawing to PDF
+      const pdfImageData = canvas.toDataURL('image/png');
+      pdf.addImage(pdfImageData, 'PNG', 0, 0, canvasWidth / 2, canvasHeight / 2);
+      
+      // Download the PDF
+      const fileName = `floorplan_${new Date().getTime()}.pdf`;
+      pdf.save(fileName);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  }, [floorPlanData]);
+
   // Save floor plan
   const handleSave = async () => {
     if (!floorPlanData || isSaving) return;
@@ -471,6 +707,16 @@ const FloorPlanCustomization = () => {
               </div>
               
               <button
+                onClick={downloadPDF}
+                className="inline-flex items-center px-4 py-2 border border-blue-600 shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-colors"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </button>
+              
+              <button
                 onClick={handleExport}
                 className="inline-flex items-center px-4 py-2 border border-[#ED7600] shadow-sm text-sm font-medium rounded-md text-white bg-transparent hover:bg-[#ED7600] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#ED7600] transition-colors"
               >
@@ -549,6 +795,7 @@ const FloorPlanCustomization = () => {
               {/* 2D View */}
               <div style={{ display: viewMode === '2d' ? 'block' : 'none' }}>
                 <KonvaFloorPlan
+                  ref={stageRef}
                   floorPlanData={floorPlanData}
                   width={800}
                   height={600}

@@ -33,6 +33,9 @@ const FloorPlanGenerator = () => {
     crossoverRate: 0.7
   });
 
+  // Tab navigation state for compact layout
+  const [activeTab, setActiveTab] = useState('plot'); // 'plot', 'rooms', 'connections'
+
   const [formData, setFormData] = useState({
     // Use sensible default strings to avoid controlled/uncontrolled warnings in number inputs
     plotDimensions: { width: '1000', height: '1000' },
@@ -54,9 +57,6 @@ const FloorPlanGenerator = () => {
     areas: false,
     connections: false
   });
-
-  // Tab navigation state for compact layout
-  const [activeTab, setActiveTab] = useState('plot'); // 'plot', 'rooms', 'connections'
 
   // Fetch society compliances to show only available plot sizes
   useEffect(() => {
@@ -155,12 +155,14 @@ const FloorPlanGenerator = () => {
       console.log('[FloorPlanGenerator] Applying compliance rules:', complianceRules);
       console.log('[FloorPlanGenerator] Plot data:', plotData);
 
-      // Use actual plot dimensions from compliance rules
-      const width = complianceRules.plot_dimension_x || '1000';
-      const height = complianceRules.plot_dimension_y || '1000';
+      // Use 1000x1000 for better view/generation (consistent with normal floorplan generation)
+      const width = '1000';
+      const height = '1000';
 
-      // Calculate total plot area and maximum allowed ground coverage area
-      const totalPlotArea = parseFloat(width) * parseFloat(height);
+      // Calculate total plot area using actual dimensions from compliance for area validation
+      const actualWidth = parseFloat(complianceRules.plot_dimension_x) || 1000;
+      const actualHeight = parseFloat(complianceRules.plot_dimension_y) || 1000;
+      const totalPlotArea = actualWidth * actualHeight;
       const maxGroundCoverage = parseFloat(complianceRules.max_ground_coverage) || 75;
       const maxAllowedArea = (totalPlotArea * maxGroundCoverage) / 100;
 

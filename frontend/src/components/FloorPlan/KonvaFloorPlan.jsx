@@ -106,43 +106,19 @@ const KonvaFloorPlan = ({
     
     if (floorPlanData) {
       // Calculate scaling factors to fit the floor plan within canvas boundaries
-      const plotWidth = floorPlanData.plotWidth || 1000; // Use actual plot width from data
-      const plotHeight = floorPlanData.plotHeight || 1000; // Use actual plot height from data
-      const boundaryMargin = 15; // Same as boundary wall margin from canvas edge
-      const innerPadding = 25; // Padding from boundary wall to rooms
-      const margin = boundaryMargin + innerPadding; // Total margin from canvas edge
+      const plotWidth = 1000; // Default backend plot width
+      const plotHeight = 1000; // Default backend plot height
+      const margin = 40; // Margin from canvas edges
       
       const scaleX = (width - margin * 2) / plotWidth;
       const scaleY = (height - margin * 2) / plotHeight;
       const scale = Math.min(scaleX, scaleY); // Use uniform scaling to maintain aspect ratio
       
-      // Calculate actual content bounds and center offset
-      const rawRooms = floorPlanData.rooms || [];
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      rawRooms.forEach(room => {
-        minX = Math.min(minX, room.x || 0);
-        minY = Math.min(minY, room.y || 0);
-        maxX = Math.max(maxX, (room.x || 0) + (room.width || 100));
-        maxY = Math.max(maxY, (room.y || 0) + (room.height || 100));
-      });
-      
-      // Content dimensions scaled
-      const contentWidth = (maxX - minX) * scale;
-      const contentHeight = (maxY - minY) * scale;
-      
-      // Available space inside boundary
-      const availableWidth = width - margin * 2;
-      const availableHeight = height - margin * 2;
-      
-      // Center offset to center rooms within available space
-      const offsetX = margin + (availableWidth - contentWidth) / 2 - minX * scale;
-      const offsetY = margin + (availableHeight - contentHeight) / 2 - minY * scale;
-      
-      // Convert rooms data with proper scaling and centering
-      const roomsData = rawRooms.map((room, index) => ({
+      // Convert rooms data with proper scaling
+      const roomsData = (floorPlanData.rooms || []).map((room, index) => ({
         id: room.id || `room-${index}`,
-        x: (room.x || 0) * scale + offsetX,
-        y: (room.y || 0) * scale + offsetY,
+        x: (room.x || 0) * scale + margin,
+        y: (room.y || 0) * scale + margin,
         width: (room.width || 100) * scale,
         height: (room.height || 100) * scale,
         fill: getRoomColor(room.type || room.tag),
@@ -156,21 +132,19 @@ const KonvaFloorPlan = ({
         originalY: room.y || 0,
         originalWidth: room.width || 100,
         originalHeight: room.height || 100,
-        scale: scale,
-        offsetX: offsetX,
-        offsetY: offsetY
+        scale: scale
       }));
 
-      // Convert walls data with proper scaling and centering
+      // Convert walls data with proper scaling
       const wallsData = (floorPlanData.mapData || [])
         .filter(item => item.type === 'Wall')
         .map((wall, index) => ({
           id: wall.id || `wall-${index}`,
           points: [
-            (wall.x1 || 0) * scale + offsetX, 
-            (wall.y1 || 0) * scale + offsetY, 
-            (wall.x2 || 0) * scale + offsetX, 
-            (wall.y2 || 0) * scale + offsetY
+            (wall.x1 || 0) * scale + margin, 
+            (wall.y1 || 0) * scale + margin, 
+            (wall.x2 || 0) * scale + margin, 
+            (wall.y2 || 0) * scale + margin
           ],
           stroke: '#000000',
           strokeWidth: Math.max(1, 4 * scale),
@@ -187,10 +161,10 @@ const KonvaFloorPlan = ({
           .map((door, index) => ({
             id: door.id || `door-${index}`,
             points: [
-              (door.x1 || 0) * scale + offsetX, 
-              (door.y1 || 0) * scale + offsetY, 
-              (door.x2 || 0) * scale + offsetX, 
-              (door.y2 || 0) * scale + offsetY
+              (door.x1 || 0) * scale + margin, 
+              (door.y1 || 0) * scale + margin, 
+              (door.x2 || 0) * scale + margin, 
+              (door.y2 || 0) * scale + margin
             ],
             stroke: '#8B4513',
             strokeWidth: Math.max(6, 4 * scale),
@@ -205,10 +179,10 @@ const KonvaFloorPlan = ({
         const directDoors = floorPlanData.doors.map((door, index) => ({
           id: door.id || `direct-door-${index}`,
           points: [
-            (door.x1 || 0) * scale + offsetX, 
-            (door.y1 || 0) * scale + offsetY, 
-            (door.x2 || 0) * scale + offsetX, 
-            (door.y2 || 0) * scale + offsetY
+            (door.x1 || 0) * scale + margin, 
+            (door.y1 || 0) * scale + margin, 
+            (door.x2 || 0) * scale + margin, 
+            (door.y2 || 0) * scale + margin
           ],
           stroke: '#8B4513',
           strokeWidth: Math.max(6, 4 * scale),
@@ -258,10 +232,10 @@ const KonvaFloorPlan = ({
           .map((window, index) => ({
             id: window.id || `window-${index}`,
             points: [
-              (window.x1 || 0) * scale + offsetX, 
-              (window.y1 || 0) * scale + offsetY, 
-              (window.x2 || 0) * scale + offsetX, 
-              (window.y2 || 0) * scale + offsetY
+              (window.x1 || 0) * scale + margin, 
+              (window.y1 || 0) * scale + margin, 
+              (window.x2 || 0) * scale + margin, 
+              (window.y2 || 0) * scale + margin
             ],
             stroke: '#87CEEB',
             strokeWidth: Math.max(5, 3 * scale),
@@ -275,10 +249,10 @@ const KonvaFloorPlan = ({
         const directWindows = floorPlanData.windows.map((window, index) => ({
           id: window.id || `direct-window-${index}`,
           points: [
-            (window.x1 || 0) * scale + offsetX, 
-            (window.y1 || 0) * scale + offsetY, 
-            (window.x2 || 0) * scale + offsetX, 
-            (window.y2 || 0) * scale + offsetY
+            (window.x1 || 0) * scale + margin, 
+            (window.y1 || 0) * scale + margin, 
+            (window.x2 || 0) * scale + margin, 
+            (window.y2 || 0) * scale + margin
           ],
           stroke: '#87CEEB',
           strokeWidth: Math.max(5, 3 * scale),
@@ -1864,58 +1838,16 @@ const KonvaFloorPlan = ({
             </>
           )}
 
-          {/* Outer Boundary Wall - dynamically wraps around rooms */}
-          {/* Calculate boundary based on actual room positions */}
-          {(() => {
-            // Find the bounding box of all rooms
-            let minRoomX = Infinity, minRoomY = Infinity, maxRoomX = -Infinity, maxRoomY = -Infinity;
-            rooms.forEach(room => {
-              minRoomX = Math.min(minRoomX, room.x);
-              minRoomY = Math.min(minRoomY, room.y);
-              maxRoomX = Math.max(maxRoomX, room.x + room.width);
-              maxRoomY = Math.max(maxRoomY, room.y + room.height);
-            });
-            
-            // If no rooms, use canvas dimensions
-            if (!isFinite(minRoomX)) {
-              minRoomX = 40;
-              minRoomY = 40;
-              maxRoomX = width - 40;
-              maxRoomY = height - 40;
-            }
-            
-            const wallPadding = 15; // Padding from rooms to boundary wall
-            const boundaryX = minRoomX - wallPadding;
-            const boundaryY = minRoomY - wallPadding;
-            const boundaryWidth = (maxRoomX - minRoomX) + wallPadding * 2;
-            const boundaryHeight = (maxRoomY - minRoomY) + wallPadding * 2;
-            
-            return (
-              <>
-                {/* Outer boundary line */}
-                <Rect
-                  x={boundaryX}
-                  y={boundaryY}
-                  width={boundaryWidth}
-                  height={boundaryHeight}
-                  fill="transparent"
-                  stroke="#5D4037"
-                  strokeWidth={6}
-                />
-                
-                {/* Inner boundary line - creates double wall effect */}
-                <Rect
-                  x={boundaryX + 8}
-                  y={boundaryY + 8}
-                  width={boundaryWidth - 16}
-                  height={boundaryHeight - 16}
-                  fill="transparent"
-                  stroke="#8D6E63"
-                  strokeWidth={2}
-                />
-              </>
-            );
-          })()}
+          {/* Plot boundary */}
+          <Rect
+            x={2}
+            y={2}
+            width={width - 4}
+            height={height - 4}
+            fill="transparent"
+            stroke="#000000"
+            strokeWidth={3}
+          />
 
           {/* Rooms */}
           {rooms.map((room, index) => {
@@ -2326,34 +2258,22 @@ const KonvaFloorPlan = ({
             
             const isSelected = selectedDoor === door.id;
             
-            // Calculate door length (arc radius)
-            const doorLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            
-            // Calculate angle of the door line
-            const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-            
             return (
               <Group key={door.id}>
-                {/* Door swing arc - 90 degree arc showing door swing */}
-                <Arc
-                  x={x1}
-                  y={y1}
-                  innerRadius={0}
-                  outerRadius={doorLength}
-                  angle={90}
-                  rotation={angle}
-                  fill="transparent"
+                {/* Simple door - bold brown line */}
+                <Line
+                  x={0}
+                  y={0}
+                  points={[x1, y1, x2, y2]}
                   stroke={isSelected ? "#2196F3" : "#8B4513"}
-                  strokeWidth={2}
-                  draggable={isEditable}
-                  onDragStart={(e) => handleDoorDragStart(e, door.id)}
-                  onDragMove={(e) => handleDoorDragMove(e, door.id)}
-                  onDragEnd={(e) => handleDoorDragEnd(e, door.id)}
+                  strokeWidth={Math.max(8, door.strokeWidth * 2)}
+                  lineCap="round"
+                  draggable={false}
                   onClick={(e) => handleDoorClick(e, door.id)}
-                  style={{ cursor: isEditable ? 'move' : 'default' }}
+                  style={{ cursor: isEditable ? 'pointer' : 'default' }}
                 />
                 
-                {/* Door selection indicators */}
+                {/* Door endpoint handles - draggable */}
                 {isSelected && isEditable && (
                   <>
                     {/* Start point handle */}
@@ -2364,7 +2284,24 @@ const KonvaFloorPlan = ({
                       fill="#2196F3"
                       stroke="#1976D2"
                       strokeWidth={2}
-                      draggable={false}
+                      draggable={true}
+                      onDragMove={(e) => {
+                        const newX = e.target.x();
+                        const newY = e.target.y();
+                        const updatedDoors = doors.map(d =>
+                          d.id === door.id
+                            ? { ...d, points: [newX, newY, d.points[2], d.points[3]] }
+                            : d
+                        );
+                        setDoors(updatedDoors);
+                      }}
+                      onDragEnd={(e) => {
+                        if (onDoorsChange) {
+                          onDoorsChange(doors);
+                        }
+                        e.target.position({ x: 0, y: 0 });
+                      }}
+                      style={{ cursor: 'move' }}
                     />
                     {/* End point handle */}
                     <Circle
@@ -2374,7 +2311,24 @@ const KonvaFloorPlan = ({
                       fill="#2196F3"
                       stroke="#1976D2"
                       strokeWidth={2}
-                      draggable={false}
+                      draggable={true}
+                      onDragMove={(e) => {
+                        const newX = e.target.x();
+                        const newY = e.target.y();
+                        const updatedDoors = doors.map(d =>
+                          d.id === door.id
+                            ? { ...d, points: [d.points[0], d.points[1], newX, newY] }
+                            : d
+                        );
+                        setDoors(updatedDoors);
+                      }}
+                      onDragEnd={(e) => {
+                        if (onDoorsChange) {
+                          onDoorsChange(doors);
+                        }
+                        e.target.position({ x: 0, y: 0 });
+                      }}
+                      style={{ cursor: 'move' }}
                     />
                   </>
                 )}

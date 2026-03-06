@@ -2774,6 +2774,8 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
       })()}
       
       {/* ── Outer perimeter boundary wall ── */}
+      {/* When setbacks exist the wall sits at the PLOT edge (building + setbacks),
+          otherwise it hugs the building footprint like before. */}
       {(() => {
         const worldScale = 25 / Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY, 1);
         const cx  = ((bounds.minX + bounds.maxX) / 2) * worldScale;
@@ -2781,32 +2783,46 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
         const bw  = (bounds.maxX - bounds.minX) * worldScale; // building world width
         const bh  = (bounds.maxY - bounds.minY) * worldScale; // building world height
 
+        // Setback distances in world units (ft × worldScale × 12 for clear 3D visibility)
+        const frontPx = setbacks ? (setbacks.front || 0) * worldScale * 12 : 0;
+        const rearPx  = setbacks ? (setbacks.rear  || 0) * worldScale * 12 : 0;
+        const leftPx  = setbacks ? (setbacks.left  || 0) * worldScale * 12 : 0;
+        const rightPx = setbacks ? (setbacks.right || 0) * worldScale * 12 : 0;
+
+        // Plot dimensions = building + setbacks on each side
+        const plotW = bw + leftPx + rightPx;
+        const plotH = bh + frontPx + rearPx;
+
+        // Plot center (shifted because setbacks may differ per side)
+        const plotCx = cx + (rightPx - leftPx) / 2;
+        const plotCz = cz + (frontPx - rearPx) / 2;
+
         const owT = 0.22;   // outer-wall thickness  (world units)
-        const owH = 3.2;    // outer-wall height      (slightly taller than room walls)
+        const owH = 3.2;    // outer-wall height
         const owY = foundationHeight + owH / 2;
         const wallMat = <meshStandardMaterial color="#808080" roughness={0.85} metalness={0.05} />;
 
         // N/S walls are wider by 2×owT so they cap the corners
         return (
           <group>
-            {/* North wall (top in 2D) */}
-            <mesh position={[cx, owY, cz - bh / 2 - owT / 2]} castShadow receiveShadow>
-              <boxGeometry args={[bw + owT * 2, owH, owT]} />
+            {/* North wall (rear / top in 2D) */}
+            <mesh position={[plotCx, owY, plotCz - plotH / 2 - owT / 2]} castShadow receiveShadow>
+              <boxGeometry args={[plotW + owT * 2, owH, owT]} />
               {wallMat}
             </mesh>
-            {/* South wall (bottom in 2D) */}
-            <mesh position={[cx, owY, cz + bh / 2 + owT / 2]} castShadow receiveShadow>
-              <boxGeometry args={[bw + owT * 2, owH, owT]} />
+            {/* South wall (front / bottom in 2D) */}
+            <mesh position={[plotCx, owY, plotCz + plotH / 2 + owT / 2]} castShadow receiveShadow>
+              <boxGeometry args={[plotW + owT * 2, owH, owT]} />
               {wallMat}
             </mesh>
             {/* West wall (left in 2D) */}
-            <mesh position={[cx - bw / 2 - owT / 2, owY, cz]} castShadow receiveShadow>
-              <boxGeometry args={[owT, owH, bh]} />
+            <mesh position={[plotCx - plotW / 2 - owT / 2, owY, plotCz]} castShadow receiveShadow>
+              <boxGeometry args={[owT, owH, plotH]} />
               {wallMat}
             </mesh>
             {/* East wall (right in 2D) */}
-            <mesh position={[cx + bw / 2 + owT / 2, owY, cz]} castShadow receiveShadow>
-              <boxGeometry args={[owT, owH, bh]} />
+            <mesh position={[plotCx + plotW / 2 + owT / 2, owY, plotCz]} castShadow receiveShadow>
+              <boxGeometry args={[owT, owH, plotH]} />
               {wallMat}
             </mesh>
           </group>
@@ -2814,44 +2830,47 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
       })()}
 
       {/* ── Setback distance labels + ground zone tints ── */}
+      {/* Zones fill the gap BETWEEN the building and the outer boundary wall */}
       {setbacks && (() => {
         const worldScale = 25 / Math.max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY, 1);
         const cx  = ((bounds.minX + bounds.maxX) / 2) * worldScale;
         const cz  = ((bounds.minY + bounds.maxY) / 2) * worldScale;
         const bw  = (bounds.maxX - bounds.minX) * worldScale;
         const bh  = (bounds.maxY - bounds.minY) * worldScale;
-        const owT = 0.22; // outer wall thickness (must match boundary wall block above)
 
-        const labelY    = foundationHeight + 1.6; // mid-wall height for text
-        const groundY   = 0.01;            // just above ground
+        const labelY    = foundationHeight + 1.6;
+        const groundY   = 0.01;
         const fontSize  = 0.55;
         const tintAlpha = 0.18;
 
-        // setback distances in world units (ft * worldScale)
-        const frontPx = (setbacks.front || 0) * worldScale;
-        const rearPx  = (setbacks.rear  || 0) * worldScale;
-        const leftPx  = (setbacks.left  || 0) * worldScale;
-        const rightPx = (setbacks.right || 0) * worldScale;
+        // setback distances in world units (ft × worldScale × 12 for clear 3D visibility)
+        const frontPx = (setbacks.front || 0) * worldScale * 12;
+        const rearPx  = (setbacks.rear  || 0) * worldScale * 12;
+        const leftPx  = (setbacks.left  || 0) * worldScale * 12;
+        const rightPx = (setbacks.right || 0) * worldScale * 12;
 
-        // Outer wall outer edges (the gap starts here)
-        const northEdge = cz - bh / 2 - owT;  // outer edge of north wall
-        const southEdge = cz + bh / 2 + owT;  // outer edge of south wall
-        const westEdge  = cx - bw / 2 - owT;
-        const eastEdge  = cx + bw / 2 + owT;
+        // Building edges
+        const buildingN = cz - bh / 2;   // north edge of building
+        const buildingS = cz + bh / 2;   // south edge
+        const buildingW = cx - bw / 2;   // west edge
+        const buildingE = cx + bw / 2;   // east edge
+
+        // Full plot width/height for the front/rear tint zones (span entire plot width)
+        const plotW = bw + leftPx + rightPx;
 
         return (
           <group>
             {/* ─ Rear setback (north / top) ─ */}
             {rearPx > 0 && (
               <group>
-                {/* tinted ground zone */}
-                <mesh position={[cx, groundY, northEdge - rearPx / 2]} rotation={[-Math.PI/2, 0, 0]}>
-                  <planeGeometry args={[bw + owT * 2 + leftPx + rightPx, rearPx]} />
+                {/* tinted ground zone: from building north edge to rearPx north of it */}
+                <mesh position={[cx + (rightPx - leftPx) / 2, groundY, buildingN - rearPx / 2]} rotation={[-Math.PI/2, 0, 0]}>
+                  <planeGeometry args={[plotW, rearPx]} />
                   <meshStandardMaterial color="#3B82F6" transparent opacity={tintAlpha} />
                 </mesh>
                 {/* label */}
                 <Text
-                  position={[cx, labelY, northEdge - rearPx / 2]}
+                  position={[cx, labelY, buildingN - rearPx / 2]}
                   rotation={[0, Math.PI, 0]}
                   fontSize={fontSize}
                   color="#1D4ED8"
@@ -2869,12 +2888,12 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
             {/* ─ Front setback (south / bottom) ─ */}
             {frontPx > 0 && (
               <group>
-                <mesh position={[cx, groundY, southEdge + frontPx / 2]} rotation={[-Math.PI/2, 0, 0]}>
-                  <planeGeometry args={[bw + owT * 2 + leftPx + rightPx, frontPx]} />
+                <mesh position={[cx + (rightPx - leftPx) / 2, groundY, buildingS + frontPx / 2]} rotation={[-Math.PI/2, 0, 0]}>
+                  <planeGeometry args={[plotW, frontPx]} />
                   <meshStandardMaterial color="#EF4444" transparent opacity={tintAlpha} />
                 </mesh>
                 <Text
-                  position={[cx, labelY, southEdge + frontPx / 2]}
+                  position={[cx, labelY, buildingS + frontPx / 2]}
                   rotation={[0, 0, 0]}
                   fontSize={fontSize}
                   color="#B91C1C"
@@ -2892,12 +2911,12 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
             {/* ─ Left setback (west) ─ */}
             {leftPx > 0 && (
               <group>
-                <mesh position={[westEdge - leftPx / 2, groundY, cz]} rotation={[-Math.PI/2, 0, 0]}>
+                <mesh position={[buildingW - leftPx / 2, groundY, cz]} rotation={[-Math.PI/2, 0, 0]}>
                   <planeGeometry args={[leftPx, bh]} />
                   <meshStandardMaterial color="#10B981" transparent opacity={tintAlpha} />
                 </mesh>
                 <Text
-                  position={[westEdge - leftPx / 2, labelY, cz]}
+                  position={[buildingW - leftPx / 2, labelY, cz]}
                   rotation={[0, Math.PI / 2, 0]}
                   fontSize={fontSize}
                   color="#065F46"
@@ -2915,12 +2934,12 @@ const FloorPlan3DScene = ({ floorPlanData, mode, customColors, roomColors = {}, 
             {/* ─ Right setback (east) ─ */}
             {rightPx > 0 && (
               <group>
-                <mesh position={[eastEdge + rightPx / 2, groundY, cz]} rotation={[-Math.PI/2, 0, 0]}>
+                <mesh position={[buildingE + rightPx / 2, groundY, cz]} rotation={[-Math.PI/2, 0, 0]}>
                   <planeGeometry args={[rightPx, bh]} />
                   <meshStandardMaterial color="#F59E0B" transparent opacity={tintAlpha} />
                 </mesh>
                 <Text
-                  position={[eastEdge + rightPx / 2, labelY, cz]}
+                  position={[buildingE + rightPx / 2, labelY, cz]}
                   rotation={[0, -Math.PI / 2, 0]}
                   fontSize={fontSize}
                   color="#92400E"

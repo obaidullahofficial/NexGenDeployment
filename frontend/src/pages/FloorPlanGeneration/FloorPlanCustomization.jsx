@@ -995,6 +995,7 @@ const FloorPlanCustomization = () => {
                   height={window.innerHeight - 180}
                   isEditable={true}
                   showWalls={false}
+                  setbacks={location.state?.setbacks || null}
                   onRoomUpdate={handleRoomUpdate}
                   onRoomsChange={handleRoomsChange}
                   onWallsChange={handleWallsChange}

@@ -12,7 +12,25 @@ const FloorPlanGenerator = () => {
   const location = useLocation();
   const { user } = useAuth();
   const stageRef = useRef(null);
-  
+  const canvasContainerRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 560 });
+
+  // Measure the canvas container on mount and resize
+  useEffect(() => {
+    const el = canvasContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setCanvasSize({ width: Math.floor(width), height: Math.floor(height) });
+        }
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Get template creation flag from location state
   const isCreatingTemplate = location.state?.isCreatingTemplate || false;
   
@@ -2176,12 +2194,12 @@ const FloorPlanGenerator = () => {
                   <div className="h-full flex gap-2">
                     {/* Main Floor Plan - Takes most of the space */}
                     <div className="flex-1 flex flex-col min-w-0">
-                      <div className="flex-1 bg-gray-50 rounded border border-gray-200 overflow-hidden min-h-0 flex items-center justify-center">
+                      <div ref={canvasContainerRef} className="flex-1 bg-gray-50 rounded border border-gray-200 overflow-hidden min-h-0 flex items-center justify-center">
                         <KonvaFloorPlan
                           ref={stageRef}
                           floorPlanData={generatedPlans[currentPlanIndex]}
-                          width={Math.min(800, window.innerWidth - 350)}
-                          height={Math.min(500, window.innerHeight - 160)}
+                          width={canvasSize.width}
+                          height={canvasSize.height}
                           isEditable={false}
                           setbacks={(() => {
                             const cr = location.state?.complianceRules;

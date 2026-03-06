@@ -47,6 +47,7 @@ const KonvaFloorPlan = forwardRef(({
   const [resizeHandle, setResizeHandle] = useState(null); // Track which handle is being used
   const resizeThrottleRef = useRef(null); // Throttle resize updates
   const isUserInteracting = useRef(false); // Flag to prevent updates during user interaction
+  const doorsUpdatedByUserRef = useRef(false); // Flag to skip door re-processing after user drag
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, type: null, id: null });
   const [boundaryWarning, setBoundaryWarning] = useState(false);
   const boundaryWarningTimeoutRef = useRef(null);
@@ -605,23 +606,28 @@ const KonvaFloorPlan = forwardRef(({
       });
       
       // Merge with existing manually created doors (those not from floorPlanData)
-      setDoors(prevDoors => {
-        // Find manually created doors (IDs starting with 'new-door-' or 'created-door-')
-        const manualDoors = prevDoors.filter(door => 
-          door.id && (door.id.toString().startsWith('new-door-') || door.id.toString().startsWith('created-door-'))
-        );
-        
-        // Create a set of manual door IDs to avoid duplicates
-        const manualDoorIds = new Set(manualDoors.map(d => d.id));
-        
-        // Remove any doors from finalDoorsData that have IDs matching manual doors (to avoid duplicates)
-        const floorPlanOnlyDoors = finalDoorsData.filter(door =>
-          !door.id || !manualDoorIds.has(door.id)
-        );
-        
-        // Combine: doors from floorPlanData (excluding manual ones) + manual doors
-        return [...floorPlanOnlyDoors, ...manualDoors];
-      });
+      // Skip re-processing if doors were just updated by user drag to avoid overwriting positions
+      if (doorsUpdatedByUserRef.current) {
+        doorsUpdatedByUserRef.current = false;
+      } else {
+        setDoors(prevDoors => {
+          // Find manually created doors (IDs starting with 'new-door-' or 'created-door-')
+          const manualDoors = prevDoors.filter(door => 
+            door.id && (door.id.toString().startsWith('new-door-') || door.id.toString().startsWith('created-door-'))
+          );
+          
+          // Create a set of manual door IDs to avoid duplicates
+          const manualDoorIds = new Set(manualDoors.map(d => d.id));
+          
+          // Remove any doors from finalDoorsData that have IDs matching manual doors (to avoid duplicates)
+          const floorPlanOnlyDoors = finalDoorsData.filter(door =>
+            !door.id || !manualDoorIds.has(door.id)
+          );
+          
+          // Combine: doors from floorPlanData (excluding manual ones) + manual doors
+          return [...floorPlanOnlyDoors, ...manualDoors];
+        });
+      }
       
       // Merge with existing manually created windows (those not from floorPlanData)
       setWindows(prevWindows => {
@@ -721,6 +727,8 @@ const KonvaFloorPlan = forwardRef(({
     
     const door = doors.find(d => d.id === doorId);
     if (!door) return;
+    
+    isUserInteracting.current = true;
     
     // Store the initial drag position for calculating offset later
     setDragStart({ x: e.target.x(), y: e.target.y() });
@@ -985,61 +993,61 @@ const KonvaFloorPlan = forwardRef(({
   const handleDoorDragEnd = useCallback((e, doorId) => {
     if (!isEditable) return;
 
-    const door = doors.find(d => d.id === doorId);
-    if (!door) return;
-    
-    // Get the drag offset from the drag start position
+    // Capture the Konva drag offset before any state changes
     const dragOffsetX = e.target.x() - dragStart.x;
     const dragOffsetY = e.target.y() - dragStart.y;
-    
-    // Calculate new door center position
-    const doorCenterX = (door.points[0] + door.points[2]) / 2 + dragOffsetX;
-    const doorCenterY = (door.points[1] + door.points[3]) / 2 + dragOffsetY;
-    
-    // Calculate door length
-    const doorLength = Math.sqrt(
-      (door.points[2] - door.points[0]) ** 2 + 
-      (door.points[3] - door.points[1]) ** 2
-    );
-    
-    // Find nearest wall edge
-    const { nearestWall, snapPosition, distance } = findNearestWallEdge(doorCenterX, doorCenterY, doorLength);
-    
-    let finalDoorPoints;
-    
-    if (nearestWall && snapPosition) {
-      // Snap to wall
-      finalDoorPoints = [snapPosition.x1, snapPosition.y1, snapPosition.x2, snapPosition.y2];
-      if (nearestWall.type === 'custom') {
-        console.log('Door snapped to custom wall:', nearestWall.id);
-      } else {
-        console.log('Door snapped to wall:', nearestWall.edge, 'of room:', nearestWall.room?.id);
-      }
-    } else {
-      // Return to original position if no valid wall found
-      finalDoorPoints = door.points;
-      console.log('Door returned to original position - no valid wall nearby');
-    }
-    
-    // Update door position
-    const updatedDoors = doors.map(d => 
-      d.id === doorId 
-        ? { ...d, points: finalDoorPoints }
-        : d
-    );
 
-    setDoors(updatedDoors);
+    // Update door position using functional updater to always read latest state
+    setDoors(prevDoors => {
+      const door = prevDoors.find(d => d.id === doorId);
+      if (!door) return prevDoors;
+
+      // Calculate new door center position
+      const doorCenterX = (door.points[0] + door.points[2]) / 2 + dragOffsetX;
+      const doorCenterY = (door.points[1] + door.points[3]) / 2 + dragOffsetY;
+
+      // Calculate door length
+      const doorLength = Math.sqrt(
+        (door.points[2] - door.points[0]) ** 2 + 
+        (door.points[3] - door.points[1]) ** 2
+      );
+
+      // Find nearest wall edge
+      const { nearestWall, snapPosition } = findNearestWallEdge(doorCenterX, doorCenterY, doorLength);
+
+      let finalDoorPoints;
+
+      if (nearestWall && snapPosition) {
+        finalDoorPoints = [snapPosition.x1, snapPosition.y1, snapPosition.x2, snapPosition.y2];
+      } else {
+        // Return to original position if no valid wall found
+        finalDoorPoints = door.points;
+      }
+
+      const updated = prevDoors.map(d => 
+        d.id === doorId 
+          ? { ...d, points: finalDoorPoints }
+          : d
+      );
+
+      // Mark that doors were updated by user so useEffect skips re-processing
+      doorsUpdatedByUserRef.current = true;
+
+      // Notify parent component about door position change
+      if (onDoorsChange) {
+        onDoorsChange(updated);
+      }
+
+      return updated;
+    });
+
     setIsDragging(false);
     setDragType(null);
+    isUserInteracting.current = false;
     
-    // Notify parent component about door position change
-    if (onDoorsChange) {
-      onDoorsChange(updatedDoors);
-    }
-    
-    // Reset Konva element position to prevent ghost copies (like windows)
+    // Reset Konva element position to prevent ghost copies
     e.target.position({ x: 0, y: 0 });
-  }, [doors, width, height, isEditable, dragStart, findNearestWallEdge, onDoorsChange]);
+  }, [isEditable, dragStart, findNearestWallEdge, onDoorsChange]);
 
   // Handle window drag start
   const handleWindowDragStart = useCallback((e, windowId) => {
@@ -2186,6 +2194,7 @@ const KonvaFloorPlan = forwardRef(({
           width={width}
           height={height}
           ref={stageRef}
+          pixelRatio={typeof window !== 'undefined' ? (window.devicePixelRatio || 2) : 2}
           onClick={handleStageClick}
           onMouseMove={handleStageMouseMove}
           onMouseUp={handleStageMouseUp}
@@ -2921,16 +2930,17 @@ const KonvaFloorPlan = forwardRef(({
                         const newY = e.target.y();
                         // Reset position first to avoid visual glitch
                         e.target.position({ x: 0, y: 0 });
-                        // Update door points with new position
-                        const updatedDoors = doors.map(d =>
-                          d.id === door.id
-                            ? { ...d, points: [newX, newY, d.points[2], d.points[3]] }
-                            : d
-                        );
-                        setDoors(updatedDoors);
-                        if (onDoorsChange) {
-                          onDoorsChange(updatedDoors);
-                        }
+                        // Update door points with functional updater
+                        doorsUpdatedByUserRef.current = true;
+                        setDoors(prev => {
+                          const updated = prev.map(d =>
+                            d.id === door.id
+                              ? { ...d, points: [newX, newY, d.points[2], d.points[3]] }
+                              : d
+                          );
+                          if (onDoorsChange) onDoorsChange(updated);
+                          return updated;
+                        });
                       }}
                       style={{ cursor: 'move' }}
                     />
@@ -2948,16 +2958,17 @@ const KonvaFloorPlan = forwardRef(({
                         const newY = e.target.y();
                         // Reset position first to avoid visual glitch
                         e.target.position({ x: 0, y: 0 });
-                        // Update door points with new position
-                        const updatedDoors = doors.map(d =>
-                          d.id === door.id
-                            ? { ...d, points: [d.points[0], d.points[1], newX, newY] }
-                            : d
-                        );
-                        setDoors(updatedDoors);
-                        if (onDoorsChange) {
-                          onDoorsChange(updatedDoors);
-                        }
+                        // Update door points with functional updater
+                        doorsUpdatedByUserRef.current = true;
+                        setDoors(prev => {
+                          const updated = prev.map(d =>
+                            d.id === door.id
+                              ? { ...d, points: [d.points[0], d.points[1], newX, newY] }
+                              : d
+                          );
+                          if (onDoorsChange) onDoorsChange(updated);
+                          return updated;
+                        });
                       }}
                       style={{ cursor: 'move' }}
                     />

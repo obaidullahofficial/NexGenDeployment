@@ -81,8 +81,8 @@ const Login = () => {
                             navigate('/subadmin');
                         }
                     } else {
-                        console.log(`[GOOGLE ${mode}] Redirecting to user profile`);
-                        navigate('/userprofile');
+                        console.log(`[GOOGLE ${mode}] Redirecting to home page`);
+                        navigate('/');
                     }
                 };
                 

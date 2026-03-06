@@ -89,39 +89,51 @@ const FloorPlanCustomization = () => {
     setHasUnsavedChanges(true);
   }, []);
 
+  // Helper: Replicate KonvaFloorPlan's exact layoutProps calculation so we can
+  // accurately convert Konva-canvas coordinates back to 0-1000 backend coords.
+  // This MUST stay in sync with KonvaFloorPlan's useMemo layoutProps block.
+  const getLayoutProps = useCallback((data) => {
+    const minMargin = 40;
+    const canvasWidth  = window.innerWidth - 280;
+    const canvasHeight = window.innerHeight - 180;
+    const plotWidth  = data.plotWidth  || 1000;
+    const plotHeight = data.plotHeight || 1000;
+    const actualLength = data.actualLength || 55;   // feet – horizontal
+    const actualWidth  = data.actualWidth  || 25;    // feet – vertical
+
+    const availableWidth  = canvasWidth  - minMargin * 2;
+    const availableHeight = canvasHeight - minMargin * 2;
+
+    const scaleToFit   = Math.min(availableWidth / actualLength, availableHeight / actualWidth);
+    const scaledWidth  = actualLength * scaleToFit;
+    const scaledHeight = actualWidth  * scaleToFit;
+
+    const coordScaleX = scaledWidth  / plotWidth;
+    const coordScaleY = scaledHeight / plotHeight;
+
+    const offsetX = (canvasWidth  - scaledWidth)  / 2;
+    const offsetY = (canvasHeight - scaledHeight) / 2;
+
+    return { offsetX, offsetY, coordScaleX, coordScaleY, scaledWidth, scaledHeight };
+  }, []);
+
   // Handle rooms change (add/remove)
   const handleRoomsChange = useCallback((updatedRooms) => {
     setFloorPlanData(prevData => {
       if (!prevData) return prevData;
       
-      // Use same dynamic canvas dimensions as KonvaFloorPlan (matching the actual component props)
-      const canvasWidth = window.innerWidth - 280;
-      const canvasHeight = window.innerHeight - 180;
-      const minMargin = 40;
-      const plotWidth = prevData.plotWidth || 1000;
-      const plotHeight = prevData.plotHeight || 1000;
-      const scaleX = (canvasWidth - minMargin * 2) / plotWidth;
-      const scaleY = (canvasHeight - minMargin * 2) / plotHeight;
-      const scale = Math.min(scaleX, scaleY);
-      
-      // Calculate centered offsets (matching KonvaFloorPlan layoutProps)
-      const scaledWidth = plotWidth * scale;
-      const scaledHeight = plotHeight * scale;
-      const offsetX = (canvasWidth - scaledWidth) / 2;
-      const offsetY = (canvasHeight - scaledHeight) / 2;
+      const { offsetX, offsetY, coordScaleX, coordScaleY } = getLayoutProps(prevData);
       
       // Convert Konva rooms back to backend format
       const backendRooms = updatedRooms.map(room => {
         // For newly created rooms, convert Konva coordinates back to backend coordinates
         if (room.id && (room.id.toString().startsWith('new-room-') || room.id.toString().startsWith('created-room-'))) {
-          const roomScale = room.scale || scale;
-          
           return {
             id: room.id,
-            x: (room.x - offsetX) / roomScale,
-            y: (room.y - offsetY) / roomScale,
-            width: room.width / roomScale,
-            height: room.height / roomScale,
+            x: (room.x - offsetX) / coordScaleX,
+            y: (room.y - offsetY) / coordScaleY,
+            width: room.width / coordScaleX,
+            height: room.height / coordScaleY,
             type: room.type,
             tag: room.tag,
             name: room.name
@@ -148,38 +160,24 @@ const FloorPlanCustomization = () => {
     });
     
     setHasUnsavedChanges(true);
-  }, []);
+  }, [getLayoutProps]);
 
   // Handle walls change (add/remove/resize)
   const handleWallsChange = useCallback((updatedWalls) => {
     setFloorPlanData(prevData => {
       if (!prevData) return prevData;
       
-      // Use same dynamic canvas dimensions as KonvaFloorPlan (matching the actual component props)
-      const canvasWidth = window.innerWidth - 280;
-      const canvasHeight = window.innerHeight - 180;
-      const minMargin = 40;
-      const plotWidth = prevData.plotWidth || 1000;
-      const plotHeight = prevData.plotHeight || 1000;
-      const scaleX = (canvasWidth - minMargin * 2) / plotWidth;
-      const scaleY = (canvasHeight - minMargin * 2) / plotHeight;
-      const scale = Math.min(scaleX, scaleY);
+      const { offsetX, offsetY, coordScaleX, coordScaleY } = getLayoutProps(prevData);
       
-      // Calculate centered offsets (matching KonvaFloorPlan layoutProps)
-      const scaledWidth = plotWidth * scale;
-      const scaledHeight = plotHeight * scale;
-      const offsetX = (canvasWidth - scaledWidth) / 2;
-      const offsetY = (canvasHeight - scaledHeight) / 2;
-      
-      // Convert ALL Konva walls to backend format using centered offsets
+      // Convert ALL Konva walls to backend format using correct per-axis scales
       const backendWalls = updatedWalls.map(wall => {
         return {
           type: 'Wall',
           id: wall.id,
-          x1: (wall.points[0] - offsetX) / scale,
-          y1: (wall.points[1] - offsetY) / scale,
-          x2: (wall.points[2] - offsetX) / scale,
-          y2: (wall.points[3] - offsetY) / scale
+          x1: (wall.points[0] - offsetX) / coordScaleX,
+          y1: (wall.points[1] - offsetY) / coordScaleY,
+          x2: (wall.points[2] - offsetX) / coordScaleX,
+          y2: (wall.points[3] - offsetY) / coordScaleY
         };
       });
       
@@ -198,38 +196,24 @@ const FloorPlanCustomization = () => {
     });
     
     setHasUnsavedChanges(true);
-  }, []);
+  }, [getLayoutProps]);
 
   // Handle doors change (add/remove)
   const handleDoorsChange = useCallback((updatedDoors) => {
     setFloorPlanData(prevData => {
       if (!prevData) return prevData;
       
-      // Use same dynamic canvas dimensions as KonvaFloorPlan (matching the actual component props)
-      const canvasWidth = window.innerWidth - 280;
-      const canvasHeight = window.innerHeight - 180;
-      const minMargin = 40;
-      const plotWidth = prevData.plotWidth || 1000;
-      const plotHeight = prevData.plotHeight || 1000;
-      const scaleX = (canvasWidth - minMargin * 2) / plotWidth;
-      const scaleY = (canvasHeight - minMargin * 2) / plotHeight;
-      const scale = Math.min(scaleX, scaleY);
+      const { offsetX, offsetY, coordScaleX, coordScaleY } = getLayoutProps(prevData);
       
-      // Calculate centered offsets (matching KonvaFloorPlan layoutProps)
-      const scaledWidth = plotWidth * scale;
-      const scaledHeight = plotHeight * scale;
-      const offsetX = (canvasWidth - scaledWidth) / 2;
-      const offsetY = (canvasHeight - scaledHeight) / 2;
-      
-      // Convert ALL Konva doors to backend format using centered offsets
+      // Convert ALL Konva doors to backend format using correct per-axis scales
       const backendDoors = updatedDoors.map(door => {
         return {
           type: 'Door',
           id: door.id, // Keep the ID so we can track it
-          x1: (door.points[0] - offsetX) / scale,
-          y1: (door.points[1] - offsetY) / scale,
-          x2: (door.points[2] - offsetX) / scale,
-          y2: (door.points[3] - offsetY) / scale
+          x1: (door.points[0] - offsetX) / coordScaleX,
+          y1: (door.points[1] - offsetY) / coordScaleY,
+          x2: (door.points[2] - offsetX) / coordScaleX,
+          y2: (door.points[3] - offsetY) / coordScaleY
         };
       });
       
@@ -248,38 +232,24 @@ const FloorPlanCustomization = () => {
     });
     
     setHasUnsavedChanges(true);
-  }, []);
+  }, [getLayoutProps]);
 
   // Handle window changes from Konva editor
   const handleWindowsChange = useCallback((updatedWindows) => {
     setFloorPlanData(prevData => {
       if (!prevData) return prevData;
       
-      // Use same dynamic canvas dimensions as KonvaFloorPlan (matching the actual component props)
-      const canvasWidth = window.innerWidth - 280;
-      const canvasHeight = window.innerHeight - 180;
-      const minMargin = 40;
-      const plotWidth = prevData.plotWidth || 1000;
-      const plotHeight = prevData.plotHeight || 1000;
-      const scaleX = (canvasWidth - minMargin * 2) / plotWidth;
-      const scaleY = (canvasHeight - minMargin * 2) / plotHeight;
-      const scale = Math.min(scaleX, scaleY);
+      const { offsetX, offsetY, coordScaleX, coordScaleY } = getLayoutProps(prevData);
       
-      // Calculate centered offsets (matching KonvaFloorPlan layoutProps)
-      const scaledWidth = plotWidth * scale;
-      const scaledHeight = plotHeight * scale;
-      const offsetX = (canvasWidth - scaledWidth) / 2;
-      const offsetY = (canvasHeight - scaledHeight) / 2;
-      
-      // Convert ALL Konva windows to backend format using centered offsets
-      const backendWindows = updatedWindows.map(window => {
+      // Convert ALL Konva windows to backend format using correct per-axis scales
+      const backendWindows = updatedWindows.map(win => {
         return {
           type: 'Window',
-          id: window.id,
-          x1: (window.points[0] - offsetX) / scale,
-          y1: (window.points[1] - offsetY) / scale,
-          x2: (window.points[2] - offsetX) / scale,
-          y2: (window.points[3] - offsetY) / scale
+          id: win.id,
+          x1: (win.points[0] - offsetX) / coordScaleX,
+          y1: (win.points[1] - offsetY) / coordScaleY,
+          x2: (win.points[2] - offsetX) / coordScaleX,
+          y2: (win.points[3] - offsetY) / coordScaleY
         };
       });
       
@@ -298,7 +268,7 @@ const FloorPlanCustomization = () => {
     });
     
     setHasUnsavedChanges(true);
-  }, []);
+  }, [getLayoutProps]);
 
   // Download floorplan as PDF in black and white format
   const downloadPDF = useCallback(() => {

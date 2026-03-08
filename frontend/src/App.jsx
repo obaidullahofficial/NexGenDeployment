@@ -31,7 +31,7 @@ import UserProfileLayout from './layouts/UserProfileLayout';
 import SocietyPlots from "./pages/user/SocietyPlots";
 import GenerateFloorPlan from './pages/user/GenerateFloorPlan';
 import FloorPlanStart from './pages/user/FloorPlanStart';
-import OffersPage from './pages/user/OffersPage';
+import AboutUsPage from './pages/user/AboutUsPage';
 import { FloorPlanGenerator as FloorPlanGen } from './pages/FloorPlanGeneration';
 import FloorPlanCustomization from './pages/FloorPlanGeneration/FloorPlanCustomization';
 
@@ -133,7 +133,7 @@ function App() {
             <Route path="user/society/:societyId/plot/:plotId/templates" element={<FloorPlanStart />} />
             <Route path="user/society/:societyId/plot/:plotId/generate" element={<GenerateFloorPlan />} />
             <Route path="generate-floor-plan/:societyId/:plotId" element={<GenerateFloorPlan />} />
-            <Route path="offers" element={<OffersPage />} />
+            <Route path="about-us" element={<AboutUsPage />} />
           </Route>
 
           {/* Subadmin Routes - Protected */}

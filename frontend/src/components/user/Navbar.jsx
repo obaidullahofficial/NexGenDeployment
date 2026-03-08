@@ -84,12 +84,12 @@ const Navbar = () => {
           Societies
         </Link>
         <Link 
-          to="/offers" 
+          to="/about-us" 
           className={`font-medium transition-colors ${
-            isActive('/offers') ? 'text-[#ED7600]' : 'text-gray-300 hover:text-[#ED7600]'
+            isActive('/about-us') ? 'text-[#ED7600]' : 'text-gray-300 hover:text-[#ED7600]'
           }`}
         >
-          Offers
+          About Us
         </Link>
         
         {/* Show Profile Dropdown if logged in, otherwise show Login button */}
@@ -235,13 +235,13 @@ const Navbar = () => {
               Societies
             </Link>
             <Link 
-              to="/offers" 
+              to="/about-us" 
               onClick={closeMobileMenu}
               className={`px-4 py-3 rounded-md font-medium transition-colors ${
-                isActive('/offers') ? 'bg-[#ED7600] text-white' : 'text-gray-300 hover:bg-[#ED7600] hover:text-white'
+                isActive('/about-us') ? 'bg-[#ED7600] text-white' : 'text-gray-300 hover:bg-[#ED7600] hover:text-white'
               }`}
             >
-              Offers
+              About Us
             </Link>
             
             {user ? (

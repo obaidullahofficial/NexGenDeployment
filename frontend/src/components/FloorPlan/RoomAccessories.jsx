@@ -66,6 +66,13 @@ const mat = {
   kitchenHandle:  { color: '#B8B8B8', roughness: 0.5, metalness: 0.3 },
   kitchenSink:    { color: '#D0D0D0', roughness: 0.4, metalness: 0.25 },
   kitchenBlack:   { color: '#2C2C2E', roughness: 0.75, metalness: 0.05 },
+  // ── Updated kitchen materials to match target design ──────────────────
+  darkWalnutWood:    { color: '#2C1A0E', roughness: 0.7,  metalness: 0.1  }, // Dining table & chair frame (Dark Walnut/Black Oak)
+  tanLeather:        { color: '#caa472', roughness: 0.4,  metalness: 0.05 }, // Chair cushions (Tan/Beige Leather)
+  matteGrayUpper:    { color: '#cfcfcf', roughness: 0.8,  metalness: 0    }, // Upper kitchen cabinets (Matte Grey Laminate)
+  darkWalnutCabinet: { color: '#5C2E0A', roughness: 0.75, metalness: 0.05 }, // Lower kitchen cabinets (Dark Walnut Wood)
+  oakCountertop:     { color: '#C8A96E', roughness: 0.6,  metalness: 0    }, // Kitchen countertop (Oak/Butcher Block)
+  glossyBlackFridge: { color: '#111111', roughness: 0.25, metalness: 0.8  }, // Refrigerator (Glossy Black Metal)
 };
 
 const M = (props) => <meshStandardMaterial {...props} />;
@@ -267,12 +274,12 @@ const Rug = ({ position, rotation = [0, 0, 0], scale = 1, color = '#8B7D6B' }) =
 
 const WallArt = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
   <group position={position} rotation={rotation} scale={scale}>
-    {/* Frame */}
-    <BoxPart position={[0, 0, 0]} args={[0.8, 0.6, 0.03]} material={mat.darkWood} />
-    {/* Canvas */}
+    {/* Frame - Light Brown Oak Wood */}
+    <BoxPart position={[0, 0, 0]} args={[0.8, 0.6, 0.03]} material={mat.oak} />
+    {/* Canvas - Glossy painting surface */}
     <mesh position={[0, 0, 0.018]}>
       <boxGeometry args={[0.7, 0.5, 0.005]} />
-      <M color="#E8D5B7" roughness={0.6} metalness={0} />
+      <M color="#E8D5B7" roughness={0.2} metalness={0.05} />
     </mesh>
     {/* Abstract paint strokes */}
     <mesh position={[-0.12, 0.05, 0.022]}>
@@ -790,25 +797,25 @@ const RoundedBox = ({ position, args, material, radius = 0.02, rotation }) => {
 
 const KitchenCounter = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
   <group position={position} rotation={rotation} scale={scale}>
-    {/* Base cabinet - clean rectangular shape */}
+    {/* Base cabinet - Dark Walnut Wood */}
     <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
       <boxGeometry args={[2.2, 0.78, 0.58]} />
-      <M {...mat.kitchenWhite} />
+      <M {...mat.darkWalnutCabinet} />
     </mesh>
     
-    {/* Countertop - slightly overhanging with rounded feel */}
+    {/* Countertop - Oak / Butcher Block Wood */}
     <mesh position={[0, 0.82, 0.02]} castShadow receiveShadow>
       <boxGeometry args={[2.3, 0.05, 0.62]} />
-      <M {...mat.kitchenCounter} />
+      <M {...mat.oakCountertop} />
     </mesh>
     
-    {/* Cabinet doors - 4 modular units with subtle gaps */}
+    {/* Cabinet doors - 4 modular units (Dark Walnut) */}
     {[-0.8, -0.27, 0.27, 0.8].map((x, i) => (
       <group key={i}>
         {/* Door panel */}
         <mesh position={[x, 0.4, 0.295]} castShadow>
           <boxGeometry args={[0.48, 0.7, 0.02]} />
-          <M {...mat.kitchenWhite} />
+          <M {...mat.darkWalnutCabinet} />
         </mesh>
         {/* Minimal handle - thin horizontal bar */}
         <mesh position={[x, 0.58, 0.32]} castShadow>
@@ -849,17 +856,17 @@ const KitchenCounter = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
       <M {...mat.kitchenSteel} />
     </mesh>
     
-    {/* Upper cabinet - modular floating unit */}
+    {/* Upper cabinet - Matte Grey Laminate */}
     <mesh position={[-0.5, 1.55, -0.12]} castShadow receiveShadow>
       <boxGeometry args={[1.1, 0.55, 0.32]} />
-      <M {...mat.kitchenWhite} />
+      <M {...mat.matteGrayUpper} />
     </mesh>
-    {/* Upper cabinet doors */}
+    {/* Upper cabinet doors - Matte Grey Laminate */}
     {[-0.78, -0.25].map((x, i) => (
       <group key={`upper-${i}`}>
         <mesh position={[x, 1.55, 0.05]} castShadow>
           <boxGeometry args={[0.5, 0.5, 0.02]} />
-          <M {...mat.kitchenWhite} />
+          <M {...mat.matteGrayUpper} />
         </mesh>
         <mesh position={[x, 1.42, 0.075]} castShadow>
           <boxGeometry args={[0.1, 0.015, 0.015]} />
@@ -868,36 +875,36 @@ const KitchenCounter = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
       </group>
     ))}
     
-    {/* Small upper cabinet */}
+    {/* Small upper cabinet - Matte Grey Laminate */}
     <mesh position={[0.6, 1.55, -0.12]} castShadow receiveShadow>
       <boxGeometry args={[0.5, 0.55, 0.32]} />
-      <M {...mat.kitchenWhite} />
+      <M {...mat.matteGrayUpper} />
     </mesh>
     <mesh position={[0.6, 1.55, 0.05]} castShadow>
       <boxGeometry args={[0.45, 0.5, 0.02]} />
-      <M {...mat.kitchenWhite} />
+      <M {...mat.matteGrayUpper} />
     </mesh>
   </group>
 );
 
 const Refrigerator = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
   <group position={position} rotation={rotation} scale={scale}>
-    {/* Main body - clean rectangular block */}
+    {/* Main body - Glossy Black Metal */}
     <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
       <boxGeometry args={[0.7, 1.82, 0.65]} />
-      <M {...mat.kitchenWhite} />
+      <M {...mat.glossyBlackFridge} />
     </mesh>
     
-    {/* Freezer section (top) - subtle separation */}
+    {/* Freezer section (top) - slightly lighter panel line */}
     <mesh position={[0, 1.6, 0.326]} castShadow>
       <boxGeometry args={[0.68, 0.48, 0.02]} />
-      <M {...mat.kitchenGray} />
+      <M color="#1A1A1A" roughness={0.2} metalness={0.85} />
     </mesh>
     
     {/* Main section (bottom) */}
     <mesh position={[0, 0.7, 0.326]} castShadow>
       <boxGeometry args={[0.68, 1.08, 0.02]} />
-      <M {...mat.kitchenGray} />
+      <M color="#1A1A1A" roughness={0.2} metalness={0.85} />
     </mesh>
     
     {/* Division line between freezer and fridge */}
@@ -932,66 +939,66 @@ const Refrigerator = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
 
 const DiningTable = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
   <group position={position} rotation={rotation} scale={scale}>
-    {/* Table top - clean geometric slab */}
+    {/* Table top - Dark Walnut/Black Oak slab */}
     <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
       <boxGeometry args={[1.3, 0.045, 0.8]} />
-      <M {...mat.kitchenWood} />
+      <M {...mat.darkWalnutWood} />
     </mesh>
     
     {/* Table edge detail */}
     <mesh position={[0, 0.375, 0]} receiveShadow>
       <boxGeometry args={[1.32, 0.015, 0.82]} />
-      <M {...mat.kitchenWood} />
+      <M {...mat.darkWalnutWood} />
     </mesh>
     
     {/* Legs - clean cylindrical pillars */}
     {[[-0.52, 0.2, 0.28], [0.52, 0.2, 0.28], [-0.52, 0.2, -0.28], [0.52, 0.2, -0.28]].map((p, i) =>
       <mesh key={i} position={p} castShadow>
         <cylinderGeometry args={[0.035, 0.03, 0.38, 8]} />
-        <M {...mat.kitchenWood} />
+        <M {...mat.darkWalnutWood} />
       </mesh>
     )}
     
     {/* Cross support - simple rectangle */}
     <mesh position={[0, 0.08, 0]} castShadow>
       <boxGeometry args={[0.9, 0.025, 0.025]} />
-      <M {...mat.kitchenWood} />
+      <M {...mat.darkWalnutWood} />
     </mesh>
   </group>
 );
 
 const DiningChair = ({ position, rotation = [0, 0, 0], scale = 1 }) => (
   <group position={position} rotation={rotation} scale={scale}>
-    {/* Legs - slim cylindrical */}
+    {/* Legs - slim cylindrical Dark Walnut */}
     {[[-0.16, 0.11, 0.15], [0.16, 0.11, 0.15], [-0.16, 0.11, -0.15], [0.16, 0.11, -0.15]].map((p, i) =>
       <mesh key={i} position={p} castShadow>
         <cylinderGeometry args={[0.018, 0.015, 0.22, 8]} />
-        <M {...mat.kitchenWood} />
+        <M {...mat.darkWalnutWood} />
       </mesh>
     )}
     
-    {/* Seat - clean flat rectangle */}
+    {/* Seat frame - Dark Walnut */}
     <mesh position={[0, 0.24, 0]} castShadow receiveShadow>
       <boxGeometry args={[0.4, 0.035, 0.38]} />
-      <M {...mat.kitchenWood} />
+      <M {...mat.darkWalnutWood} />
     </mesh>
     
-    {/* Seat cushion - soft rounded rectangle */}
+    {/* Seat cushion - Tan/Beige Leather */}
     <mesh position={[0, 0.275, 0]} castShadow>
       <boxGeometry args={[0.36, 0.035, 0.34]} />
-      <M {...mat.kitchenMint} />
+      <M {...mat.tanLeather} />
     </mesh>
     
-    {/* Backrest - simple clean rectangle */}
+    {/* Backrest frame - Dark Walnut */}
     <mesh position={[0, 0.52, -0.17]} castShadow receiveShadow>
       <boxGeometry args={[0.36, 0.42, 0.03]} />
-      <M {...mat.kitchenWood} />
+      <M {...mat.darkWalnutWood} />
     </mesh>
     
-    {/* Backrest cushion */}
+    {/* Backrest cushion - Tan/Beige Leather */}
     <mesh position={[0, 0.5, -0.155]} castShadow>
       <boxGeometry args={[0.32, 0.32, 0.025]} />
-      <M {...mat.kitchenMint} />
+      <M {...mat.tanLeather} />
     </mesh>
   </group>
 );
@@ -1972,6 +1979,7 @@ export const getRoomAccessories = (roomType, roomWidth, roomHeight) => {
         { component: DiningChair,    position: [-0.45 * scale, 0, (h * 0.2 - 0.45) * 1], rotation: [0, 0, 0], scale: scale * 0.9 },
         { component: DiningChair,    position: [0.45 * scale, 0, (h * 0.2 - 0.45) * 1],  rotation: [0, 0, 0], scale: scale * 0.9 },
         { component: PlantPot,       position: [-w * 0.38, 0, h * 0.35], rotation: [0, 0, 0], scale: scale * 0.6, props: { variant: 2 } },
+        { component: WallArt,        position: [w * 0.2, 1.4, -h * 0.48], rotation: [0, 0, 0], scale: scale * 0.6 },
       );
       break;
 

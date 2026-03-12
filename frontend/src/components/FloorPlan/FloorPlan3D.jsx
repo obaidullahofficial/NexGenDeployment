@@ -1916,7 +1916,7 @@ const Room3D = ({ room, bounds, showLabels = true, doors = [], windows = [], wal
     'livingroom': '#F4E4C7', // Warm beige
     'living': '#F4E4C7',
     'bedroom': '#E8F4F8', // Soft blue
-    'kitchen': '#FFF8E7', // Cream white
+    'kitchen': '#3D2B1A', // Dark Oak/Walnut wood plank floor
     'bathroom': '#F0F8FF', // Alice blue
     'drawingroom': '#F5F0E8', // Off white
     'drawing': '#F5F0E8',

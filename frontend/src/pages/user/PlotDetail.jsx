@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiPhone, FiMapPin, FiDollarSign, FiHome, FiShield, FiCheckCircle } from 'react-icons/fi';
+import { FiPhone, FiMapPin, FiDollarSign, FiHome, FiShield, FiCheckCircle, FiEye, FiDownload, FiX } from 'react-icons/fi';
 import { HiOutlineDocumentText, HiOutlineTemplate } from 'react-icons/hi';
 import { MdOutlineArchitecture } from 'react-icons/md';
 import axios from 'axios';
@@ -111,6 +111,7 @@ const PlotDetail = () => {
   const [societyData, setSocietyData] = useState(null);
   const [complianceRules, setComplianceRules] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
 
   useEffect(() => {
     if (plotId && societyId) {
@@ -230,6 +231,63 @@ const PlotDetail = () => {
     navigate('/floor-plan/generate', { state: navigationState });
   };
 
+  const parseApprovedFloorplanJson = () => {
+    if (!displayData?.json_template) {
+      return null;
+    }
+
+    try {
+      const parsed = typeof displayData.json_template === 'string'
+        ? JSON.parse(displayData.json_template)
+        : displayData.json_template;
+
+      const floorData = parsed.floor_plan_data || parsed.floorPlanData || parsed;
+
+      return {
+        ...parsed,
+        ...floorData,
+        rooms: parsed.room_data || floorData.rooms || parsed.rooms || [],
+        walls: floorData.walls || parsed.walls || [],
+        doors: floorData.doors || parsed.doors || [],
+        windows: floorData.windows || parsed.windows || [],
+        mapData: floorData.mapData || parsed.mapData || [],
+        plotWidth: floorData.plotWidth || parsed.plotWidth || 1000,
+        plotHeight: floorData.plotHeight || parsed.plotHeight || 1000,
+        actualLength: floorData.actualLength || parsed.actualLength || Number(displayData.dimension_x) || 55,
+        actualWidth: floorData.actualWidth || parsed.actualWidth || Number(displayData.dimension_y) || 25,
+      };
+    } catch (error) {
+      console.error('[PlotDetail] Failed to parse approved floorplan JSON:', error);
+      return null;
+    }
+  };
+
+  const handleViewApprovedFloorplan = () => {
+    const floorPlan = parseApprovedFloorplanJson();
+    if (!floorPlan) {
+      alert('Approved floorplan JSON is not available or invalid.');
+      return;
+    }
+
+    navigate('/floor-plan/customize', {
+      state: {
+        floorPlan,
+        fromPlotDetail: true
+      }
+    });
+  };
+
+  const handleDownloadPdf = () => {
+    if (!displayData?.pdf_template) return;
+
+    const link = document.createElement('a');
+    link.href = displayData.pdf_template;
+    link.download = `approved-floorplan-${displayData.plot_number || plotId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Use fetched data or fallback to sample data
   const displayData = plotData ? {
     ...plotData,
@@ -241,6 +299,9 @@ const PlotDetail = () => {
       ? plotData.description 
       : (plotData.description ? [plotData.description] : []),
   } : samplePlotData;
+
+  const hasApprovedFloorplanJson = Boolean(displayData?.json_template);
+  const hasApprovedFloorplanPdf = Boolean(displayData?.pdf_template);
   
   console.log('[PlotDetail] Displaying data:', displayData);
   
@@ -494,6 +555,40 @@ const PlotDetail = () => {
                 <MdOutlineArchitecture className="text-xl" />
                 Generate Floor Plan
               </button>
+
+              <button
+                onClick={handleViewApprovedFloorplan}
+                disabled={!hasApprovedFloorplanJson}
+                className={`w-full flex items-center gap-2 justify-center py-3 rounded-lg text-sm font-medium transition-all shadow-md ${
+                  hasApprovedFloorplanJson
+                    ? 'bg-[#2F3D57] hover:bg-[#1f2b40] text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <FiEye className="text-lg" />
+                View Approved Floorplan
+              </button>
+
+              <button
+                onClick={handleDownloadPdf}
+                disabled={!hasApprovedFloorplanPdf}
+                className={`w-full flex items-center gap-2 justify-center py-2 rounded-lg text-sm font-medium transition-all ${
+                  hasApprovedFloorplanPdf
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <FiDownload className="text-base" />
+                Download Approved Floorplan
+              </button>
+
+              {(!hasApprovedFloorplanJson || !hasApprovedFloorplanPdf) && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-amber-700 font-medium">
+                    Approved template files are not fully available for this plot yet.
+                  </p>
+                </div>
+              )}
               
               {complianceRules && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -509,6 +604,40 @@ const PlotDetail = () => {
           </div>
         </div>
       </div>
+
+      {showPdfViewer && hasApprovedFloorplanPdf && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-5xl h-[85vh] shadow-2xl flex flex-col overflow-hidden">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-gray-50">
+              <h3 className="text-lg font-semibold text-[#2F3D57]">
+                Approved Floorplan PDF
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownloadPdf}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-green-600 text-white text-sm hover:bg-green-700"
+                >
+                  <FiDownload />
+                  Download
+                </button>
+                <button
+                  onClick={() => setShowPdfViewer(false)}
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-md border hover:bg-gray-100"
+                  aria-label="Close PDF viewer"
+                >
+                  <FiX />
+                </button>
+              </div>
+            </div>
+
+            <iframe
+              src={displayData.pdf_template}
+              title="Approved Floorplan PDF"
+              className="flex-1 w-full"
+            />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

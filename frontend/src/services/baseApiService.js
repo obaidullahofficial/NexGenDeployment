@@ -90,16 +90,23 @@ export function createAuthHeaders(includeContentType = true) {
  */
 export async function apiRequest(endpoint, options = {}, context = 'apiRequest') {
   const url = `${API_URL}${endpoint}`;
+  const isFormData = options.body instanceof FormData;
   
   console.log(`[${context}] Making request to:`, url, options.method || 'GET');
   
   try {
+    const mergedHeaders = {
+      ...options.headers
+    };
+
+    // Keep JSON as default only for non-FormData requests.
+    if (!isFormData && !mergedHeaders["Content-Type"]) {
+      mergedHeaders["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers
-      },
-      ...options
+      ...options,
+      headers: mergedHeaders
     });
     
     const result = await response.json();

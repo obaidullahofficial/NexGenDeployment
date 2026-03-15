@@ -85,6 +85,37 @@ class PlotController:
                         return jsonify({'error': 'Plot image is required for creating a new plot'}), 400
                 else:
                     return jsonify({'error': 'Plot image is required for creating a new plot'}), 400
+                
+                # Process pdf template file upload
+                if 'pdf_template' in request.files:
+                    pdf_file = request.files['pdf_template']
+                    if pdf_file and pdf_file.filename:
+                        filename = pdf_file.filename.lower()
+                        if not filename.endswith('.pdf'):
+                            return jsonify({'error': 'Only PDF files allowed for PDF template'}), 400
+                        pdf_content = pdf_file.read()
+                        if len(pdf_content) > 10 * 1024 * 1024:  # 10MB limit
+                            return jsonify({'error': 'PDF file too large (max 10MB)'}), 400
+                        pdf_b64 = base64.b64encode(pdf_content).decode('utf-8')
+                        data['pdf_template'] = f"data:application/pdf;base64,{pdf_b64}"
+
+                # Process json template file upload
+                if 'json_template' in request.files:
+                    json_file = request.files['json_template']
+                    if json_file and json_file.filename:
+                        filename = json_file.filename.lower()
+                        if not filename.endswith('.json'):
+                            return jsonify({'error': 'Only JSON files allowed for JSON template'}), 400
+                        json_content = json_file.read()
+                        try:
+                            json.loads(json_content.decode('utf-8'))
+                            data['json_template'] = json_content.decode('utf-8')
+                        except json.JSONDecodeError:
+                            return jsonify({'error': 'Invalid JSON format in template file'}), 400
+
+                # Capture floorplan relation
+                data['saved_floorplan_id'] = request.form.get('saved_floorplan_id')
+                data['saved_floorplan_name'] = request.form.get('saved_floorplan_name')
                         
             elif request.is_json and request.json:
                 # Handle JSON data for legacy or API-only requests
@@ -121,7 +152,11 @@ class PlotController:
                 marla_size=data.get('marla_size', ''),
                 dimension_x=data.get('dimension_x', 0),
                 dimension_y=data.get('dimension_y', 0),
-                description=data.get('description', [])
+                description=data.get('description', []),
+                pdf_template=data.get('pdf_template'),
+                json_template=data.get('json_template'),
+                saved_floorplan_id=data.get('saved_floorplan_id'),
+                saved_floorplan_name=data.get('saved_floorplan_name')
             )
             
             plot_dict = plot.to_dict()
@@ -277,6 +312,33 @@ class PlotController:
                         image_b64 = base64.b64encode(image_content).decode('utf-8')
                         mime_type = 'image/png' if filename.endswith('.png') else 'image/jpeg'
                         data['image'] = f"data:{mime_type};base64,{image_b64}"
+
+                # Update pdf template file if provided
+                if 'pdf_template' in request.files:
+                    pdf_file = request.files['pdf_template']
+                    if pdf_file and pdf_file.filename:
+                        filename = pdf_file.filename.lower()
+                        if not filename.endswith('.pdf'):
+                            return jsonify({'error': 'Only PDF files allowed for PDF template'}), 400
+                        pdf_content = pdf_file.read()
+                        if len(pdf_content) > 10 * 1024 * 1024:  # 10MB limit
+                            return jsonify({'error': 'PDF file too large (max 10MB)'}), 400
+                        pdf_b64 = base64.b64encode(pdf_content).decode('utf-8')
+                        data['pdf_template'] = f"data:application/pdf;base64,{pdf_b64}"
+
+                # Update json template file if provided
+                if 'json_template' in request.files:
+                    json_file = request.files['json_template']
+                    if json_file and json_file.filename:
+                        filename = json_file.filename.lower()
+                        if not filename.endswith('.json'):
+                            return jsonify({'error': 'Only JSON files allowed for JSON template'}), 400
+                        json_content = json_file.read()
+                        try:
+                            json.loads(json_content.decode('utf-8'))
+                            data['json_template'] = json_content.decode('utf-8')
+                        except json.JSONDecodeError:
+                            return jsonify({'error': 'Invalid JSON format in template file'}), 400
 
             elif request.is_json and request.json:
                 data = request.json.copy()

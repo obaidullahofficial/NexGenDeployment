@@ -3,6 +3,8 @@ import { FiPhone } from "react-icons/fi";
 import AlertModal from '../common/AlertModal';
 import { useAlert } from '../../hooks/useAlert';
 import { getSocietyProfile } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
+import { floorplanAPI } from '../../services/floorplanAPI';
 
 // Hardcoded marla dimensions (in feet)
 const MARLA_DIMENSIONS = {
@@ -25,6 +27,12 @@ const MARLA_DIMENSIONS = {
 };
 
 const AddPlotForm = ({ onSubmit, onCancel}) => {
+  const { user } = useAuth();
+  const [savedFloorplans, setSavedFloorplans] = useState([]);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [jsonFile, setJsonFile] = useState(null);
+  const [jsonTemplateMode, setJsonTemplateMode] = useState('none');
+
   const [form, setForm] = useState({
     plotId: "",
     plot_number: "", // New field for plot number
@@ -36,6 +44,8 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     dimension_x: "",
     dimension_y: "",
     description: [""],
+    saved_floorplan_id: "",
+    saved_floorplan_name: "",
     images: [] // New field for storing images
   });
 
@@ -48,6 +58,31 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
   const [imageError, setImageError] = useState(false); // Track image validation error
   const [plotNumberError, setPlotNumberError] = useState('');
   const { alertState, showError, showWarning, showSuccess } = useAlert();
+
+  // Fetch user floorplans for dropdown
+  useEffect(() => {
+    const fetchFloorplans = async () => {
+      try {
+        const userId = user?.id || user?._id;
+        if (user && userId) {
+          const response = user.role === 'subadmin'
+            ? await floorplanAPI.getSocietyFloorplans(userId)
+            : await floorplanAPI.getUserFloorplans(userId);
+
+          if (response && response.success) {
+            const plans = response.floorplans || response.floor_plans || response.data || [];
+            setSavedFloorplans(Array.isArray(plans) ? plans : []);
+          } else {
+            setSavedFloorplans([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching floorplans:', error);
+        setSavedFloorplans([]);
+      }
+    };
+    fetchFloorplans();
+  }, [user]);
 
   // Fetch society profile to get available plot sizes
   useEffect(() => {
@@ -95,6 +130,18 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
       } else {
         setForm({ ...form, [name]: value });
       }
+    }
+    else if (name === 'saved_floorplan_id') {
+      const selectedPlan = savedFloorplans.find(p => String(p._id) === String(value) || String(p.id) === String(value));
+      setJsonTemplateMode(value ? 'select' : 'none');
+      if (value) {
+        setJsonFile(null);
+      }
+      setForm({
+        ...form, 
+        saved_floorplan_id: value, 
+        saved_floorplan_name: selectedPlan ? (selectedPlan.plotName || selectedPlan.name || selectedPlan.project_name || '') : ''
+      });
     }
     else {
       setForm({ ...form, [name]: value });
@@ -145,6 +192,27 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
       reader.readAsDataURL(file);
     } else {
       console.log('No file selected');
+    }
+  };
+
+  const handlePdfUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setPdfFile(file);
+    } else if (file) {
+      showError('Invalid File', 'Please upload a PDF file.');
+    }
+  };
+
+  const handleJsonUpload = (e) => {
+    const file = e.target.files[0];
+    // application/json or text/plain depending on browser
+    if (file && (file.type === 'application/json' || file.name.endsWith('.json'))) {
+      setJsonTemplateMode('upload');
+      setForm(prev => ({ ...prev, saved_floorplan_id: '', saved_floorplan_name: '' }));
+      setJsonFile(file);
+    } else if (file) {
+      showError('Invalid File', 'Please upload a JSON file.');
     }
   };
 
@@ -229,7 +297,21 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
         console.log('[AddPlot] Adding plot image to FormData:', plotImage.name, plotImage.type, plotImage.size);
         formData.append('plot_image', plotImage);
       }
-      
+
+      // Add templates to FormData
+      if (pdfFile) {
+        formData.append('pdf_template', pdfFile);
+      }
+      if (jsonTemplateMode === 'upload' && jsonFile) {
+        formData.append('json_template', jsonFile);
+      }
+      if (jsonTemplateMode === 'select' && form.saved_floorplan_id) {
+        formData.append('saved_floorplan_id', form.saved_floorplan_id);
+      }
+      if (jsonTemplateMode === 'select' && form.saved_floorplan_name) {
+        formData.append('saved_floorplan_name', form.saved_floorplan_name);
+      }
+
       // Debug: Log what's being sent
       console.log('[AddPlot] FormData contents:');
       for (let [key, value] of formData.entries()) {
@@ -262,10 +344,15 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
           dimension_x: "",
           dimension_y: "",
           description: [""],
+          saved_floorplan_id: "",
+          saved_floorplan_name: "",
           images: []
         });
         setPlotImage(null);
         setImagePreviews([]);
+        setPdfFile(null);
+        setJsonFile(null);
+        setJsonTemplateMode('none');
         
         if (onCancel) onCancel(); // Close the form
       }
@@ -431,6 +518,77 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                     />
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Templates Section */}
+            <div className="space-y-4 pt-4 border-t border-gray-200 mt-4 rounded-lg bg-gray-50 p-4">
+              <h3 className="font-semibold text-gray-700">Floorplan Template Options</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Choose JSON Floorplan Source</label>
+                <select
+                  value={jsonTemplateMode}
+                  onChange={(e) => {
+                    const mode = e.target.value;
+                    setJsonTemplateMode(mode);
+                    if (mode !== 'upload') {
+                      setJsonFile(null);
+                    }
+                    if (mode !== 'select') {
+                      setForm(prev => ({ ...prev, saved_floorplan_id: '', saved_floorplan_name: '' }));
+                    }
+                  }}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
+                >
+                  <option value="none">None</option>
+                  <option value="upload">Upload JSON from PC</option>
+                  <option value="select">Select from Saved Floorplans</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Choose only one option: upload JSON file or select from dropdown.</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Saved Floorplan</label>
+                <select
+                  name="saved_floorplan_id"
+                  value={form.saved_floorplan_id}
+                  onChange={handleChange}
+                  disabled={jsonTemplateMode !== 'select'}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
+                >
+                  <option value="">-- None --</option>
+                  {savedFloorplans.map(plan => (
+                    <option key={plan._id || plan.id} value={plan._id || plan.id}>
+                      {plan.plotName || plan.name || plan.project_name || 'Unnamed Plan'} - {(plan.createdAt || plan.created_at) ? new Date(plan.createdAt || plan.created_at).toLocaleDateString() : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Select a pre-configured floorplan from your account.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload PDF Template</label>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfUpload}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#ED7600] file:text-white hover:file:bg-[#D56900]"
+                  />
+                  {pdfFile && <p className="text-xs text-green-600 mt-1 font-semibold">✓ {pdfFile.name}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload JSON Template</label>
+                  <input
+                    type="file"
+                    accept="application/json"
+                    onChange={handleJsonUpload}
+                    disabled={jsonTemplateMode !== 'upload'}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#ED7600] file:text-white hover:file:bg-[#D56900]"
+                  />
+                  {jsonFile && <p className="text-xs text-green-600 mt-1 font-semibold">✓ {jsonFile.name}</p>}
+                </div>
               </div>
             </div>
 

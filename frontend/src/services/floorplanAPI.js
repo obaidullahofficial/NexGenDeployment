@@ -38,6 +38,17 @@ export const floorplanAPI = {
   },
 
   /**
+   * Get all floor plans for a subadmin's society
+   */
+  async getSocietyFloorplans(userId) {
+    const response = await fetch(`${API_BASE_URL}/floorplan/society/${userId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  /**
    * Get detailed floor plan by ID
    */
   async getFloorplanDetails(floorplanId) {

@@ -41,6 +41,7 @@ class SocietyRegistrationFormController:
             # Create society registration form
             society_data['status'] = "pending"
             society_data['user_id'] = user_data['user_id']  # Link society to user ID only
+            society_data['user_email'] = user_data.get('email')
             
             # Debug: Log what fields are being saved
             print(f"[SIGNUP SOCIETY DEBUG] Saving society data: {society_data.keys()}")

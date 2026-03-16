@@ -4,6 +4,9 @@ from controllers.user_controller import UserController
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils.db import get_db
 from models.user import user_collection
+import base64
+import re
+from datetime import datetime, date
 
 society_registration_form_bp = Blueprint('society_registration_form_bp', __name__)
 
@@ -58,7 +61,7 @@ def signup_society():
     - User account should already exist with 'society' role
     - This endpoint registers the society details for an existing user
     """
-    data = request.json
+    data = request.form.to_dict() if request.content_type and 'multipart/form-data' in request.content_type else (request.json or {})
     
     # Extract user data (for linking to existing account)
     user_email = data.get('userEmail')
@@ -73,10 +76,36 @@ def signup_society():
         'contact': data.get('contact'),
         'website': data.get('website'),
         'city': data.get('city'),
-        'noc_issued': data.get('noc_issued', False),
+        'noc_issued': str(data.get('noc_issued', False)).lower() in ['true', '1', 'yes', 'on'],
         'land_acquisition_status': data.get('land_acquisition_status'),
         'procurement_status': data.get('procurement_status')
     }
+
+    # Handle optional NOC file upload when noc_issued is checked
+    if society_data['noc_issued']:
+        noc_file = request.files.get('noc_document') if request.files else None
+        if not noc_file or not noc_file.filename:
+            return jsonify({"error": "NOC document is required when NOC Issued is checked"}), 400
+
+        filename = noc_file.filename.lower()
+        allowed = ['.pdf', '.png', '.jpg', '.jpeg']
+        if not any(filename.endswith(ext) for ext in allowed):
+            return jsonify({"error": "NOC document must be PDF or image (PNG/JPG/JPEG)"}), 400
+
+        noc_content = noc_file.read()
+        if len(noc_content) > 10 * 1024 * 1024:
+            return jsonify({"error": "NOC document size must be less than 10MB"}), 400
+
+        if filename.endswith('.pdf'):
+            mime_type = 'application/pdf'
+        elif filename.endswith('.png'):
+            mime_type = 'image/png'
+        else:
+            mime_type = 'image/jpeg'
+
+        society_data['noc_document'] = f"data:{mime_type};base64,{base64.b64encode(noc_content).decode('utf-8')}"
+    else:
+        society_data['noc_document'] = None
     
     # Validate required fields
     if not user_email:
@@ -95,6 +124,18 @@ def signup_society():
     
     if not all(society_required):
         return jsonify({"error": "Society information is incomplete"}), 400
+
+    if not re.fullmatch(r'\d{6}', str(society_data.get('regNo', '')).strip()):
+        return jsonify({"error": "Registration number must be exactly 6 digits"}), 400
+
+    established_raw = str(society_data.get('established', '')).strip()
+    try:
+        established_date = datetime.strptime(established_raw, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({"error": "Established date format is invalid. Use YYYY-MM-DD"}), 400
+
+    if established_date > date.today():
+        return jsonify({"error": "Established date cannot be in the future"}), 400
     
     try:
         # Get user from database by email
@@ -114,10 +155,10 @@ def signup_society():
         # Check if user already has a registration form submitted (by user_id)
         from models.society_registration_form import society_registration_form_collection
         reg_forms = society_registration_form_collection(db)
-        existing_form = reg_forms.find_one({'user_id': user_id})
+        existing_form = reg_forms.find_one({'$or': [{'user_id': user_id}, {'user_email': user_email}]})
         
         if existing_form:
-            return jsonify({"error": "You have already submitted a registration form. Please wait for admin approval."}), 400
+            return jsonify({"error": "This society email has already submitted a registration form."}), 400
         
         # Add user_id to society data (no user_email)
         society_data['user_id'] = user_id

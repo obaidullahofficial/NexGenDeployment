@@ -65,11 +65,15 @@ const RegistrationForm = () => {
     land_acquisition_status: "",
     procurement_status: ""
   });
+  const [nocDocument, setNocDocument] = useState(null);
 
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [phoneError, setPhoneError] = useState('');
   const [websiteError, setWebsiteError] = useState('');
+  const [regNoError, setRegNoError] = useState('');
+  const [establishedDateError, setEstablishedDateError] = useState('');
+  const today = new Date().toISOString().split('T')[0];
   
   // Popup modal state with navigation callback
   const [popup, setPopup] = useState({
@@ -90,6 +94,32 @@ const RegistrationForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Established date validation - no future date allowed
+    if (name === 'established') {
+      if (value && value > today) {
+        setEstablishedDateError('Future date is not allowed');
+      } else {
+        setEstablishedDateError('');
+      }
+
+      setForm({ ...form, established: value });
+      return;
+    }
+
+
+    // Registration number validation - exactly 6 digits
+    if (name === 'regNo') {
+      const cleaned = value.replace(/\D/g, '').substring(0, 6);
+
+      if (cleaned.length > 0 && cleaned.length < 6) {
+        setRegNoError('Registration number must be exactly 6 digits');
+      } else {
+        setRegNoError('');
+      }
+
+      setForm({ ...form, regNo: cleaned });
+      return;
+    }
     
     // Phone number validation and formatting
     if (name === 'contact') {
@@ -163,9 +193,28 @@ const RegistrationForm = () => {
   };
 
   const handleSubmit = async (e) => {
+        if (establishedDateError || (form.established && form.established > today)) {
+          showPopup(
+            'Validation Error',
+            'Established date cannot be a future date.',
+            'error'
+          );
+          return;
+        }
+
     e.preventDefault();
     setMessage(null);
     setError(null);
+
+    // Validate registration number
+    if (regNoError || !/^\d{6}$/.test(form.regNo || '')) {
+      showPopup(
+        'Validation Error',
+        'Registration number must be exactly 6 digits.',
+        'error'
+      );
+      return;
+    }
 
     // Validate phone number before submission
     if (phoneError) {
@@ -211,20 +260,36 @@ const RegistrationForm = () => {
       }
     }
 
+    if (form.noc_issued && !nocDocument) {
+      showPopup(
+        'Validation Error',
+        'Please upload NOC document (PDF or image) when NOC Issued is checked.',
+        'error'
+      );
+      return;
+    }
+
     try {
-      // Prepare data for society signup (includes both user and society info)
-      const societyData = {
-        // User information
-        userName: userData.userName,
-        userEmail: userData.userEmail,
-        userPassword: userData.userPassword,
-        // Society information
-        ...form,
-        // Use customCity if 'Other' is selected, otherwise use selected city
-        city: form.city === 'Other' ? form.customCity : form.city,
-        // Add country code to contact number
-        contact: '+92' + phoneDigits
-      };
+      // Prepare multipart form data to support NOC document upload
+      const societyData = new FormData();
+      societyData.append('userName', userData.userName || '');
+      societyData.append('userEmail', userData.userEmail || '');
+      societyData.append('userPassword', userData.userPassword || '');
+      societyData.append('name', form.name || '');
+      societyData.append('type', form.type || '');
+      societyData.append('regNo', form.regNo || '');
+      societyData.append('established', form.established || '');
+      societyData.append('authority', form.authority || '');
+      societyData.append('website', form.website || '');
+      societyData.append('land_acquisition_status', form.land_acquisition_status || '');
+      societyData.append('procurement_status', form.procurement_status || '');
+      societyData.append('noc_issued', String(form.noc_issued));
+      societyData.append('city', form.city === 'Other' ? form.customCity : form.city);
+      societyData.append('contact', '+92' + phoneDigits);
+
+      if (form.noc_issued && nocDocument) {
+        societyData.append('noc_document', nocDocument);
+      }
 
       const data = await societySignup(societyData);
 
@@ -469,11 +534,14 @@ const RegistrationForm = () => {
                 </Typography>
                 <TextField 
                   name="regNo"
-                  placeholder="e.g., REG-2024-12345"
+                  placeholder="e.g., 123456"
                   value={form.regNo} 
                   onChange={handleChange} 
                   fullWidth 
                   required
+                  error={!!regNoError}
+                  helperText={regNoError || 'Enter exactly 6 digits'}
+                  inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
@@ -503,6 +571,9 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required 
+                  error={!!establishedDateError}
+                  helperText={establishedDateError || 'Future date is not allowed'}
+                  inputProps={{ max: today }}
                   InputLabelProps={{ shrink: true }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
@@ -669,7 +740,13 @@ const RegistrationForm = () => {
                     control={
                       <Checkbox
                         checked={form.noc_issued}
-                        onChange={(e) => setForm({ ...form, noc_issued: e.target.checked })}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setForm({ ...form, noc_issued: checked });
+                          if (!checked) {
+                            setNocDocument(null);
+                          }
+                        }}
                         sx={{
                           color: '#2F3D57',
                           '&.Mui-checked': {
@@ -686,6 +763,58 @@ const RegistrationForm = () => {
                   />
                 </Box>
               </Grid>
+
+              {form.noc_issued && (
+                <Grid item xs={12} sm={6}>
+                  <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
+                    Upload NOC Document <span style={{ color: '#ED7600' }}>*</span>
+                  </Typography>
+                  <TextField
+                    type="file"
+                    fullWidth
+                    required
+                    inputProps={{ accept: '.pdf,image/png,image/jpeg,image/jpg' }}
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (!file) {
+                        setNocDocument(null);
+                        return;
+                      }
+
+                      const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+                      if (!allowedTypes.includes(file.type)) {
+                        showPopup('Invalid File', 'Please upload PDF, PNG, or JPG file for NOC document.', 'error');
+                        e.target.value = '';
+                        setNocDocument(null);
+                        return;
+                      }
+
+                      if (file.size > 10 * 1024 * 1024) {
+                        showPopup('File Too Large', 'NOC document must be less than 10MB.', 'error');
+                        e.target.value = '';
+                        setNocDocument(null);
+                        return;
+                      }
+
+                      setNocDocument(file);
+                    }}
+                    helperText={nocDocument ? `Selected: ${nocDocument.name}` : 'Allowed: PDF, PNG, JPG (max 10MB)'}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        background: '#fff',
+                        '&:hover fieldset': {
+                          borderColor: '#ED7600',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#ED7600',
+                          borderWidth: 2,
+                        },
+                      },
+                    }}
+                  />
+                </Grid>
+              )}
 
               {/* Land Acquisition Status */}
               <Grid item xs={12} sm={6}>

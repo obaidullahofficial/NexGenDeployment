@@ -137,9 +137,10 @@ export async function googleLogin(googleCredential, intent = 'login') {
  * @returns {Promise<Object>} Society registration response
  */
 export async function societySignup(societyData) {
+  const isFormData = societyData instanceof FormData;
   return apiRequest('/signup-society', {
     method: 'POST',
-    body: JSON.stringify(societyData)
+    body: isFormData ? societyData : JSON.stringify(societyData)
   }, 'societySignup');
 }
 

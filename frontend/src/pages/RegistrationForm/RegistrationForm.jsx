@@ -344,7 +344,7 @@ const RegistrationForm = () => {
       <Paper 
         elevation={20} 
         sx={{ 
-          maxWidth: 900, 
+          maxWidth: 1500,
           width: '100%', 
           borderRadius: 3, 
           overflow: 'hidden',
@@ -430,7 +430,7 @@ const RegistrationForm = () => {
           pt: 4,
           pb: 4,
           background: '#f8f9fa',
-          maxWidth: 980,
+          maxWidth: 1460,
           mx: 'auto',
           '& .MuiGrid-item': {
             display: 'flex',
@@ -438,9 +438,9 @@ const RegistrationForm = () => {
             alignItems: 'flex-start',
           },
           '& .MuiFormControl-root': {
-            width: '360px !important',
-            minWidth: '360px',
-            maxWidth: '360px',
+            width: '420px !important',
+            minWidth: '420px',
+            maxWidth: '420px',
           },
           '& .MuiInputBase-root': {
             height: 56,
@@ -491,7 +491,7 @@ const RegistrationForm = () => {
           <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               {/* Society Name */}
-              <Grid item xs={12}>
+              <Grid item xs={12} lg={8}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Society Name <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -523,7 +523,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Registration Number */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Registration Number <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -557,7 +557,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Established Date */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Established Date <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -592,7 +592,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Society Type */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Society Type <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -624,7 +624,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* City Location */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   City <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -657,7 +657,7 @@ const RegistrationForm = () => {
 
               {/* Custom City Name (shown when Other is selected) */}
               {form.city === 'Other' && (
-                <Grid item xs={12}>
+                <Grid item xs={12} lg={4}>
                   <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                     City Name <span style={{ color: '#ED7600' }}>*</span>
                   </Typography>
@@ -687,7 +687,7 @@ const RegistrationForm = () => {
               )}
 
               {/* Regulatory Authority */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Regulatory Authority <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -719,7 +719,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* NOC Issued Checkbox */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   NOC Status
                 </Typography>
@@ -764,7 +764,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {form.noc_issued && (
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6} lg={4}>
                   <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                     Upload NOC Document <span style={{ color: '#ED7600' }}>*</span>
                   </Typography>
@@ -816,7 +816,7 @@ const RegistrationForm = () => {
               )}
 
               {/* Land Acquisition Status */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Land Acquisition Status <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -851,7 +851,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Procurement Status */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Procurement Status <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -886,7 +886,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Contact Number */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Contact Number <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>
@@ -952,7 +952,7 @@ const RegistrationForm = () => {
               </Grid>
 
               {/* Website URL */}
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6} lg={4}>
                 <Typography sx={{ mb: 1, color: '#2F3D57', fontWeight: 600, fontSize: 15 }}>
                   Website URL <span style={{ color: '#ED7600' }}>*</span>
                 </Typography>

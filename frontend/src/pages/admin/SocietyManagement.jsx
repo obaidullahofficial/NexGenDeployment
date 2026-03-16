@@ -100,6 +100,158 @@ const statusColors = {
 function SocietyDetailsModal({ isOpen, onClose, society }) {
   if (!isOpen || !society) return null;
 
+  const getNocDocumentType = (value) => {
+    if (!value) return 'unknown';
+    const lower = value.toLowerCase();
+
+    if (lower.startsWith('data:application/pdf') || lower.endsWith('.pdf')) return 'pdf';
+    if (
+      lower.startsWith('data:image/') ||
+      lower.endsWith('.jpg') ||
+      lower.endsWith('.jpeg') ||
+      lower.endsWith('.png')
+    ) {
+      return 'image';
+    }
+
+    return 'unknown';
+  };
+
+  const guessMimeFromBase64 = (base64Value) => {
+    // PDF files usually begin with "%PDF" => base64 starts with JVBERi0
+    if (base64Value.startsWith('JVBERi0')) return 'application/pdf';
+    // PNG files usually begin with 89 50 4E 47 => iVBORw0K
+    if (base64Value.startsWith('iVBORw0K')) return 'image/png';
+    // JPEG files usually begin with FF D8 FF => /9j/
+    if (base64Value.startsWith('/9j/')) return 'image/jpeg';
+    // GIF files usually begin with GIF8 => R0lGOD
+    if (base64Value.startsWith('R0lGOD')) return 'image/gif';
+    // WEBP files usually begin with RIFF....WEBP => UklGR
+    if (base64Value.startsWith('UklGR')) return 'image/webp';
+
+    // Prefer image fallback to avoid showing broken PDF for unknown image-only uploads.
+    return 'image/jpeg';
+  };
+
+  const getNocDocumentData = () => {
+    const raw = society?.noc_document;
+    if (!raw || typeof raw !== 'string') return null;
+
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+
+    // Already a valid data URL or direct link.
+    if (trimmed.startsWith('data:') || trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+      return {
+        url: trimmed,
+        type: getNocDocumentType(trimmed)
+      };
+    }
+
+    // Fallback: raw base64 stored without data URL prefix.
+    const normalized = trimmed.replace(/\s/g, '');
+    const isLikelyBase64 = /^[A-Za-z0-9+/=]+$/.test(normalized);
+
+    if (!isLikelyBase64) {
+      return null;
+    }
+
+    const mime = guessMimeFromBase64(normalized);
+    const dataUrl = `data:${mime};base64,${normalized}`;
+
+    return {
+      url: dataUrl,
+      type: mime === 'application/pdf' ? 'pdf' : 'image'
+    };
+  };
+
+  const openNocDocument = () => {
+    if (!nocDocumentUrl) return;
+
+    const openedWindow = window.open('', '_blank');
+    if (!openedWindow) return;
+
+    const renderImageInTab = (url) => {
+      openedWindow.document.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>NOC Document</title>
+            <style>
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: #111827;
+                height: 100%;
+              }
+              .wrap {
+                min-height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 16px;
+                box-sizing: border-box;
+              }
+              img {
+                max-width: 100%;
+                max-height: calc(100vh - 32px);
+                object-fit: contain;
+                border-radius: 8px;
+                background: #fff;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="wrap">
+              <img src="${url}" alt="NOC document" />
+            </div>
+          </body>
+        </html>
+      `);
+      openedWindow.document.close();
+    };
+
+    // Use blob URL for data-URL PDFs for better browser compatibility.
+    if (nocDocumentType === 'pdf' && nocDocumentUrl.startsWith('data:')) {
+      try {
+        const parts = nocDocumentUrl.split(',');
+        if (parts.length === 2) {
+          const meta = parts[0];
+          const base64 = parts[1];
+          const mimeMatch = /data:(.*);base64/.exec(meta);
+          const mimeType = mimeMatch ? mimeMatch[1] : 'application/pdf';
+
+          const byteCharacters = atob(base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+
+          const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+          const blobUrl = URL.createObjectURL(blob);
+          openedWindow.location.href = blobUrl;
+
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+          return;
+        }
+      } catch (error) {
+        console.error('Error opening NOC PDF:', error);
+      }
+    }
+
+    if (nocDocumentType === 'image') {
+      renderImageInTab(nocDocumentUrl);
+      return;
+    }
+
+    openedWindow.location.href = nocDocumentUrl;
+  };
+
+  const nocDocument = getNocDocumentData();
+  const nocDocumentUrl = nocDocument?.url || null;
+  const nocDocumentType = nocDocument?.type || 'unknown';
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -272,11 +424,48 @@ function SocietyDetailsModal({ isOpen, onClose, society }) {
                     <Shield className="mr-2 text-indigo-600" size={20} />
                     Compliance Information
                   </h3>
-                  <div className="bg-indigo-50 p-4 rounded-lg">
-                    <label className="text-xs font-medium text-indigo-700">NOC Status</label>
-                    <p className="text-indigo-900 font-medium">
-                      {society.noc_issued ? '✅ NOC Issued' : '❌ NOC Not Issued'}
-                    </p>
+                  <div className="bg-indigo-50 p-4 rounded-lg space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-indigo-700">NOC Status</label>
+                      <p className="text-indigo-900 font-medium">
+                        {society.noc_issued ? '✅ NOC Issued' : '❌ NOC Not Issued'}
+                      </p>
+                    </div>
+
+                    {society.noc_issued && nocDocumentUrl && (
+                      <div className="pt-2 border-t border-indigo-200">
+                        <label className="text-xs font-medium text-indigo-700 block mb-2">NOC Document</label>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={openNocDocument}
+                            className="inline-flex items-center px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-colors"
+                          >
+                            {nocDocumentType === 'pdf'
+                              ? 'View NOC PDF'
+                              : nocDocumentType === 'image'
+                                ? 'View NOC Image'
+                                : 'View NOC Document'}
+                          </button>
+                        </div>
+
+                        {nocDocumentType === 'image' && (
+                          <div className="mt-3">
+                            <img
+                              src={nocDocumentUrl}
+                              alt="NOC document"
+                              className="max-h-56 w-auto rounded-lg border border-indigo-200"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {society.noc_issued && !nocDocumentUrl && (
+                      <p className="text-xs text-indigo-700 bg-indigo-100 px-3 py-2 rounded-md">
+                        NOC is marked as issued, but no document is attached for this request.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

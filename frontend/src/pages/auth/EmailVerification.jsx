@@ -241,43 +241,43 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#2F3D57',
-    padding: '20px'
+    background: 'linear-gradient(to bottom right, #2F3D57, #3a4b66, #2F3D57)',
+    padding: '16px'
   },
   card: {
-    maxWidth: '600px',
+    maxWidth: '384px',
     width: '100%',
     backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-    padding: '40px'
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    padding: '15px'
   },
   header: {
     textAlign: 'center',
-    marginBottom: '30px'
-  },
-  logo: {
-    fontSize: '60px',
     marginBottom: '20px'
   },
+  logo: {
+    fontSize: '48px',
+    marginBottom: '16px'
+  },
   title: {
-    fontSize: '28px',
+    fontSize: '24px',
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: '10px'
+    marginBottom: '8px'
   },
   subtitle: {
-    fontSize: '16px',
+    fontSize: '14px',
     color: '#666'
   },
   section: {
-    marginBottom: '30px'
+    marginBottom: '20px'
   },
   sectionTitle: {
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: '600',
     color: '#333',
-    marginBottom: '15px'
+    marginBottom: '10px'
   },
   input: {
     width: '100%',
@@ -291,24 +291,24 @@ const styles = {
   },
   button: {
     width: '100%',
-    padding: '14px',
+    padding: '12px',
     backgroundColor: '#ED7600',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: 'bold',
     cursor: 'pointer',
     transition: 'all 0.3s ease'
   },
   buttonSecondary: {
     width: '100%',
-    padding: '14px',
+    padding: '12px',
     backgroundColor: '#ED7600',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: 'bold',
     cursor: 'pointer',
     transition: 'all 0.3s ease'
@@ -337,15 +337,15 @@ const styles = {
   successBox: {
     display: 'flex',
     alignItems: 'center',
-    padding: '15px',
+    padding: '12px',
     backgroundColor: '#e8f5e9',
     borderLeft: '4px solid #4CAF50',
     borderRadius: '6px',
-    marginBottom: '20px'
+    marginBottom: '16px'
   },
   successIcon: {
-    fontSize: '48px',
-    marginBottom: '20px'
+    fontSize: '36px',
+    marginBottom: '16px'
   },
   successText: {
     color: '#2e7d32',
@@ -353,31 +353,31 @@ const styles = {
     marginLeft: '15px'
   },
   helpBox: {
-    padding: '20px',
+    padding: '16px',
     backgroundColor: '#e3f2fd',
     borderRadius: '8px',
-    marginTop: '30px'
+    marginTop: '20px'
   },
   helpIcon: {
-    fontSize: '32px',
+    fontSize: '24px',
     textAlign: 'center',
-    marginBottom: '10px'
+    marginBottom: '8px'
   },
   helpTitle: {
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: '600',
     color: '#1976d2',
-    marginBottom: '10px'
+    marginBottom: '8px'
   },
   helpList: {
     color: '#555',
-    fontSize: '14px',
-    lineHeight: '1.8',
+    fontSize: '13px',
+    lineHeight: '1.6',
     paddingLeft: '20px'
   },
   footer: {
     textAlign: 'center',
-    marginTop: '30px'
+    marginTop: '20px'
   },
   linkButton: {
     background: 'none',
@@ -388,18 +388,18 @@ const styles = {
     textDecoration: 'underline'
   },
   loader: {
-    fontSize: '48px',
+    fontSize: '36px',
     textAlign: 'center',
-    marginBottom: '20px'
+    marginBottom: '16px'
   },
   text: {
     textAlign: 'center',
     color: '#666',
-    fontSize: '16px'
+    fontSize: '14px'
   },
   codeInput: {
-    fontSize: '24px',
-    letterSpacing: '8px',
+    fontSize: '20px',
+    letterSpacing: '6px',
     textAlign: 'center',
     fontWeight: 'bold',
     border: '2px solid #ED7600'

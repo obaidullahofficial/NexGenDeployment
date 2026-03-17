@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FiTarget, FiEye, FiHeart, FiUsers, FiHome, FiAward, FiArrowRight, FiStar, FiZap, FiLayers, FiGlobe } from 'react-icons/fi';
+import Navbar from '../../components/user/Navbar';
+import Footer from '../../components/user/Footer';
 
 // Custom hook for scroll animation
 const useScrollAnimation = (threshold = 0.1) => {
@@ -190,9 +192,14 @@ const AboutUsPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex flex-col">
+      <div className="fixed w-full top-0 z-50">
+        <Navbar />
+      </div>
+
+      <main className="flex-1 pt-16">
       {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
+      <div className="fixed top-16 left-0 w-full h-1 bg-gray-200 z-40">
         <div 
           className="h-full bg-gradient-to-r from-[#ED7600] via-[#FF9A3C] to-[#ED7600] transition-all duration-150"
           style={{ width: `${scrollProgress}%` }}
@@ -791,6 +798,10 @@ const AboutUsPage = () => {
           </div>
         </div>
       </section>
+
+      </main>
+
+      <Footer />
     </div>
   );
 };

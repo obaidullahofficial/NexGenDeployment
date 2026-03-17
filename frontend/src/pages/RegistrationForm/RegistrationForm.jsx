@@ -74,12 +74,18 @@ const RegistrationForm = () => {
   const [websiteError, setWebsiteError] = useState('');
   const [regNoError, setRegNoError] = useState('');
   const [establishedDateError, setEstablishedDateError] = useState('');
+  const [selectErrors, setSelectErrors] = useState({});
   const [focusedField, setFocusedField] = useState('');
   const today = new Date().toISOString().split('T')[0];
 
   const getHelperText = (field, hint, error = '') => {
     if (error) return error;
     return focusedField === field ? hint : ' ';
+  };
+
+  const getSelectHelperText = (field, hint) => {
+    if (selectErrors[field]) return selectErrors[field];
+    return hint;
   };
   
   // Popup modal state with navigation callback
@@ -101,6 +107,15 @@ const RegistrationForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    const optionFields = ['type', 'city', 'authority', 'land_acquisition_status', 'procurement_status'];
+    if (optionFields.includes(name)) {
+      setSelectErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    if (name === 'customCity') {
+      setSelectErrors(prev => ({ ...prev, customCity: '' }));
+    }
+
     // Established date validation - no future date allowed
     if (name === 'established') {
       if (value && value > today) {
@@ -212,6 +227,37 @@ const RegistrationForm = () => {
     e.preventDefault();
     setMessage(null);
     setError(null);
+
+    const newSelectErrors = {};
+    const requiredOptions = [
+      { key: 'type', label: 'society type' },
+      { key: 'city', label: 'city' },
+      { key: 'authority', label: 'regulatory authority' },
+      { key: 'land_acquisition_status', label: 'land acquisition status' },
+      { key: 'procurement_status', label: 'procurement status' }
+    ];
+
+    requiredOptions.forEach(({ key, label }) => {
+      if (!form[key]) {
+        newSelectErrors[key] = `Please select ${label}`;
+      }
+    });
+
+    if (form.city === 'Other' && !form.customCity.trim()) {
+      newSelectErrors.customCity = 'Please enter city name';
+    }
+
+    if (Object.keys(newSelectErrors).length > 0) {
+      setSelectErrors(newSelectErrors);
+      showPopup(
+        'Validation Error',
+        'Please select all required options and complete highlighted fields.',
+        'error'
+      );
+      return;
+    }
+
+    setSelectErrors({});
 
     // Validate registration number
     if (regNoError || !/^\d{6}$/.test(form.regNo || '')) {
@@ -506,6 +552,9 @@ const RegistrationForm = () => {
                   required 
                   helperText={getHelperText('name', 'Enter official registered society name')}
                   sx={{
+                    '& .MuiSelect-select, & .MuiSelect-select.MuiSelect-outlined': {
+                      color: form.type ? '#2F3D57' : '#9e9e9e',
+                    },
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       height: 56,
@@ -603,7 +652,14 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required
-                  placeholder="Select type"
+                  error={!!selectErrors.type}
+                  helperText={getSelectHelperText('type', 'Select society type from the list')}
+                  placeholder="Please select the society type"
+                  SelectProps={{
+                    displayEmpty: true,
+                    renderValue: (selected) =>
+                      selected ? selected : <span style={{ color: '#9e9e9e' }}>Please select the society type</span>,
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
@@ -617,8 +673,12 @@ const RegistrationForm = () => {
                         borderWidth: 2,
                       },
                     },
+                    '& .MuiFormHelperText-root': {
+                      color: selectErrors.type ? '#d32f2f' : '#9e9e9e',
+                    },
                   }}
                 >
+                  <MenuItem value="" sx={{ color: '#9e9e9e' }}>Please select the society type</MenuItem>
                   {typeOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
                 </TextField>
               </Grid>
@@ -635,8 +695,14 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required
-                  placeholder="Select city"
+                  error={!!selectErrors.city}
+                  helperText={getSelectHelperText('city', 'Select city where society is located')}
+                  placeholder="Please select the city"
+                  SelectProps={{ displayEmpty: true }}
                   sx={{
+                    '& .MuiSelect-select, & .MuiSelect-select.MuiSelect-outlined': {
+                      color: form.city ? '#2F3D57' : '#9e9e9e',
+                    },
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       height: 56,
@@ -649,8 +715,12 @@ const RegistrationForm = () => {
                         borderWidth: 2,
                       },
                     },
+                    '& .MuiFormHelperText-root': {
+                      color: selectErrors.city ? '#d32f2f' : '#9e9e9e',
+                    },
                   }}
                 >
+                  <MenuItem value="" sx={{ color: '#9e9e9e' }}>Please select the city</MenuItem>
                   {cityOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
                 </TextField>
               </Grid>
@@ -668,6 +738,8 @@ const RegistrationForm = () => {
                     onChange={handleChange} 
                     fullWidth 
                     required
+                    error={!!selectErrors.customCity}
+                    helperText={selectErrors.customCity || 'Enter city name when "Other" is selected'}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 2,
@@ -680,6 +752,9 @@ const RegistrationForm = () => {
                           borderColor: '#ED7600',
                           borderWidth: 2,
                         },
+                      },
+                      '& .MuiFormHelperText-root': {
+                        color: selectErrors.customCity ? '#d32f2f' : '#9e9e9e',
                       },
                     }}
                   />
@@ -698,8 +773,14 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required
-                  placeholder="Select authority"
+                  error={!!selectErrors.authority}
+                  helperText={getSelectHelperText('authority', 'Select the authority that governs your society')}
+                  placeholder="Please select the regulatory authority"
+                  SelectProps={{ displayEmpty: true }}
                   sx={{
+                    '& .MuiSelect-select, & .MuiSelect-select.MuiSelect-outlined': {
+                      color: form.authority ? '#2F3D57' : '#9e9e9e',
+                    },
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       height: 56,
@@ -712,8 +793,12 @@ const RegistrationForm = () => {
                         borderWidth: 2,
                       },
                     },
+                    '& .MuiFormHelperText-root': {
+                      color: selectErrors.authority ? '#d32f2f' : '#9e9e9e',
+                    },
                   }}
                 >
+                  <MenuItem value="" sx={{ color: '#9e9e9e' }}>Please select the regulatory authority</MenuItem>
                   {authorityOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
                 </TextField>
               </Grid>
@@ -827,7 +912,13 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required
+                  error={!!selectErrors.land_acquisition_status}
+                  helperText={getSelectHelperText('land_acquisition_status', 'Select current land acquisition stage')}
+                  SelectProps={{ displayEmpty: true }}
                   sx={{
+                    '& .MuiSelect-select, & .MuiSelect-select.MuiSelect-outlined': {
+                      color: form.land_acquisition_status ? '#2F3D57' : '#9e9e9e',
+                    },
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       height: 56,
@@ -840,9 +931,12 @@ const RegistrationForm = () => {
                         borderWidth: 2,
                       },
                     },
+                    '& .MuiFormHelperText-root': {
+                      color: selectErrors.land_acquisition_status ? '#d32f2f' : '#9e9e9e',
+                    },
                   }}
                 >
-                  <MenuItem value="">Select Status</MenuItem>
+                  <MenuItem value="" sx={{ color: '#9e9e9e' }}>Please select the land acquisition status</MenuItem>
                   <MenuItem value="not_started">Not Started</MenuItem>
                   <MenuItem value="in_progress">In Progress</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
@@ -862,7 +956,13 @@ const RegistrationForm = () => {
                   onChange={handleChange} 
                   fullWidth 
                   required
+                  error={!!selectErrors.procurement_status}
+                  helperText={getSelectHelperText('procurement_status', 'Select current procurement stage')}
+                  SelectProps={{ displayEmpty: true }}
                   sx={{
+                    '& .MuiSelect-select, & .MuiSelect-select.MuiSelect-outlined': {
+                      color: form.procurement_status ? '#2F3D57' : '#9e9e9e',
+                    },
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 2,
                       height: 56,
@@ -875,9 +975,12 @@ const RegistrationForm = () => {
                         borderWidth: 2,
                       },
                     },
+                    '& .MuiFormHelperText-root': {
+                      color: selectErrors.procurement_status ? '#d32f2f' : '#9e9e9e',
+                    },
                   }}
                 >
-                  <MenuItem value="">Select Status</MenuItem>
+                  <MenuItem value="" sx={{ color: '#9e9e9e' }}>Please select the procurement status</MenuItem>
                   <MenuItem value="not_started">Not Started</MenuItem>
                   <MenuItem value="in_progress">In Progress</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>

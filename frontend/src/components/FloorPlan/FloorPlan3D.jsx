@@ -3503,7 +3503,7 @@ const FloorPlan3D = ({ floorPlanData, className = "", isVisible = true, setbacks
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <span>??</span>
+              <span>🎨</span>
               <span>Customize Colors</span>
             </h3>
           </div>
@@ -3535,10 +3535,10 @@ const FloorPlan3D = ({ floorPlanData, className = "", isVisible = true, setbacks
             <div className="space-y-2">
               <div className="text-xs font-semibold text-slate-700">Element Colors</div>
               {[
-                { key: 'walls', label: 'Walls', emoji: '??' },
-                { key: 'windows', label: 'Windows', emoji: '??' },
-                { key: 'doors', label: 'Doors', emoji: '??' },
-                { key: 'ground', label: 'Ground', emoji: '??' },
+                { key: 'walls', label: 'Walls', emoji: '🧱' },
+                { key: 'windows', label: 'Windows', emoji: '🪟' },
+                { key: 'doors', label: 'Doors', emoji: '🚪' },
+                { key: 'ground', label: 'Ground', emoji: '⛰️' },
               ].map((item) => (
                 <div key={item.key} className="flex items-center justify-between">
                   <span className="text-xs text-slate-600">{item.emoji} {item.label}</span>
@@ -3727,7 +3727,7 @@ const FloorPlan3D = ({ floorPlanData, className = "", isVisible = true, setbacks
       {/* Right Sidebar - View Controls */}
       <div className="w-64 bg-white border-l border-gray-200 overflow-y-auto flex-shrink-0">
         <div className="p-4">
-          <h3 className="text-sm font-bold text-slate-900 mb-4">?? View Controls</h3>
+          <h3 className="text-sm font-bold text-slate-900 mb-4">👁️ View Controls</h3>
           
           {/* View Mode */}
           <div className="space-y-3">
@@ -3763,7 +3763,7 @@ const FloorPlan3D = ({ floorPlanData, className = "", isVisible = true, setbacks
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                ? Auto-rotate {autoRotate ? 'ON' : 'OFF'}
+                ⚙️ Auto-rotate {autoRotate ? 'ON' : 'OFF'}
               </button>
             )}
 
@@ -3775,13 +3775,13 @@ const FloorPlan3D = ({ floorPlanData, className = "", isVisible = true, setbacks
                   : 'bg-slate-900 text-white hover:bg-slate-800'
               }`}
             >
-              {saveFeedback === 'saved' ? '? Saved' : '?? Save Progress'}
+              {saveFeedback === 'saved' ? '✓ Saved' : '💾 Save Progress'}
             </button>
           </div>
 
           {/* Sun Settings */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-xs font-bold text-slate-900 mb-3">?? Sun / Lighting</h4>
+            <h4 className="text-xs font-bold text-slate-900 mb-3">☀️ Sun / Lighting</h4>
             
             {/* Sun Toggle + Presets */}
             <div className="flex items-center gap-1.5 mb-3">

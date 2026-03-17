@@ -422,3 +422,39 @@ canvas, video, iframe, .no-transition {
 .floating-element:hover {
   @apply scale-110;
 }
+
+/* ===== SUBADMIN TYPOGRAPHY ===== */
+.subadmin-panel-typography {
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+}
+
+.subadmin-panel-typography h1,
+.subadmin-panel-typography h2,
+.subadmin-panel-typography h3,
+.subadmin-panel-typography h4,
+.subadmin-panel-typography h5,
+.subadmin-panel-typography h6,
+.subadmin-panel-typography th,
+.subadmin-panel-typography .MuiTableCell-head,
+.subadmin-panel-typography .MuiTypography-h1,
+.subadmin-panel-typography .MuiTypography-h2,
+.subadmin-panel-typography .MuiTypography-h3,
+.subadmin-panel-typography .MuiTypography-h4,
+.subadmin-panel-typography .MuiTypography-h5,
+.subadmin-panel-typography .MuiTypography-h6 {
+  font-weight: 600;
+}
+
+.subadmin-panel-typography td,
+.subadmin-panel-typography tbody tr,
+.subadmin-panel-typography .MuiTableCell-body {
+  font-weight: 400;
+}
+
+.subadmin-panel-typography .MuiTypography-root,
+.subadmin-panel-typography .MuiInputBase-root,
+.subadmin-panel-typography .MuiFormLabel-root,
+.subadmin-panel-typography .MuiButton-root,
+.subadmin-panel-typography .MuiTableCell-root {
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans" !important;
+}

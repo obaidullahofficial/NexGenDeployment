@@ -318,14 +318,14 @@ const SocietyProfileEdit = () => {
   // Show loading screen while loading profile data
   if (initialLoading) {
     return (
-      <Box sx={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box className="subadmin-panel-typography" sx={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography variant="h6" color="textSecondary">Loading profile for editing...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', background: '#2F3D57', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+    <Box className="subadmin-panel-typography" sx={{ minHeight: '100vh', background: '#2F3D57', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
       <Box sx={{ maxWidth: 900, width: '100%' }}>
         
         {/* Single Card with Side-by-Side Layout */}

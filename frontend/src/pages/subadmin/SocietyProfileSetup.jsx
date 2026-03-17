@@ -429,7 +429,7 @@ const SocietyProfileSetup = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', background: '#f5f5f5', p: 3 }}>
+    <Box className="subadmin-panel-typography" sx={{ minHeight: '100vh', background: '#f5f5f5', p: 3 }}>
       <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
         <Paper elevation={3} sx={{ p: 4, mb: 3 }}>
           <Typography variant="h4" sx={{ color: '#2F3D57', fontWeight: 700, mb: 2, textAlign: 'center' }}>

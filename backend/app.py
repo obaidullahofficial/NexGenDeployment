@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager
 from routes.user_routes import user_bp
 from routes.society_profile_routes import society_profile_bp
 from flask_cors import CORS  
-from utils.db import test_connection
+from utils.db import test_connection, close_db
 from routes.review_routes import review_bp
 from routes.plot_routes import plot_bp  # Import the blueprint
 from routes.advertisement_routes import advertisement_bp  # Import advertisement routes
@@ -192,6 +192,16 @@ def jwt_test():
     except Exception as e:
         print(f"[JWT TEST ERROR] {e}")
         return jsonify({"error": str(e)}), 500
+
+# Graceful shutdown: close MongoDB connection only on app termination
+import atexit
+
+def shutdown_handler():
+    """Close MongoDB connection when app truly shuts down"""
+    close_db()
+
+# Register shutdown handler for actual app exit (CTRL+C)
+atexit.register(shutdown_handler)
 
 if __name__ == '__main__':
     # Python 3.14 + Werkzeug on Windows has a WinError 10038 (socket selector bug).

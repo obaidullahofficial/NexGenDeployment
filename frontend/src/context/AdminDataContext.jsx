@@ -117,7 +117,7 @@ const initialState = {
   
   // Configuration
   autoRefreshInterval: 5 * 60 * 1000, // 5 minutes
-  backgroundLoading: true
+  backgroundLoading: false  // Set to false to disable auto-refresh during development
 };
 
 // Action types

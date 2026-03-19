@@ -1,0 +1,83 @@
+[
+  {
+    "_id": "6930850af45084319787e05e",
+    "name": "Weekly",
+    "duration_days": 7,
+    "price": 300.0,
+    "is_active": false,
+    "created_at": "2025-12-03 18:44:26.074000",
+    "updated_at": "2025-12-17 13:05:40.068000"
+  },
+  {
+    "_id": "6930864bf45084319787e08a",
+    "name": "Monthly",
+    "duration_days": 30,
+    "price": 150.0,
+    "is_active": false,
+    "created_at": "2025-12-03 18:49:47.108000",
+    "updated_at": "2026-03-11 06:19:13.155000"
+  },
+  {
+    "_id": "6931b6ea7767aa2ecee07aab",
+    "name": "Yearly",
+    "duration_days": 365,
+    "price": 150.0,
+    "is_active": false,
+    "created_at": "2025-12-04 16:29:30.918000",
+    "updated_at": "2026-03-11 06:18:44.501000"
+  },
+  {
+    "_id": "693a71edcef58ce5fdd2a5cd",
+    "name": " weekly",
+    "duration_days": 7,
+    "price": 150.0,
+    "is_active": false,
+    "created_at": "2025-12-11 07:25:33.093000",
+    "updated_at": "2026-03-11 06:19:20.087000"
+  },
+  {
+    "_id": "693a71eecef58ce5fdd2a5d0",
+    "name": " weekly",
+    "duration_days": 7,
+    "price": 150.0,
+    "is_active": true,
+    "created_at": "2025-12-11 07:25:34.024000",
+    "updated_at": "2025-12-11 07:25:34.024000"
+  },
+  {
+    "_id": "693a71f0cef58ce5fdd2a5d2",
+    "name": " weekly",
+    "duration_days": 7,
+    "price": 150.0,
+    "is_active": true,
+    "created_at": "2025-12-11 07:25:36.690000",
+    "updated_at": "2025-12-11 07:25:36.690000"
+  },
+  {
+    "_id": "69441a84922885f91a627228",
+    "name": "Yearly",
+    "duration_days": 360,
+    "price": 500.0,
+    "is_active": true,
+    "created_at": "2025-12-18 15:15:16.558000",
+    "updated_at": "2025-12-18 15:15:16.558000"
+  },
+  {
+    "_id": "69b78a914e7e3d0b1d6b16e9",
+    "name": "Yearly",
+    "duration_days": 365,
+    "price": 150.0,
+    "is_active": true,
+    "created_at": "2026-03-16 04:44:01.259000",
+    "updated_at": "2026-03-16 04:44:01.259000"
+  },
+  {
+    "_id": "69b78ab54e7e3d0b1d6b16ec",
+    "name": "UserSociety",
+    "duration_days": 1,
+    "price": 150.04,
+    "is_active": true,
+    "created_at": "2026-03-16 04:44:37.148000",
+    "updated_at": "2026-03-16 04:44:37.148000"
+  }
+]

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Typography, Button, Paper, Alert, Avatar } from '@mui/material';
+import { Box, Grid, Typography, Button, Paper, Alert, Avatar, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getSocietyProfile, checkProfileCompleteness } from '../../services/apiService';
 import PopupModal from '../../components/common/PopupModal';
 import SocietyProfileEditModal from '../../components/subadmin/SocietyProfileEditModal';
+import { calculateMarlaStandard } from '../../utils/marlaCalculator';
 
 const SocietyProfile = () => {
   const navigate = useNavigate();
@@ -11,6 +12,10 @@ const SocietyProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showMarlaConfig, setShowMarlaConfig] = useState(false);
+  const [marlaStandard, setMarlaStandard] = useState(272.25);
+  const [marlaData, setMarlaData] = useState(null);
+  const [savingMarla, setSavingMarla] = useState(false);
   
   // Popup modal state
   const [popup, setPopup] = useState({
@@ -97,6 +102,98 @@ const SocietyProfile = () => {
     // Show edit modal instead of navigating
     console.log('[SOCIETY PROFILE] Opening edit profile modal');
     setShowEditModal(true);
+  };
+
+  // Handle marla configuration load
+  useEffect(() => {
+    if (profile && profile.marla_data) {
+      try {
+        setMarlaStandard(profile.marla_data.marlaStandard || 272.25);
+        setMarlaData(profile.marla_data);
+        console.log('[MARLA CONFIG] Loaded marla data:', profile.marla_data);
+      } catch (error) {
+        console.error('[MARLA CONFIG] Error loading marla data:', error);
+      }
+    }
+  }, [profile]);
+
+  // Handle marla standard change
+  const handleMarlaStandardChange = (e) => {
+    const value = parseFloat(e.target.value) || 272.25;
+    setMarlaStandard(value);
+  };
+
+  // Calculate and save marla configuration
+  const handleSaveMarlaConfig = async () => {
+    try {
+      setSavingMarla(true);
+      
+      // Validate marla standard
+      if (!marlaStandard || marlaStandard <= 0) {
+        showPopup('Invalid Input', 'Marla standard must be greater than 0', 'error');
+        setSavingMarla(false);
+        return;
+      }
+
+      // Get available plot sizes from profile (set during registration)
+      if (!profile.available_plots || !Array.isArray(profile.available_plots) || profile.available_plots.length === 0) {
+        showPopup('No Plot Sizes', 'Please set available plot sizes in your society profile first', 'error');
+        setSavingMarla(false);
+        return;
+      }
+
+      // Calculate all dimensions
+      let calculations;
+      try {
+        calculations = calculateMarlaStandard(marlaStandard, '5 Marla');
+      } catch (error) {
+        console.error('[MARLA CONFIG] Error in calculateMarlaStandard:', error);
+        showPopup('Calculation Error', 'Failed to calculate marla dimensions: ' + error.message, 'error');
+        setSavingMarla(false);
+        return;
+      }
+      
+      const marlaConfig = {
+        ...calculations,  // Spread the calculations object directly (includes marlaStandard, baseMarla, calculations)
+        available_plots: profile.available_plots,
+        configured_at: new Date().toISOString()
+      };
+
+      console.log('[MARLA CONFIG] Saving configuration:', marlaConfig);
+
+      // Save to backend (update society profile)
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/society-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          marla_data: marlaConfig,
+          available_plots: profile.available_plots,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        showPopup('Success', 'Marla configuration saved successfully!', 'success');
+        setMarlaData(marlaConfig);
+        setShowMarlaConfig(false);
+        // Reload profile
+        loadProfileData();
+      } else {
+        showPopup('Error', result.error || 'Failed to save marla configuration', 'error');
+        console.error('[MARLA CONFIG] Backend error:', result);
+      }
+    } catch (error) {
+      console.error('[MARLA CONFIG] Error saving:', error);
+      showPopup('Error', 'Error saving marla configuration: ' + error.message, 'error');
+    } finally {
+      setSavingMarla(false);
+    }
   };
   
   // Handle successful profile update
@@ -326,8 +423,179 @@ const SocietyProfile = () => {
                   </Grid>
                 </Grid>
               </Grid>
-              
-              {/* Action Buttons */}
+
+              {/* Marla Configuration Section */}
+              <Grid item xs={12}>
+                <Paper sx={{ p: 3, backgroundColor: '#fff5ed', border: '2px solid #ED7600' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: '#ED7600', fontWeight: 700 }}>
+                      📏 Marla Standard Configuration
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => setShowMarlaConfig(!showMarlaConfig)}
+                      sx={{
+                        backgroundColor: '#ED7600',
+                        color: 'white',
+                        fontWeight: 600,
+                        '&:hover': { backgroundColor: '#d65c00' }
+                      }}
+                    >
+                      {showMarlaConfig ? 'Hide' : 'Configure'}
+                    </Button>
+                  </Box>
+
+                  {marlaData && !showMarlaConfig && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                        <strong>✓ Configured:</strong> 1 Marla = {marlaData.marlaStandard} sq ft | Base: {marlaData.baseMarla}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#999' }}>
+                        Available plot sizes: {marlaData.available_plots?.join(', ') || 'None'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {showMarlaConfig && (
+                    <Box sx={{ pt: 2 }}>
+                      {/* Step 1: Set Base Marla Standard */}
+                      <Box sx={{ mb: 4, p: 2.5, backgroundColor: '#e8f5e9', borderRadius: 2, border: '2px solid #4caf50' }}>
+                        <Typography variant="body2" sx={{ color: '#2F3D57', fontWeight: 700, mb: 2, fontSize: '16px' }}>
+                          ✓ Step 1: Set Your Society's Marla Standard
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#555', display: 'block', mb: 2, fontSize: '13px', lineHeight: 1.6 }}>
+                          Set how many square feet equal 1 Marla in your society. This is the ONLY value you need to set. All other plot sizes (which you defined during registration) will automatically calculate from this.
+                        </Typography>
+                        
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                          <Grid item xs={12} md={8}>
+                            <Typography variant="body2" sx={{ color: '#2F3D57', fontWeight: 600, mb: 1 }}>
+                              1 Marla = ? Square Feet <span style={{ color: 'red' }}>*</span>
+                            </Typography>
+                            <TextField
+                              type="number"
+                              value={marlaStandard}
+                              onChange={handleMarlaStandardChange}
+                              placeholder="e.g., 272.25"
+                              step="0.01"
+                              inputProps={{ min: "1" }}
+                              fullWidth
+                              size="small"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  backgroundColor: 'white',
+                                  fontWeight: 600,
+                                  fontSize: '16px'
+                                }
+                              }}
+                            />
+                          </Grid>
+                        </Grid>
+
+                        {marlaStandard > 0 && (
+                          <Box sx={{ p: 1.5, backgroundColor: 'white', borderRadius: 1, border: '1px solid #4caf50' }}>
+                            <Typography variant="body2" sx={{ color: '#4caf50', fontWeight: 600 }}>
+                              ✓ Your Marla Standard: <strong>{marlaStandard} sq ft per marla</strong>
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#666', display: 'block', mt: 0.5 }}>
+                              This automatically applies to all {profile?.available_plots?.length || 0} plot sizes you offer
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {/* Step 2: Auto-Calculated Preview */}
+                      {marlaStandard > 0 && profile?.available_plots && profile.available_plots.length > 0 && (
+                        <Box sx={{ mb: 4, p: 2.5, backgroundColor: '#fff3e0', borderRadius: 2, border: '2px solid #ff9800' }}>
+                          <Typography variant="body2" sx={{ color: '#2F3D57', fontWeight: 700, mb: 2, fontSize: '16px' }}>
+                            ✓ Step 2: Your Plot Sizes (Auto-Calculated)
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#555', display: 'block', mb: 2, fontSize: '13px', lineHeight: 1.6 }}>
+                            Based on your marla standard of {marlaStandard} sq ft per marla, here are the calculated dimensions for your available plot sizes:
+                          </Typography>
+
+                          {(() => {
+                            try {
+                              const calc = calculateMarlaStandard(marlaStandard, '5 Marla');
+                              if (!calc || typeof calc !== 'object' || Object.keys(calc).length === 0) {
+                                return (
+                                  <Typography variant="caption" sx={{ color: '#999' }}>
+                                    No calculations available
+                                  </Typography>
+                                );
+                              }
+                              return (
+                                <Grid container spacing={1.5}>
+                                  {profile.available_plots.map((size) => {
+                                    const dims = calc[size];
+                                    if (!dims || !dims.x || !dims.y || !dims.sqft) {
+                                      return null;
+                                    }
+                                    return (
+                                      <Grid item xs={12} sm={6} md={4} key={size}>
+                                        <Box sx={{ p: 2, backgroundColor: 'white', borderRadius: 1, border: '2px solid #ff9800', textAlign: 'center' }}>
+                                          <Typography variant="body2" sx={{ fontWeight: 700, color: '#ff9800', mb: 1 }}>
+                                            {size}
+                                          </Typography>
+                                          <Typography variant="caption" sx={{ color: '#666', display: 'block', fontWeight: 600 }}>
+                                            {dims.x.toFixed(1)}' × {dims.y.toFixed(1)}'
+                                          </Typography>
+                                          <Typography variant="caption" sx={{ color: '#999', display: 'block' }}>
+                                            ({dims.sqft.toFixed(0)} sq ft)
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                    );
+                                  })}
+                                </Grid>
+                              );
+                            } catch (error) {
+                              console.error('[MARLA CONFIG] Error calculating dimensions:', error);
+                              return (
+                                <Typography variant="caption" sx={{ color: 'red' }}>
+                                  Error calculating dimensions: {error.message}
+                                </Typography>
+                              );
+                            }
+                          })()}
+                        </Box>
+                      )}
+
+                      {/* Action Buttons */}
+                      <Box sx={{ display: 'flex', gap: 2, pt: 1 }}>
+                        <Button
+                          variant="contained"
+                          onClick={handleSaveMarlaConfig}
+                          disabled={savingMarla || marlaStandard <= 0}
+                          sx={{
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            fontWeight: 600,
+                            '&:hover': { backgroundColor: '#45a049' },
+                            '&:disabled': { backgroundColor: '#ccc' }
+                          }}
+                        >
+                          {savingMarla ? '⏳ Saving...' : '✓ Save Configuration'}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => setShowMarlaConfig(false)}
+                          disabled={savingMarla}
+                          sx={{
+                            color: '#ED7600',
+                            borderColor: '#ED7600',
+                            fontWeight: 600,
+                            '&:hover': { backgroundColor: '#fff5ed' }
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Paper>
+              </Grid>
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
                   <Button

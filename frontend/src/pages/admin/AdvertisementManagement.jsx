@@ -25,7 +25,8 @@ const AdvertisementManagement = () => {
     title: '',
     link_url: '',
     featured_image: '',
-    status: 'pending'
+    status: 'pending',
+    is_featured: false
   });
 
   useEffect(() => {
@@ -137,7 +138,8 @@ const AdvertisementManagement = () => {
       title: ad.title || '',
       link_url: ad.link_url || '',
       featured_image: ad.featured_image || '',
-      status: ad.status || 'pending'
+      status: ad.status || 'pending',
+      is_featured: ad.is_featured || false
     });
     setModalAction('edit');
     setShowModal(true);
@@ -162,7 +164,8 @@ const AdvertisementManagement = () => {
         title: editForm.title,
         link_url: editForm.link_url,
         featured_image: editForm.featured_image,
-        status: editForm.status
+        status: editForm.status,
+        is_featured: editForm.is_featured
       };
       
       const result = await advertisementAPI.updateAdvertisement(selectedAd._id, updateData);
@@ -628,6 +631,20 @@ const AdvertisementManagement = () => {
                       <option value="rejected">Rejected</option>
                       <option value="expired">Expired</option>
                     </select>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="is_featured"
+                      checked={editForm.is_featured || false}
+                      onChange={(e) => setEditForm({...editForm, is_featured: e.target.checked})}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="is_featured" className="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-2">
+                      <span>⭐ Mark as Featured Advertisement</span>
+                      <span className="text-xs text-gray-500">(Highlighted in listings)</span>
+                    </label>
                   </div>
 
                   <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">

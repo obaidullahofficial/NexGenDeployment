@@ -55,11 +55,13 @@ class PlotController:
                     'status': request.form.get('status', 'Available'),
                 }
                 
-                # Convert dimensions to integers
+                # Convert dimensions to floats (can have decimal values like 82.6)
                 try:
-                    data['dimension_x'] = int(request.form.get('dimension_x', '0')) if request.form.get('dimension_x') else 0
-                    data['dimension_y'] = int(request.form.get('dimension_y', '0')) if request.form.get('dimension_y') else 0
-                except ValueError:
+                    dimension_x_str = request.form.get('dimension_x', '0')
+                    dimension_y_str = request.form.get('dimension_y', '0')
+                    data['dimension_x'] = float(dimension_x_str) if dimension_x_str and dimension_x_str.strip() else 0
+                    data['dimension_y'] = float(dimension_y_str) if dimension_y_str and dimension_y_str.strip() else 0
+                except (ValueError, TypeError):
                     data['dimension_x'] = 0
                     data['dimension_y'] = 0
                 
@@ -120,6 +122,17 @@ class PlotController:
             elif request.is_json and request.json:
                 # Handle JSON data for legacy or API-only requests
                 data = request.json.copy()
+                
+                # Convert dimensions to floats (can have decimal values like 82.6)
+                if 'dimension_x' in data or 'dimension_y' in data:
+                    try:
+                        dimension_x_str = data.get('dimension_x', '0')
+                        dimension_y_str = data.get('dimension_y', '0')
+                        data['dimension_x'] = float(dimension_x_str) if dimension_x_str and str(dimension_x_str).strip() else 0
+                        data['dimension_y'] = float(dimension_y_str) if dimension_y_str and str(dimension_y_str).strip() else 0
+                    except (ValueError, TypeError):
+                        data['dimension_x'] = 0
+                        data['dimension_y'] = 0
             else:
                 return jsonify({'error': 'Invalid request format. Expected form data or JSON.'}), 400
 
@@ -294,6 +307,17 @@ class PlotController:
             if request.content_type and 'multipart/form-data' in request.content_type:
                 data = request.form.to_dict()
                 
+                # Convert dimensions to floats (can have decimal values like 82.6)
+                if 'dimension_x' in data or 'dimension_y' in data:
+                    try:
+                        dimension_x_str = data.get('dimension_x', '0')
+                        dimension_y_str = data.get('dimension_y', '0')
+                        data['dimension_x'] = float(dimension_x_str) if dimension_x_str and str(dimension_x_str).strip() else 0
+                        data['dimension_y'] = float(dimension_y_str) if dimension_y_str and str(dimension_y_str).strip() else 0
+                    except (ValueError, TypeError):
+                        data['dimension_x'] = 0
+                        data['dimension_y'] = 0
+                
                 # Handle nested array and object fields
                 data['description'] = [request.form.get(f'description[{i}]') for i in range(len(request.form.getlist('description[]')))]
 
@@ -342,6 +366,17 @@ class PlotController:
 
             elif request.is_json and request.json:
                 data = request.json.copy()
+                
+                # Convert dimensions to floats (can have decimal values like 82.6)
+                if 'dimension_x' in data or 'dimension_y' in data:
+                    try:
+                        dimension_x_str = data.get('dimension_x', '0')
+                        dimension_y_str = data.get('dimension_y', '0')
+                        data['dimension_x'] = float(dimension_x_str) if dimension_x_str and str(dimension_x_str).strip() else 0
+                        data['dimension_y'] = float(dimension_y_str) if dimension_y_str and str(dimension_y_str).strip() else 0
+                    except (ValueError, TypeError):
+                        data['dimension_x'] = 0
+                        data['dimension_y'] = 0
             else:
                 return jsonify({'error': 'Invalid request format. Expected form data or JSON.'}), 400
             

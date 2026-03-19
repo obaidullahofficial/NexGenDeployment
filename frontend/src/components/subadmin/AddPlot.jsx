@@ -5,26 +5,7 @@ import { useAlert } from '../../hooks/useAlert';
 import { getSocietyProfile } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 import { floorplanAPI } from '../../services/floorplanAPI';
-
-// Hardcoded marla dimensions (in feet)
-const MARLA_DIMENSIONS = {
-  '5 Marla': { x: 30, y: 50 },
-  '6 Marla': { x: 30, y: 60 },
-  '7 Marla': { x: 35, y: 60 },
-  '8 Marla': { x: 40, y: 60 },
-  '9 Marla': { x: 45, y: 60 },
-  '10 Marla': { x: 50, y: 60 },
-  '11 Marla': { x: 44, y: 75 },
-  '12 Marla': { x: 48, y: 75 },
-  '13 Marla': { x: 52, y: 75 },
-  '14 Marla': { x: 56, y: 75 },
-  '15 Marla': { x: 60, y: 75 },
-  '16 Marla': { x: 64, y: 75 },
-  '17 Marla': { x: 68, y: 75 },
-  '18 Marla': { x: 72, y: 75 },
-  '19 Marla': { x: 76, y: 75 },
-  '20 Marla (1 Kanal)': { x: 80, y: 75 }
-};
+import { getDimensionsForPlotSize } from '../../utils/marlaCalculator';
 
 const AddPlotForm = ({ onSubmit, onCancel}) => {
   const { user } = useAuth();
@@ -49,6 +30,8 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     images: [] // New field for storing images
   });
 
+  const [baseArea, setBaseArea] = useState(0); // Track the base area for dimension calculations
+  const [societyMarlaData, setSocietyMarlaData] = useState(null); // Society-specific marla data
   const [availablePlotSizes, setAvailablePlotSizes] = useState([]);
 
   const [imagePreviews, setImagePreviews] = useState([]); // For displaying previews
@@ -84,13 +67,25 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     fetchFloorplans();
   }, [user]);
 
-  // Fetch society profile to get available plot sizes
+  // Fetch society profile to get available plot sizes and marla standard
   useEffect(() => {
     const fetchSocietyProfile = async () => {
       try {
         const result = await getSocietyProfile();
-        if (result.success && result.profile && result.profile.available_plots) {
-          setAvailablePlotSizes(result.profile.available_plots);
+        if (result.success && result.profile) {
+          // Get available plot sizes from society profile
+          if (result.profile.available_plots && Array.isArray(result.profile.available_plots)) {
+            setAvailablePlotSizes(result.profile.available_plots);
+            console.log('[AddPlot] Available plot sizes from society:', result.profile.available_plots);
+          }
+          
+          // Get society-specific marla data if configured
+          if (result.profile.marla_data) {
+            setSocietyMarlaData(result.profile.marla_data);
+            console.log('[AddPlot] Society marla standard set to:', result.profile.marla_data.marlaStandard, 'sq ft per marla');
+          } else {
+            console.warn('[AddPlot] No marla data configured for this society. Please set up the marla standard in Society Profile.');
+          }
         }
       } catch (error) {
         console.error('Error fetching society profile:', error);
@@ -117,15 +112,55 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
     }
     // Auto-populate dimensions and calculate area when marla_size is selected
     else if (name === 'marla_size') {
-      const dimensions = MARLA_DIMENSIONS[value];
+      if (!societyMarlaData) {
+        showWarning('Society Configuration Required', 'Please configure the marla standard for your society in the Society Profile first.');
+        return;
+      }
+      
+      // Get dimensions from society-specific marla data
+      const dimensions = getDimensionsForPlotSize(value, societyMarlaData);
       if (dimensions) {
-        const area = dimensions.x * dimensions.y;
+        const area = dimensions.sqft;
+        setBaseArea(area); // Store base area for dynamic calculations
+        console.log(`[AddPlot] Selected ${value}: ${dimensions.x}×${dimensions.y} ft = ${area} sq ft`);
         setForm({ 
           ...form, 
           marla_size: value,
           dimension_x: dimensions.x.toString(),
           dimension_y: dimensions.y.toString(),
           area: `${area.toFixed(2)} sq ft`
+        });
+      } else {
+        showError('Invalid Plot Size', `No dimensions found for ${value}. Please reconfigure your society's marla standard.`);
+        setForm({ ...form, [name]: value });
+      }
+    }
+    // Dynamic dimension adjustment - maintain constant area
+    else if (name === 'dimension_x') {
+      const newX = parseFloat(value);
+      if (newX && baseArea && newX > 0) {
+        // Calculate new Y to maintain area: Y = Area / X
+        const newY = (baseArea / newX).toFixed(2);
+        setForm({
+          ...form,
+          dimension_x: value,
+          dimension_y: newY.toString(),
+          area: `${baseArea.toFixed(2)} sq ft`
+        });
+      } else {
+        setForm({ ...form, [name]: value });
+      }
+    }
+    else if (name === 'dimension_y') {
+      const newY = parseFloat(value);
+      if (newY && baseArea && newY > 0) {
+        // Calculate new X to maintain area: X = Area / Y
+        const newX = (baseArea / newY).toFixed(2);
+        setForm({
+          ...form,
+          dimension_x: newX.toString(),
+          dimension_y: value,
+          area: `${baseArea.toFixed(2)} sq ft`
         });
       } else {
         setForm({ ...form, [name]: value });
@@ -417,9 +452,20 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
               </select>
               {availablePlotSizes.length === 0 && (
                 <p className="text-orange-600 text-xs mt-1">
-                  Please add available plot sizes in your Society Profile first
+                  ⚠️ No plot sizes configured. Please add sizes in your Society Profile first.
                 </p>
               )}
+              {availablePlotSizes.length > 0 && !societyMarlaData && (
+                <p className="text-orange-600 text-xs mt-1">
+                  ⚠️ Society marla standard not configured. Dimensions will not auto-fill. Configure in Society Profile.
+                </p>
+              )}
+              {societyMarlaData && (
+                <p className="text-green-600 text-xs mt-1">
+                  ✅ Society marla standard: {societyMarlaData.marlaStandard} sq ft per marla
+                </p>
+              )}
+              <p className="text-gray-500 text-xs mt-1">📌 Only select from your society's configured plot sizes</p>
             </div>
 
             <div>
@@ -481,11 +527,12 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                   type="number"
                   name="dimension_x"
                   value={form.dimension_x}
-                  readOnly
-                  className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700 cursor-not-allowed"
-                  placeholder="Auto-filled from marla size"
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
+                  placeholder="Change X, Y adjusts to keep area same"
                   required
                 />
+                <p className="text-gray-500 text-xs mt-1">Change X, Y auto-adjusts</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dimension Y (ft)</label>
@@ -493,11 +540,12 @@ const AddPlotForm = ({ onSubmit, onCancel}) => {
                   type="number"
                   name="dimension_y"
                   value={form.dimension_y}
-                  readOnly
-                  className="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-700 cursor-not-allowed"
-                  placeholder="Auto-filled from marla size"
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-[#ED7600] focus:border-transparent"
+                  placeholder="Change Y, X adjusts to keep area same"
                   required
                 />
+                <p className="text-gray-500 text-xs mt-1">Change Y, X auto-adjusts</p>
               </div>
             </div>
           </div>

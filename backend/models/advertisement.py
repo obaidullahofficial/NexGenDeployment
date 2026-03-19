@@ -31,6 +31,7 @@ class Advertisement:
             ad_data['payment_status'] = 'pending'
             ad_data['payment_id'] = None
             ad_data['paid_at'] = None
+            ad_data['is_featured'] = False  # Initialize as not featured
             
             result = self.collection.insert_one(ad_data)
             return str(result.inserted_id)

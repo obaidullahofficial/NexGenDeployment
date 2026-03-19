@@ -27,6 +27,7 @@ def get_db():
     """
     Get database connection with persistent connection pooling.
     Creates connection only once, then reuses for all requests.
+    Prioritizes MongoDB Atlas (production), falls back to local MongoDB.
     """
     global _client, _db
     
@@ -34,12 +35,14 @@ def get_db():
     if _db is not None:
         return _db
     
-    # Try MongoDB Atlas first
+    # Try MongoDB Atlas first (prioritized for production)
     try:
         print("[DB] Attempting to connect to MongoDB Atlas...")
         _client = MongoClient(
             MONGO_URI,
-            serverSelectionTimeoutMS=5000,
+            serverSelectionTimeoutMS=30000,  # Increased to 30 seconds
+            connectTimeoutMS=30000,          # Added explicit connect timeout
+            socketTimeoutMS=30000,           # Socket timeout
             # Connection pooling options
             maxPoolSize=50,          # Maximum connections in pool
             minPoolSize=10,          # Minimum connections to maintain
@@ -55,12 +58,12 @@ def get_db():
     except Exception as atlas_error:
         print(f"[DB] ❌ Atlas connection failed: {atlas_error}")
         
-        # Fallback to local MongoDB
+        # Fallback to local MongoDB (development)
         try:
-            print("[DB] Attempting to connect to local MongoDB...")
+            print("[DB] Attempting to connect to local MongoDB (fallback)...")
             _client = MongoClient(
                 LOCAL_MONGO_URI,
-                serverSelectionTimeoutMS=3000,
+                serverSelectionTimeoutMS=5000,
                 # Connection pooling options
                 maxPoolSize=50,
                 minPoolSize=10
@@ -73,8 +76,8 @@ def get_db():
             return _db
         except Exception as local_error:
             print(f"[DB] ❌ Local MongoDB connection failed: {local_error}")
-            print("[DB] Both Atlas and local connections failed!")
-            raise Exception("Database connection failed. Please ensure MongoDB is running locally or Atlas is accessible.")
+            print("[DB] ❌ Both Atlas and local connections failed!")
+            raise Exception("Database connection failed. Please ensure MongoDB Atlas is accessible or MongoDB is running locally.")
 
 def test_connection():
     """

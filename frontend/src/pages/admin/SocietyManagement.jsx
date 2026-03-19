@@ -645,6 +645,8 @@ function SocietyModal({ isOpen, onClose, society, onSave }) {
                   >
                     <option value="Private">Private</option>
                     <option value="Public">Public</option>
+                    <option value="Semi-Government">Semi-Government</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 

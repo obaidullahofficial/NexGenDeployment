@@ -9,30 +9,10 @@ import {
   getAvailableMarlas
 } from '../../services/complianceAPI';
 import { FiPlus, FiEdit2, FiTrash2, FiSave, FiX, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { getDimensionsForPlotSize, getAvailablePlotSizes } from '../../utils/marlaCalculator';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-const MARLA_DIMENSIONS = {
-  '5 Marla': { x: 30, y: 50 },
-  '6 Marla': { x: 30, y: 60 },
-  '7 Marla': { x: 35, y: 60 },
-  '8 Marla': { x: 40, y: 60 },
-  '9 Marla': { x: 45, y: 60 },
-  '10 Marla': { x: 50, y: 60 },
-  '11 Marla': { x: 44, y: 75 },
-  '12 Marla': { x: 48, y: 75 },
-  '13 Marla': { x: 52, y: 75 },
-  '14 Marla': { x: 56, y: 75 },
-  '15 Marla': { x: 60, y: 75 },
-  '16 Marla': { x: 64, y: 75 },
-  '17 Marla': { x: 68, y: 75 },
-  '18 Marla': { x: 72, y: 75 },
-  '19 Marla': { x: 76, y: 75 },
-  '20 Marla (1 Kanal)': { x: 80, y: 75 },
-  '1 Kanal': { x: 80, y: 75 },
-  '2 Kanal': { x: 80, y: 150 }
-};
 
 const ComplianceManagement = () => {
   const { user } = useAuth();
@@ -44,6 +24,7 @@ const ComplianceManagement = () => {
   const [loadingPlots, setLoadingPlots] = useState(true);
   const [totalAreaPercentage, setTotalAreaPercentage] = useState(0);
   const [availableAreaPercentage, setAvailableAreaPercentage] = useState(100);
+  const [societyMarlaData, setSocietyMarlaData] = useState(null);
   
   // Get society ID - for society users, their user ID is their society ID
   const getSocietyId = async () => {
@@ -55,6 +36,13 @@ const ComplianceManagement = () => {
       });
       const profileId = response.data?.profile?._id;
       console.log('[Compliance] Society Profile ID:', profileId);
+      
+      // Fetch marla data from society profile
+      if (response.data?.profile?.marla_data) {
+        setSocietyMarlaData(response.data.profile.marla_data);
+        console.log('[Compliance] Society marla standard set to:', response.data.profile.marla_data.marlaStandard, 'sq ft per marla');
+      }
+      
       return profileId;
     } catch (error) {
       console.error('[Compliance] Error fetching society profile:', error);
@@ -63,9 +51,7 @@ const ComplianceManagement = () => {
   };
   const [formData, setFormData] = useState({
     marla_size: '',
-    plot_dimension_x: '',
-    plot_dimension_y: '',
-    total_plot_area: '',
+    total_plot_area: '', // Display-only, calculated from marla_size
     // Room count requirements
     bedrooms: 0,
     bathrooms: 0,
@@ -145,8 +131,12 @@ const ComplianceManagement = () => {
     }
 
     const totalPlotArea = parseFloat(formData.total_plot_area) || 0;
-    const plotX = parseFloat(formData.plot_dimension_x) || 0;
-    const plotY = parseFloat(formData.plot_dimension_y) || 0;
+    
+    // Get marla dimensions for setback calculation (but compliance applies to all plots of this marla size)
+    // Compliance is area-based, so dimensions are just for reference in setback calculations
+    const dimensions = societyMarlaData ? getDimensionsForPlotSize(formData.marla_size, societyMarlaData) : null;
+    const plotX = dimensions?.x || 0;
+    const plotY = dimensions?.y || 0;
 
     // Calculate setback area
     const frontSetback = parseFloat(formData.front_setback) || 0;
@@ -486,8 +476,6 @@ const ComplianceManagement = () => {
   const handleEdit = (compliance) => {
     setFormData({
       marla_size: compliance.marla_size,
-      plot_dimension_x: compliance.plot_dimension_x || '',
-      plot_dimension_y: compliance.plot_dimension_y || '',
       total_plot_area: compliance.total_plot_area || '',
       // Room count requirements
       bedrooms: compliance.bedrooms || 0,
@@ -538,8 +526,6 @@ const ComplianceManagement = () => {
   const resetForm = () => {
     setFormData({
       marla_size: '',
-      plot_dimension_x: '',
-      plot_dimension_y: '',
       total_plot_area: '',
       // Room count requirements
       bedrooms: 0,
@@ -576,9 +562,9 @@ const ComplianceManagement = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Auto-populate dimensions and calculate area when marla_size is selected
+    // Auto-populate area when marla_size is selected (compliance is area-based, not dimension-based)
     if (name === 'marla_size') {
-      const dimensions = MARLA_DIMENSIONS[value];
+      const dimensions = societyMarlaData ? getDimensionsForPlotSize(value, societyMarlaData) : null;
       const defaults = getPlotDefaults(value);
       
       if (dimensions) {
@@ -586,9 +572,7 @@ const ComplianceManagement = () => {
         setFormData(prev => ({
           ...prev,
           marla_size: value,
-          plot_dimension_x: dimensions.x,
-          plot_dimension_y: dimensions.y,
-          total_plot_area: area,
+          total_plot_area: area, // Area-based compliance applies to ALL plot dimensions of this marla size
           ...defaults
         }));
       } else {
@@ -603,7 +587,7 @@ const ComplianceManagement = () => {
         ...prev,
         [name]: ['max_ground_coverage', 'front_setback', 'rear_setback', 
                  'side_setback_left', 'side_setback_right', 'min_open_space',
-                 'plot_dimension_x', 'plot_dimension_y', 'total_plot_area',
+                 'total_plot_area',
                  'bedrooms', 'bathrooms', 'livingRooms', 'kitchens', 'drawingrooms',
                  'carporches', 'gardens', 'bedroom_area', 'bathroom_area', 'livingroom_area',
                  'kitchen_area', 'drawingroom_area', 'carporch_area', 'garden_area'].includes(name)
@@ -846,55 +830,41 @@ const ComplianceManagement = () => {
               )}
             </div>
 
-            {/* Plot Dimensions - Auto-filled based on marla selection */}
+            {/* Plot Size Info - Area-based compliance */}
             {formData.marla_size && (
               <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <h3 className="text-sm font-semibold text-gray-800 mb-3">
-                  📏 Plot Dimensions (Auto-filled)
+                  📐 Plot Size Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Width (X) - feet
+                      Plot Size Category
                     </label>
                     <input
-                      type="number"
-                      name="plot_dimension_x"
-                      value={formData.plot_dimension_x}
-                      onChange={handleChange}
+                      type="text"
+                      value={formData.marla_size}
                       readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed font-semibold"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Length (Y) - feet
+                      Standard Area - sq ft
                     </label>
                     <input
                       type="number"
-                      name="plot_dimension_y"
-                      value={formData.plot_dimension_y}
-                      onChange={handleChange}
-                      readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Total Area - sq ft
-                    </label>
-                    <input
-                      type="number"
-                      name="total_plot_area"
                       value={formData.total_plot_area}
-                      onChange={handleChange}
                       readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed font-semibold"
                     />
                   </div>
                 </div>
-                <p className="text-xs text-green-700 mt-2 font-medium">
-                  ✅ These dimensions are automatically filled based on standard {formData.marla_size} specifications
+                <p className="text-xs text-green-700 mt-3 font-medium">
+                  ✅ These compliance rules apply to <strong>ALL {formData.marla_size} plots</strong> in your society, 
+                  regardless of their specific dimensions (X, Y). 
+                  If society wants to change plot dimensions, the total area ({formData.total_plot_area} sq ft) remains constant, 
+                  and the same compliance rules will apply automatically.
                 </p>
               </div>
             )}

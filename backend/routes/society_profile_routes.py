@@ -258,6 +258,11 @@ def create_or_update_society_profile():
                 # Handle logo if provided in JSON
                 if 'society_logo' in json_data and json_data['society_logo']:
                     profile_data['society_logo'] = json_data['society_logo']
+                
+                # Handle marla_data if provided in JSON (for marla configuration)
+                if 'marla_data' in json_data and json_data['marla_data']:
+                    profile_data['marla_data'] = json_data['marla_data']
+                    print(f"[DEBUG] Marla data provided: {json_data['marla_data']}")
                     
             else:
                 return jsonify({"error": "Invalid request format. Expected form data or JSON."}), 400
@@ -268,9 +273,10 @@ def create_or_update_society_profile():
         
         # Validate that we have some data
         has_available_plots = bool(profile_data.get('available_plots'))
+        has_marla_data = bool(profile_data.get('marla_data'))
         has_other_fields = any(profile_data.get(field, '').strip() if isinstance(profile_data.get(field), str) else profile_data.get(field) for field in ['name', 'description', 'location', 'price_range'])
         
-        if not has_available_plots and not has_other_fields:
+        if not has_available_plots and not has_marla_data and not has_other_fields:
             return jsonify({"error": "At least one field must be provided"}), 400
 
         if 'contact_number' in profile_data and profile_data['contact_number']:
@@ -303,6 +309,11 @@ def create_or_update_society_profile():
                     print(f"[DEBUG] Blocked attempt to change society name from '{existing_profile.get('name')}' to '{profile_data[field]}'")
                     continue  # Skip updating name field
                 update_data[field] = profile_data[field]
+        
+        # Add marla_data if provided (special handling for configuration object)
+        if 'marla_data' in profile_data and profile_data['marla_data']:
+            update_data['marla_data'] = profile_data['marla_data']
+            print(f"[DEBUG] Marla data added to update: {profile_data['marla_data']}")
         
         # Check completeness
         required_fields = ['name', 'description', 'location', 'price_range']

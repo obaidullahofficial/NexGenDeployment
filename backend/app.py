@@ -206,5 +206,8 @@ atexit.register(shutdown_handler)
 if __name__ == '__main__':
     # Python 3.14 + Werkzeug on Windows has a WinError 10038 (socket selector bug).
     # use_reloader=False + threaded=False avoids the broken selector paths.
-    app.run(debug=True, use_reloader=False, threaded=False)
+    # Bind to 0.0.0.0 for external access (required for Render, Heroku, etc.)
+    # Use PORT environment variable if available (set by hosting platforms), default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False, threaded=False)
 

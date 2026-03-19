@@ -1,7 +1,7 @@
 // API service for Review CRUD operations
 import cachedFetch, { clearCache } from './cachedFetch.js';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
 
 class ReviewAPI {
   // Get authentication token from localStorage

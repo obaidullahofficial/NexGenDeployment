@@ -1,7 +1,7 @@
 // Base API service with common configuration and utilities
 import cachedFetch, { clearCache } from './cachedFetch.js';
 
-export const API_URL = "http://localhost:5000/api";
+export const API_URL = import.meta.env.VITE_API_URL || "https://nexgendeployment.onrender.com/api";
 
 /**
  * Helper function to get and validate authentication token

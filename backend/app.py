@@ -21,9 +21,9 @@ app = Flask(__name__)
 # Apply GZIP Compression for Admin performance optimizations
 Compress(app)
 
-# Configure CORS - Allow all localhost ports for development
+# Configure CORS - Allow production and development origins
 CORS(app, 
-     origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"], 
+     origins=["https://nexgendeployment.onrender.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"], 
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"],

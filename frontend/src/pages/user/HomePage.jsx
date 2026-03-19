@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform, useSpring } from 'framer-motion';
-import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments, FaBullhorn, FaPhone, FaEye, FaStar, FaRocket, FaArrowRight, FaChevronDown, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import { FaBuilding, FaCube, FaClipboardCheck, FaShieldAlt, FaMapMarkerAlt, FaComments, FaBullhorn, FaPhone, FaEye, FaStar, FaRocket, FaArrowRight, FaChevronDown, FaStarHalfAlt, FaRegStar, FaExternalLinkAlt, FaCheckCircle } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import homepagePic1 from '../../assets/homepage-pic1.png';
 import homepagePic3 from '../../assets/homepage-pic3.png';
@@ -119,6 +119,30 @@ const HomePage = () => {
       trackedImpressions.current.add(adId);
       advertisementAPI.trackImpression(adId);
     }
+  };
+
+  // Generate dynamic taglines for advertisements
+  const getAdTagline = (ad, index) => {
+    const taglines = [
+      "🏆 Premium Property Listing",
+      "✨ Exclusive Opportunity",
+      "🎯 Your Dream Property Awaits",
+      "🌟 Featured Investment",
+      "💎 Premium Real Estate",
+      "🚀 Stunning Development Project",
+      "🏅 Award-Winning Property",
+      "👑 Luxury Living Experience",
+      "🔥 Hot Property Alert",
+      "💰 Smart Investment Choice",
+      "🌍 Prime Location",
+      "🎁 Limited Time Offer",
+      "⭐ Professional Development",
+      "🏢 Commercial Excellence",
+      "🌏 Global Standard Property"
+    ];
+    
+    // Use index to cycle through taglines
+    return taglines[index % taglines.length];
   };
 
   const slides = [
@@ -1131,7 +1155,7 @@ const HomePage = () => {
               </div>
             ) : featuredAds.length > 0 ? (
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-50px" }}
@@ -1140,57 +1164,123 @@ const HomePage = () => {
                 {featuredAds.map((ad, index) => (
                   <motion.div 
                     key={ad._id} 
-                    className="group relative rounded-3xl shadow-2xl shadow-black/50 overflow-hidden cursor-pointer bg-[#2F3D57]"
+                    className="group relative h-full rounded-2xl overflow-hidden cursor-pointer"
                     variants={scaleIn}
                     whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                    onClick={() => handleAdClick(ad)}
                   >
-                    {/* Gradient border on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#ED7600] to-[#FF9933] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm scale-105"></div>
+                    {/* Premium Gradient Border Background */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#ED7600] via-[#FF9933] to-[#FFB347] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-lg scale-105"></div>
                     
-                    {/* Advertisement Poster/Banner */}
-                    <div className="relative w-full h-[400px] overflow-hidden bg-[#1e2738] rounded-3xl">
-                      {ad.featured_image ? (
-                        <motion.img 
-                          src={ad.featured_image} 
-                          alt={ad.title}
-                          className="w-full h-full object-contain transition-transform duration-500"
-                          whileHover={{ scale: 1.05 }}
-                          onError={(e) => {
-                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23e5e7eb" width="400" height="400"/%3E%3Ctext fill="%23999" font-size="20" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EAdvertisement%3C/text%3E%3C/svg%3E';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                          <FaBullhorn className="text-5xl text-gray-400" />
-                        </div>
-                      )}
+                    {/* Main Card Container */}
+                    <div className="relative w-full h-full bg-gradient-to-br from-[#2F3D57] to-[#1e2738] rounded-2xl overflow-hidden shadow-xl shadow-black/70 border border-white/10 group-hover:border-[#ED7600]/30 transition-all duration-500 flex flex-col">
                       
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
-                        <motion.span 
-                          className="px-6 py-2 bg-[#2F3D57]/90 backdrop-blur-sm rounded-full text-white font-semibold flex items-center gap-2"
-                          initial={{ y: 20, opacity: 0 }}
-                          whileHover={{ y: 0, opacity: 1 }}
+                      {/* Advertisement Image Section */}
+                      <div className="relative w-full h-48 overflow-hidden bg-[#1e2738] flex-shrink-0">
+                        {ad.featured_image ? (
+                          <motion.img 
+                            src={ad.featured_image} 
+                            alt={ad.title}
+                            className="w-full h-full object-contain bg-gradient-to-br from-gray-700 to-gray-900 transition-transform duration-700"
+                            whileHover={{ scale: 1.05 }}
+                            onError={(e) => {
+                              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%23999" font-size="18" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EAdvertisement%3C/text%3E%3C/svg%3E';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800">
+                            <FaBullhorn className="text-5xl text-gray-400/50" />
+                          </div>
+                        )}
+                        
+                        {/* Premium Badge - Top Left */}
+                        <motion.div 
+                          className="absolute top-3 left-3 bg-gradient-to-r from-[#ED7600] to-[#FF9933] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5"
+                          whileHover={{ scale: 1.05 }}
                         >
-                          <FaEye /> View Details
-                        </motion.span>
+                          <span className="inline-block w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                          Featured
+                        </motion.div>
                       </div>
+
+                      {/* Content Section - Compact */}
+                      <div className="relative p-4 flex flex-col flex-1">
+                        
+                        {/* Title & Description */}
+                        <div className="mb-4 flex-1">
+                          <h3 className="text-white text-lg font-bold line-clamp-2 group-hover:text-[#FFB347] transition-colors">{ad.title}</h3>
+                          <p className="text-gray-400 text-xs mt-1 line-clamp-2">
+                            {getAdTagline(ad, index)}
+                          </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="space-y-2">
+                          {/* Primary CTA Button */}
+                          <motion.button
+                            onClick={() => handleAdClick(ad)}
+                            className="group/btn relative overflow-hidden w-full bg-gradient-to-r from-[#ED7600] to-[#FF9933] text-white font-semibold py-2 px-3 rounded-lg transition-all duration-500 flex items-center justify-center gap-1.5 text-sm shadow-lg hover:shadow-xl hover:shadow-orange-500/40"
+                            whileHover={{ 
+                              scale: 1.02,
+                              boxShadow: "0 12px 25px rgba(237, 118, 0, 0.4)"
+                            }}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            <FaArrowRight className="text-xs group-hover/btn:translate-x-0.5 transition-transform" />
+                            <span className="relative z-10">Learn More</span>
+                          </motion.button>
+
+                          {/* Secondary Button */}
+                          <motion.button
+                            onClick={() => handleViewClick(ad._id)}
+                            className="group/btn relative overflow-hidden w-full bg-white/5 border border-white/20 hover:border-[#ED7600]/50 text-white font-semibold py-1.5 px-3 rounded-lg transition-all duration-500 flex items-center justify-center gap-1.5 text-xs"
+                            whileHover={{ 
+                              scale: 1.02,
+                              boxShadow: "0 6px 15px rgba(237, 118, 0, 0.2)",
+                              backgroundColor: "rgba(237, 118, 0, 0.08)"
+                            }}
+                            whileTap={{ scale: 0.96 }}
+                          >
+                            <FaEye className="text-xs" />
+                            <span className="relative z-10">View</span>
+                          </motion.button>
+                        </div>
+                      </div>
+
+                      {/* Hover Accent Line */}
+                      <motion.div
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#ED7600] to-transparent"
+                        initial={{ scaleX: 0 }}
+                        whileHover={{ scaleX: 1 }}
+                        transition={{ duration: 0.4 }}
+                      />
                     </div>
                   </motion.div>
                 ))}
               </motion.div>
             ) : (
               <motion.div 
-                className="text-center py-20"
+                className="text-center py-20 bg-gradient-to-br from-white/5 to-transparent rounded-3xl border border-white/10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="text-5xl text-white/30 mb-4 flex justify-center">
-                  <FaBuilding />
-                </div>
-                <h3 className="text-xl font-bold text-white/70 mb-2">No Featured Properties Available</h3>
-                <p className="text-gray-400">Check back later for exciting property opportunities!</p>
+                <motion.div 
+                  className="text-6xl text-white/20 mb-4 flex justify-center"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <FaBullhorn />
+                </motion.div>
+                <h3 className="text-2xl font-bold text-white/70 mb-3">No Featured Properties Available</h3>
+                <p className="text-gray-400 max-w-md mx-auto">Check back later for exciting property opportunities from our premium partners.</p>
+                
+                <motion.button
+                  onClick={handleGenerateNow}
+                  className="mt-6 px-6 py-3 bg-gradient-to-r from-[#ED7600] to-[#FF9933] text-white rounded-full font-semibold hover:shadow-lg transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Start Your Design Now
+                </motion.button>
               </motion.div>
             )}
           </div>
@@ -1446,7 +1536,7 @@ const HomePage = () => {
                   <img 
                     src={advertisement.image} 
                     alt={advertisement.title}
-                    className="w-full h-48 object-cover rounded-2xl relative z-10"
+                    className="w-full h-32 object-contain bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl relative z-10 p-2"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
@@ -1458,7 +1548,7 @@ const HomePage = () => {
                     whileHover={{ opacity: 1 }}
                   >
                     <motion.div 
-                      className="text-white text-sm font-semibold bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full"
+                      className="text-white text-xs font-semibold bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full"
                       initial={{ y: 10, opacity: 0 }}
                       whileHover={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.2 }}
@@ -1476,7 +1566,7 @@ const HomePage = () => {
                 
                 <div className="relative z-10">
                   <motion.h3 
-                    className="font-bold text-base mb-3 text-transparent bg-clip-text bg-gradient-to-r from-[#2F3D57] via-[#1e2a3a] to-[#2F3D57] break-words hyphens-auto leading-tight"
+                    className="font-bold text-base mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#2F3D57] via-[#1e2a3a] to-[#2F3D57] break-words hyphens-auto leading-tight"
                     style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1486,15 +1576,15 @@ const HomePage = () => {
                   </motion.h3>
                   
                   <motion.p 
-                    className="text-gray-300 mb-4 text-sm leading-relaxed"
+                    className="text-gray-400 mb-4 text-xs leading-relaxed line-clamp-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
-                    {advertisement.message}
+                    {currentAdIndex >= 0 && allAds[currentAdIndex] ? getAdTagline(allAds[currentAdIndex], currentAdIndex) : "Premium Advertisement"}
                   </motion.p>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <motion.button
                       onClick={() => {
                         if (randomAd) {
@@ -1502,35 +1592,18 @@ const HomePage = () => {
                         }
                         closePopup();
                       }}
-                      className="group relative overflow-hidden flex-1 bg-gradient-to-r from-[#ED7600] to-[#FF9933] hover:from-[#FF9933] hover:to-[#FFD700] text-white py-2.5 px-4 rounded-2xl text-sm font-bold transition-all duration-500 flex items-center justify-center gap-2 border border-orange-200/30"
+                      className="group relative overflow-hidden flex-1 bg-gradient-to-r from-[#ED7600] to-[#FF9933] hover:from-[#FF9933] hover:to-[#FFD700] text-white py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center justify-center gap-1.5 shadow-lg hover:shadow-xl"
                       whileHover={{ 
                         scale: 1.02,
-                        boxShadow: "0 10px 25px rgba(237, 118, 0, 0.4)",
-                        rotateX: -2
+                        boxShadow: "0 10px 25px rgba(237, 118, 0, 0.4)"
                       }}
                       whileTap={{ scale: 0.98 }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.4 }}
                     >
-                      {/* Button glow effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
-                      <motion.div
-                        whileHover={{ rotate: 15, scale: 1.1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <FaBullhorn />
-                      </motion.div>
+                      <FaArrowRight className="text-xs" />
                       <span className="relative z-10">Learn More</span>
-                      
-                      {/* Animated border */}
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl border-2 border-white/30 opacity-0 group-hover:opacity-100"
-                        initial={{ scale: 1.1 }}
-                        whileHover={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
                     </motion.button>
                     
                     <motion.button
@@ -1540,35 +1613,19 @@ const HomePage = () => {
                         }
                         closePopup();
                       }}
-                      className="group relative overflow-hidden flex-1 bg-gradient-to-r from-[#2F3D57] to-[#1e2a3a] hover:from-[#1e2a3a] hover:to-[#0f1419] text-white py-2.5 px-4 rounded-2xl text-sm font-bold transition-all duration-500 flex items-center justify-center gap-2 border border-gray-500/20"
+                      className="group relative overflow-hidden flex-1 bg-white/5 border border-white/20 hover:border-[#ED7600]/50 text-white py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-500 flex items-center justify-center gap-1.5"
                       whileHover={{ 
                         scale: 1.02,
-                        boxShadow: "0 10px 25px rgba(47, 61, 87, 0.4)",
-                        rotateX: -2
+                        boxShadow: "0 6px 15px rgba(237, 118, 0, 0.2)",
+                        backgroundColor: "rgba(237, 118, 0, 0.08)"
                       }}
                       whileTap={{ scale: 0.98 }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.5 }}
                     >
-                      {/* Button glow effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <FaEye />
-                      </motion.div>
-                      <span className="relative z-10">View Details</span>
-                      
-                      {/* Animated border */}
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl border-2 border-white/20 opacity-0 group-hover:opacity-100"
-                        initial={{ scale: 1.1 }}
-                        whileHover={{ scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
+                      <FaEye className="text-xs" />
+                      <span className="relative z-10">Details</span>
                     </motion.button>
                   </div>
                 </div>

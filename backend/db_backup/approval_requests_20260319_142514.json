@@ -1,0 +1,6746 @@
+[
+  {
+    "_id": "68dae3ece05d5c585a15b090",
+    "user_id": "68d823eefe0e093391df7599",
+    "plot_id": "PL-1001",
+    "plot_details": "Commercial Plot A, 10 Marla",
+    "area": "10 Marla",
+    "design_type": "3",
+    "floor_plan_file_url": "uploads/user_profiles/user_68d823eefe0e093391df7599/floor_plans/6a805e9f-e96e-461c-82ea-b05eb7c95bef_AI_Lab_Task.pdf",
+    "notes": "",
+    "status": "Rejected",
+    "request_date": "2025-09-29T19:54:20.652078",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T05:50:53.519866",
+    "created_at": "2025-09-29T19:54:20.652088",
+    "updated_at": "2025-11-16 05:50:54.555000"
+  },
+  {
+    "_id": "68fde3c8faf82fe9097ea449",
+    "user_id": "68fde12a3a111183bda25090",
+    "plot_id": "PL-1001",
+    "plot_details": "Commercial Plot A, 10 Marla",
+    "area": "10 Marla",
+    "design_type": "2",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fde12a3a111183bda25090/floor_plans/27cd997c-1eeb-4871-9dcd-651cc25f76c5_AI_Lab_Task.pdf",
+    "notes": "222",
+    "status": "Approved",
+    "request_date": "2025-10-26T09:03:04.164274",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T05:50:57.902457",
+    "created_at": "2025-10-26T09:03:04.164287",
+    "updated_at": "2025-11-16 05:50:58.818000"
+  },
+  {
+    "_id": "69194725b73395bcfae540a8",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "plot_id": "68d703ffc3b2dd7ef4839ade",
+    "plot_details": "6544 - Residential, ISB",
+    "area": "marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/ff9ba490-dd73-4266-8974-67ae1a899011_cover_page.pdf",
+    "notes": "please approve as early as possible",
+    "status": "Rejected",
+    "request_date": "2025-11-16T03:38:13.026212",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T06:23:53.039214",
+    "created_at": "2025-11-16T03:38:13.026212",
+    "updated_at": "2025-11-16 06:23:54.050000"
+  },
+  {
+    "_id": "691948f1fddfb56691cc04be",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/36cc317a-0bc9-4188-8598-f5099af6169f_cover_page.pdf",
+    "notes": "please approve with in two weeks",
+    "status": "Pending",
+    "request_date": "2025-11-16T03:45:53.365187",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T03:45:53.365187",
+    "updated_at": "2025-11-16T03:45:53.365187"
+  },
+  {
+    "_id": "691949f1fddfb56691cc04cd",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/f2f31a04-bb2c-43d5-897b-4c7ec3fc7010_cover_page.pdf",
+    "notes": "approve as early as possible",
+    "status": "Approved",
+    "request_date": "2025-11-16T03:50:09.856387",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T06:23:57.280564",
+    "created_at": "2025-11-16T03:50:09.856387",
+    "updated_at": "2025-11-16 06:23:58.169000"
+  },
+  {
+    "_id": "69194a6efddfb56691cc04d3",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/2eab1882-6130-4ca0-85bd-a21ad94bbc8c_cover_page.pdf",
+    "notes": "abcdef",
+    "status": "Approved",
+    "request_date": "2025-11-16T03:52:14.407444",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T06:24:04.280050",
+    "created_at": "2025-11-16T03:52:14.407444",
+    "updated_at": "2025-11-16 06:24:05.190000"
+  },
+  {
+    "_id": "69194d9f64c8da674352cb88",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/3f4fc01e-1153-4f1d-ab12-e957ff964505_cover_page.pdf",
+    "notes": "abcdef",
+    "status": "Pending",
+    "request_date": "2025-11-16T04:05:51.650772",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T04:05:51.650772",
+    "updated_at": "2025-11-16T04:05:51.650772"
+  },
+  {
+    "_id": "69194e8abaa780c6d8bb2c2e",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/f18d0de3-2716-489a-8653-b13153105d34_cover_page.pdf",
+    "notes": "abcdfghjkl",
+    "status": "Approved",
+    "request_date": "2025-11-16T04:09:46.103659",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-18T04:15:29.650263",
+    "created_at": "2025-11-16T04:09:46.103659",
+    "updated_at": "2025-11-18 04:15:31.665000"
+  },
+  {
+    "_id": "69195ac99bf7ff379c6628f2",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "society_name": "Bahria Town",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/ea8ae1f2-1d6d-4d29-b599-85fe65224266_floor-plan-1.json",
+    "notes": "abcdefgh",
+    "status": "Pending",
+    "request_date": "2025-11-16T05:02:01.435015",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T05:02:01.435015",
+    "updated_at": "2025-11-16T05:02:01.435015"
+  },
+  {
+    "_id": "69196694cab04f590f887f24",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68cf8df52b954bed1ebdc3ab",
+    "society_name": "Muhammad Bashir",
+    "plot_id": "68d85ee7c3b2dd7ef4839b38",
+    "plot_details": "",
+    "area": "\"10 Marla\"",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/29bba656-1199-44b8-ba81-0bc21027a1d9_floor-plan-1.json",
+    "notes": "afdhfkh;kpppp",
+    "status": "Pending",
+    "request_date": "2025-11-16T05:52:20.913574",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T05:52:20.913574",
+    "updated_at": "2025-11-16T05:52:20.913574"
+  },
+  {
+    "_id": "69196c545b8ef6f15bc63aed",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/875110f8-5e0e-4529-b29f-d37bc154eb39_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Approved",
+    "request_date": "2025-11-16T06:16:52.243098",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-16T06:24:11.768782",
+    "created_at": "2025-11-16T06:16:52.243098",
+    "updated_at": "2025-11-16 06:24:13.130000"
+  },
+  {
+    "_id": "69196dbe5b8ef6f15bc63af5",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/df396c29-90c9-4177-ae01-61783fa794ee_floor-plan-1.json",
+    "notes": "aaaa",
+    "status": "Rejected",
+    "request_date": "2025-11-16T06:22:54.236124",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-18T04:00:25.438060",
+    "created_at": "2025-11-16T06:22:54.236124",
+    "updated_at": "2025-11-18 04:00:27.631000"
+  },
+  {
+    "_id": "691972f9ddfdbc96ddcbd6f4",
+    "user_id": "691972abddfdbc96ddcbd6e8",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_691972abddfdbc96ddcbd6e8/floor_plans/ec14f466-2393-4692-8797-5828925cc446_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Rejected",
+    "request_date": "2025-11-16T06:45:13.646479",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-17T05:45:14.667630",
+    "created_at": "2025-11-16T06:45:13.646479",
+    "updated_at": "2025-11-17 05:45:16.078000"
+  },
+  {
+    "_id": "691974ae406cdab8109d9e5e",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68cf8df52b954bed1ebdc3ab",
+    "society_name": "Muhammad Bashir",
+    "plot_id": "68d85d06c3b2dd7ef4839b2a",
+    "plot_number": "100",
+    "plot_details": "",
+    "area": "\"10 Marla\"",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/09ef7043-b6bd-4308-a48e-9bdd44cd28be_floor-plan-1.json",
+    "notes": "12345",
+    "status": "Pending",
+    "request_date": "2025-11-16T06:52:30.188913",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T06:52:30.188913",
+    "updated_at": "2025-11-16T06:52:30.188913"
+  },
+  {
+    "_id": "6919750f406cdab8109d9e6d",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68b4108fbd5d856e3a10a084",
+    "society_name": "Bahria Town",
+    "plot_id": "68dad0a67f9c38d86b4f3d2f",
+    "plot_number": "BT-C-301",
+    "plot_details": "",
+    "area": "1,650 sq ft",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/d7e406ed-1d23-4cf2-a0d4-550635cceb75_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Pending",
+    "request_date": "2025-11-16T06:54:07.850025",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-16T06:54:07.850025",
+    "updated_at": "2025-11-16T06:54:07.850025"
+  },
+  {
+    "_id": "691ab54dd7ccaf572dfafdcb",
+    "user_id": "691942099c981b45b7a49661",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_691942099c981b45b7a49661/floor_plans/67f8ca6b-a029-4401-b11f-9cb67e254a5d_floor-plan-1.json",
+    "notes": "abcdefgh",
+    "status": "pending",
+    "request_date": "2025-11-17T05:40:29.037481",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-17T05:43:53.142525",
+    "created_at": "2025-11-17T05:40:29.037481",
+    "updated_at": "2025-11-17 05:43:55.351000"
+  },
+  {
+    "_id": "691bf562bcb9638dc335863c",
+    "user_id": "691942099c981b45b7a49661",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "society_name": "Bahria Town",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_number": "107",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_691942099c981b45b7a49661/floor_plans/934ff88b-bf30-427a-bcd3-ca5bc4969e39_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Pending",
+    "request_date": "2025-11-18T04:26:10.100737",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-18T04:26:10.100737",
+    "updated_at": "2025-11-18T04:26:10.100737"
+  },
+  {
+    "_id": "691bf62abcb9638dc3358664",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/c93ba705-dde4-4911-a135-a8951fe78bcc_floor-plan-1.json",
+    "notes": "sdafsd",
+    "status": "Approved",
+    "request_date": "2025-11-18T04:29:30.140548",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-19T10:49:04.459827",
+    "created_at": "2025-11-18T04:29:30.140548",
+    "updated_at": "2025-11-19 10:49:06.709000"
+  },
+  {
+    "_id": "691c020ebcb9638dc335867e",
+    "user_id": "691942099c981b45b7a49661",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "society_name": "Bahria Town",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_number": "107",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_691942099c981b45b7a49661/floor_plans/678822a8-14b5-494b-b756-664d41648c3c_floor-plan-1.json",
+    "notes": "aaaa",
+    "status": "Pending",
+    "request_date": "2025-11-18T05:20:14.198472",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-18T05:20:14.198472",
+    "updated_at": "2025-11-18T05:20:14.198472"
+  },
+  {
+    "_id": "691c029abcb9638dc335869c",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "68fa4677fa1070b71df21add",
+    "plot_number": "1235",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/f763c6b2-25a9-472c-a3b6-1a859a2559d3_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Approved",
+    "request_date": "2025-11-18T05:22:34.275130",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-19T10:52:21.477792",
+    "created_at": "2025-11-18T05:22:34.275130",
+    "updated_at": "2025-11-19 10:52:22.705000"
+  },
+  {
+    "_id": "691d9f78f6542e63d2ab81eb",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "68fa449cfa1070b71df21ac7",
+    "society_name": "society123",
+    "plot_id": "691d91747b979ab843ff19a3",
+    "plot_number": "116",
+    "plot_details": "",
+    "area": "7 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles/user_68fa43d8fa1070b71df21abc/floor_plans/f1e0b44c-be72-49b5-949f-6b8f18805b96_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Pending",
+    "request_date": "2025-11-19T10:44:08.190273",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-19T10:44:08.190273",
+    "updated_at": "2025-11-19T10:44:08.190273"
+  },
+  {
+    "_id": "69226d1036f5dbf24cf4cb22",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "society_name": "Bahria Town",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_number": "107",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\59e1f35b-72a6-450d-bd71-5d806f4bd651_floor-plan-1.json",
+    "notes": "ab cgg fjfj",
+    "status": "Pending",
+    "request_date": "2025-11-23T02:10:24.130598",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T02:10:24.141531",
+    "updated_at": "2025-11-23T02:10:24.141531"
+  },
+  {
+    "_id": "692271add718885990fb05a0",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "society_name": "society123",
+    "plot_id": "69223e9963e6c9c612fa99db",
+    "plot_number": "119",
+    "plot_details": "",
+    "area": "7 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\33b42537-f721-4892-85c3-98271d0a4d2f_floor-plan-1.json",
+    "notes": "aaaaa",
+    "status": "Approved",
+    "request_date": "2025-11-23T02:30:05.032858",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-25T12:24:01.400551",
+    "created_at": "2025-11-23T02:30:05.032858",
+    "updated_at": "2025-11-25 12:24:02.926000"
+  },
+  {
+    "_id": "692299cd3c2cf1bcb108995b",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "society_name": "Bahria Town",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "plot_number": "107",
+    "plot_details": "",
+    "area": "10 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\c94d6245-9351-4001-a35e-885a4aa2edd5_floor-plan-1.json",
+    "notes": "yyyyyyyyyyy",
+    "status": "Pending",
+    "request_date": "2025-11-23T05:21:17.834720",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T05:21:17.834720",
+    "updated_at": "2025-11-23T05:21:17.834720"
+  },
+  {
+    "_id": "69229a423c2cf1bcb1089979",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "society_name": "society123",
+    "plot_id": "69223ed763e6c9c612fa99df",
+    "plot_number": "110",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\0c07405c-a534-4ac3-9971-650fc632d047_floor-plan-1.json",
+    "notes": "kkkkk",
+    "status": "Pending",
+    "request_date": "2025-11-23T05:23:14.364745",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T05:23:14.364745",
+    "updated_at": "2025-11-23T05:23:14.364745"
+  },
+  {
+    "_id": "69229e20430a065353e4e063",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "society_name": "society123",
+    "plot_id": "69223ed763e6c9c612fa99df",
+    "plot_number": "110",
+    "plot_details": "",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\cc75b041-62ca-4fe3-9b04-e53a03c807bc_floor-plan-1.json",
+    "notes": "aaaa",
+    "status": "Pending",
+    "request_date": "2025-11-23T05:39:44.119083",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T05:39:44.119083",
+    "updated_at": "2025-11-23T05:39:44.119083"
+  },
+  {
+    "_id": "6922a00ff4310a40f84d5ed4",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "plot_id": "69223ed763e6c9c612fa99df",
+    "area": "5 Marla",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\74c929bd-d258-4f83-af60-71379e37f552_floor-plan-1.json",
+    "notes": "aaaa",
+    "status": "Approved",
+    "request_date": "2025-11-23T05:47:59.814703",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-23T06:26:43.977817",
+    "created_at": "2025-11-23T05:47:59.814703",
+    "updated_at": "2025-11-23 06:26:45.622000"
+  },
+  {
+    "_id": "6922a41f4501330c444f5715",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "plot_id": "69223ed763e6c9c612fa99df",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\6c4a6506-ae19-413f-9f4b-6171fa3211f1_floor-plan-1.json",
+    "notes": "5555",
+    "status": "Approved",
+    "request_date": "2025-11-23T06:05:19.202279",
+    "admin_comments": "",
+    "reviewed_by": "68fa43d8fa1070b71df21abc",
+    "reviewed_at": "2025-11-23T06:25:51.280639",
+    "created_at": "2025-11-23T06:05:19.202279",
+    "updated_at": "2025-11-23 06:25:52.756000"
+  },
+  {
+    "_id": "6922ae38149ebc6c8f104711",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\af13b21a-62cd-43d8-95c0-153178c8021a_floor-plan-1.json",
+    "notes": "hhhhhhhhhhhhh",
+    "status": "Pending",
+    "request_date": "2025-11-23T06:48:24.027973",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T06:48:24.027973",
+    "updated_at": "2025-11-23T06:48:24.027973"
+  },
+  {
+    "_id": "6922ae8b149ebc6c8f10472b",
+    "user_id": "68fa43d8fa1070b71df21abc",
+    "society_id": "69223aaed6e3c83257ae5eec",
+    "plot_id": "69223ed763e6c9c612fa99df",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_68fa43d8fa1070b71df21abc/floor_plans\\aa61044f-1560-450c-b8e0-64044b835379_floor-plan-1.json",
+    "notes": "hhhhhh",
+    "status": "Pending",
+    "request_date": "2025-11-23T06:49:47.314845",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-11-23T06:49:47.314845",
+    "updated_at": "2025-11-23T06:49:47.314845"
+  },
+  {
+    "_id": "6931df612dd99c05865e5aad",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "design_type": "2",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6931a2c822f6aba52e213427/floor_plans\\0a14b85f-002b-4a21-955d-676c3c9263db_floorplan-design-1764527004658.json",
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-04T19:22:09.559188",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-04T19:22:09.559188",
+    "updated_at": "2025-12-04T19:22:09.559188"
+  },
+  {
+    "_id": "6931dfc02dd99c05865e5abf",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "68cf8df52b954bed1ebdc3ab",
+    "plot_id": "68d85d06c3b2dd7ef4839b2a",
+    "design_type": "2",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6931a2c822f6aba52e213427/floor_plans\\49ecb444-aded-473b-9844-28e3af26725f_floor-design-1764521651487.json",
+    "notes": "make it cool ",
+    "status": "Pending",
+    "request_date": "2025-12-04T19:23:44.320720",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-04T19:23:44.320720",
+    "updated_at": "2025-12-04T19:23:44.320720"
+  },
+  {
+    "_id": "6931e21e39b3d9726d6c3dd8",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "68cf8df52b954bed1ebdc3ab",
+    "plot_id": "68d85c7dc3b2dd7ef4839b26",
+    "design_type": "3",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6931a2c822f6aba52e213427/floor_plans\\e2a45be7-d561-462b-93d4-853407345fe6_floor-design-1764521651487.json",
+    "notes": "make it cool ",
+    "status": "Pending",
+    "request_date": "2025-12-04T19:33:50.197558",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-04T19:33:50.197558",
+    "updated_at": "2025-12-04T19:33:50.197558"
+  },
+  {
+    "_id": "6931e3d22a2100101b66b120",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "plot_id": "68a18b7deb1602ba180dd61a",
+    "design_type": "3",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6931a2c822f6aba52e213427/floor_plans\\7c21a7bf-3b9f-4643-8d04-2ab93c4db01b_floor-design-1764521651487.json",
+    "notes": "ssss",
+    "status": "Pending",
+    "request_date": "2025-12-04T19:41:06.113018",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-04T19:41:06.113018",
+    "updated_at": "2025-12-04T19:41:06.114119"
+  },
+  {
+    "_id": "693560958f27342e98030521",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "693543c3ab34d0012b3d3398",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\92fc07ea-e7e9-4fc6-8d84-09d7cf6f3f6e_floor-plan-1_1.json",
+    "notes": "approve as early as possible",
+    "status": "Rejected",
+    "request_date": "2025-12-07T11:10:13.390025",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-07T12:42:11.346709",
+    "created_at": "2025-12-07T11:10:13.390025",
+    "updated_at": "2025-12-07 12:42:13.409000"
+  },
+  {
+    "_id": "693561138f27342e9803052b",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "693543c3ab34d0012b3d3398",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\55f1bc52-9454-4820-9cfa-2166a18aa27a_floor-plan-69355a388f27342e980304ad.json",
+    "notes": "i need approval with i week",
+    "status": "Approved",
+    "request_date": "2025-12-07T11:12:19.417632",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-07T12:40:58.683876",
+    "created_at": "2025-12-07T11:12:19.417632",
+    "updated_at": "2025-12-07 12:40:59.686000"
+  },
+  {
+    "_id": "69356fff9062f4e72ee995b7",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_691e121c0b908f141406fd5e/floor_plans\\f721b2e7-5e0e-4892-a62d-08e450312149_floor-plan-69355a388f27342e980304ad.json",
+    "notes": "approval needed in this month",
+    "status": "Rejected",
+    "request_date": "2025-12-07T12:15:59.948782",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T12:41:11.628588",
+    "created_at": "2025-12-07T12:15:59.948782",
+    "updated_at": "2025-12-18 12:41:14.209000"
+  },
+  {
+    "_id": "69357b0a4883746692bc2f57",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": "69355a388f27342e980304ad",
+      "_id": "69355a388f27342e980304ad",
+      "projectName": "four rooms",
+      "rooms": [
+        {
+          "height": 600,
+          "id": 0,
+          "tag": "livingroom-1",
+          "type": "livingroom-1",
+          "width": 1000,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "height": 400,
+          "id": 1,
+          "tag": "kitchen-1",
+          "type": "kitchen-1",
+          "width": 300,
+          "x": 0,
+          "y": 600
+        },
+        {
+          "height": 400,
+          "id": 2,
+          "tag": "bedroom-1",
+          "type": "bedroom-1",
+          "width": 490,
+          "x": 300,
+          "y": 600
+        },
+        {
+          "height": 400,
+          "id": 3,
+          "tag": "bathroom-1",
+          "type": "bathroom-1",
+          "width": 210,
+          "x": 790,
+          "y": 600
+        }
+      ],
+      "walls": [],
+      "doors": [],
+      "plotDimensions": {
+        "height": 1000,
+        "width": 1000
+      },
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 125,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 1000,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 600,
+          "y2": 775
+        },
+        {
+          "type": "Door",
+          "x1": 300,
+          "x2": 300,
+          "y1": 775,
+          "y2": 825
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 825,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 790,
+          "x2": 790,
+          "y1": 600,
+          "y2": 775
+        },
+        {
+          "type": "Door",
+          "x1": 790,
+          "x2": 790,
+          "y1": 775,
+          "y2": 825
+        },
+        {
+          "type": "Wall",
+          "x1": 790,
+          "x2": 790,
+          "y1": 825,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 125,
+          "x2": 125,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Door",
+          "x1": 125,
+          "x2": 175,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 500,
+          "x1": 0,
+          "x2": 1000,
+          "x3": 0,
+          "x4": 1000,
+          "y": 300,
+          "y1": 0,
+          "y2": 0,
+          "y3": 600,
+          "y4": 600
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 150,
+          "x1": 0,
+          "x2": 300,
+          "x3": 0,
+          "x4": 300,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 545,
+          "x1": 300,
+          "x2": 790,
+          "x3": 300,
+          "x4": 790,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bathroom-1",
+          "type": "label",
+          "x": 895,
+          "x1": 790,
+          "x2": 1000,
+          "x3": 790,
+          "x4": 1000,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "constraints": {},
+      "user_id": "6927f787534aaf466815112b"
+    },
+    "notes": "approval required till june 15 2026",
+    "status": "Approved",
+    "request_date": "2025-12-07T13:03:06.857548",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:53:14.982105",
+    "created_at": "2025-12-07T13:03:06.857548",
+    "updated_at": "2025-12-18 13:53:20.246000"
+  },
+  {
+    "_id": "6935b91066d8738c5c45c7c3",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "3hbvds",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "version": "1.0",
+      "timestamp": "2025-11-30T18:23:24.651Z",
+      "metadata": {
+        "totalArea": 10000,
+        "canvasWidth": 800,
+        "canvasHeight": 600,
+        "margin": 40
+      },
+      "rooms": [
+        {
+          "id": "room-0",
+          "type": "livingroom-1",
+          "name": "LIVINGROOM 1",
+          "x": 19.23076923076923,
+          "y": 19.23076923076923,
+          "width": 1000,
+          "height": 700,
+          "areaPercentage": 70,
+          "color": "#e3f2fd"
+        },
+        {
+          "id": 1,
+          "type": "garden-1",
+          "name": "GARDEN 1",
+          "x": 19.23076923076923,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#e8f5e8"
+        },
+        {
+          "id": 2,
+          "type": "kitchen-1",
+          "name": "KITCHEN 1",
+          "x": 500,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#fff3e0"
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "x1": 0,
+          "y1": 0,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-1",
+          "x1": 0,
+          "y1": 520,
+          "x2": 0,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-2",
+          "x1": 520,
+          "y1": 520,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-3",
+          "x1": 520,
+          "y1": 520,
+          "x2": 0,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-4",
+          "x1": 0,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-5",
+          "x1": 403,
+          "y1": 364,
+          "x2": 520,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-6",
+          "x1": 260,
+          "y1": 364,
+          "x2": 260,
+          "y2": 429,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-7",
+          "x1": 260,
+          "y1": 455,
+          "x2": 260,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-8",
+          "x1": 377,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-9",
+          "x1": 403,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "x1": 260,
+          "y1": 429,
+          "x2": 260,
+          "y2": 455,
+          "color": "#8B4513",
+          "width": 6
+        },
+        {
+          "id": "door-1",
+          "x1": 377,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#8B4513",
+          "width": 6
+        }
+      ],
+      "settings": {
+        "snapToGrid": true,
+        "gridSize": 25,
+        "doorColor": "#8B4513",
+        "wallColor": "#000000",
+        "doorWidth": 6,
+        "wallWidth": 4
+      }
+    },
+    "notes": "ccccc",
+    "status": "Approved",
+    "request_date": "2025-12-07T17:27:44.938017",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-07T17:30:37.291384",
+    "created_at": "2025-12-07T17:27:44.938017",
+    "updated_at": "2025-12-07 17:30:38.450000"
+  },
+  {
+    "_id": "6935bcda66d8738c5c45c83c",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "3ssss",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "version": "1.0",
+      "timestamp": "2025-11-30T18:23:24.651Z",
+      "metadata": {
+        "totalArea": 10000,
+        "canvasWidth": 800,
+        "canvasHeight": 600,
+        "margin": 40
+      },
+      "rooms": [
+        {
+          "id": "room-0",
+          "type": "livingroom-1",
+          "name": "LIVINGROOM 1",
+          "x": 19.23076923076923,
+          "y": 19.23076923076923,
+          "width": 1000,
+          "height": 700,
+          "areaPercentage": 70,
+          "color": "#e3f2fd"
+        },
+        {
+          "id": 1,
+          "type": "garden-1",
+          "name": "GARDEN 1",
+          "x": 19.23076923076923,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#e8f5e8"
+        },
+        {
+          "id": 2,
+          "type": "kitchen-1",
+          "name": "KITCHEN 1",
+          "x": 500,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#fff3e0"
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "x1": 0,
+          "y1": 0,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-1",
+          "x1": 0,
+          "y1": 520,
+          "x2": 0,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-2",
+          "x1": 520,
+          "y1": 520,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-3",
+          "x1": 520,
+          "y1": 520,
+          "x2": 0,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-4",
+          "x1": 0,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-5",
+          "x1": 403,
+          "y1": 364,
+          "x2": 520,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-6",
+          "x1": 260,
+          "y1": 364,
+          "x2": 260,
+          "y2": 429,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-7",
+          "x1": 260,
+          "y1": 455,
+          "x2": 260,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-8",
+          "x1": 377,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-9",
+          "x1": 403,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "x1": 260,
+          "y1": 429,
+          "x2": 260,
+          "y2": 455,
+          "color": "#8B4513",
+          "width": 6
+        },
+        {
+          "id": "door-1",
+          "x1": 377,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#8B4513",
+          "width": 6
+        }
+      ],
+      "settings": {
+        "snapToGrid": true,
+        "gridSize": 25,
+        "doorColor": "#8B4513",
+        "wallColor": "#000000",
+        "doorWidth": 6,
+        "wallWidth": 4
+      }
+    },
+    "notes": "coolll",
+    "status": "Approved",
+    "request_date": "2025-12-07T17:43:54.684508",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-07T17:47:58.841149",
+    "created_at": "2025-12-07T17:43:54.684508",
+    "updated_at": "2025-12-07 17:47:59.998000"
+  },
+  {
+    "_id": "6935c05837408aa5cd892e0b",
+    "user_id": "6931a2c822f6aba52e213427",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356a0cdf4e29d479a33f1e",
+    "design_type": "35555",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "version": "1.0",
+      "timestamp": "2025-11-30T18:23:24.651Z",
+      "metadata": {
+        "totalArea": 10000,
+        "canvasWidth": 800,
+        "canvasHeight": 600,
+        "margin": 40
+      },
+      "rooms": [
+        {
+          "id": "room-0",
+          "type": "livingroom-1",
+          "name": "LIVINGROOM 1",
+          "x": 19.23076923076923,
+          "y": 19.23076923076923,
+          "width": 1000,
+          "height": 700,
+          "areaPercentage": 70,
+          "color": "#e3f2fd"
+        },
+        {
+          "id": 1,
+          "type": "garden-1",
+          "name": "GARDEN 1",
+          "x": 19.23076923076923,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#e8f5e8"
+        },
+        {
+          "id": 2,
+          "type": "kitchen-1",
+          "name": "KITCHEN 1",
+          "x": 500,
+          "y": 692.3076923076923,
+          "width": 500,
+          "height": 300,
+          "areaPercentage": 15,
+          "color": "#fff3e0"
+        }
+      ],
+      "walls": [
+        {
+          "id": "wall-0",
+          "x1": 0,
+          "y1": 0,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-1",
+          "x1": 0,
+          "y1": 520,
+          "x2": 0,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-2",
+          "x1": 520,
+          "y1": 520,
+          "x2": 520,
+          "y2": 0,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-3",
+          "x1": 520,
+          "y1": 520,
+          "x2": 0,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-4",
+          "x1": 0,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-5",
+          "x1": 403,
+          "y1": 364,
+          "x2": 520,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-6",
+          "x1": 260,
+          "y1": 364,
+          "x2": 260,
+          "y2": 429,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-7",
+          "x1": 260,
+          "y1": 455,
+          "x2": 260,
+          "y2": 520,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-8",
+          "x1": 377,
+          "y1": 364,
+          "x2": 377,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        },
+        {
+          "id": "wall-9",
+          "x1": 403,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#000",
+          "width": 2.08
+        }
+      ],
+      "doors": [
+        {
+          "id": "door-0",
+          "x1": 260,
+          "y1": 429,
+          "x2": 260,
+          "y2": 455,
+          "color": "#8B4513",
+          "width": 6
+        },
+        {
+          "id": "door-1",
+          "x1": 377,
+          "y1": 364,
+          "x2": 403,
+          "y2": 364,
+          "color": "#8B4513",
+          "width": 6
+        }
+      ],
+      "settings": {
+        "snapToGrid": true,
+        "gridSize": 25,
+        "doorColor": "#8B4513",
+        "wallColor": "#000000",
+        "doorWidth": 6,
+        "wallWidth": 4
+      }
+    },
+    "notes": "ggg",
+    "status": "Approved",
+    "request_date": "2025-12-07T17:58:48.108764",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-07T18:00:00.640652",
+    "created_at": "2025-12-07T17:58:48.108764",
+    "updated_at": "2025-12-07 18:00:01.674000"
+  },
+  {
+    "_id": "69419dedb6c5a37901318529",
+    "user_id": "691e121c0b908f141406fd5e",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "3",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": "6936fb2c6dfa9ba89244662f",
+      "_id": "6936fb2c6dfa9ba89244662f",
+      "projectName": "artwork222",
+      "rooms": [
+        {
+          "height": 600,
+          "id": 0,
+          "tag": "livingroom-1",
+          "type": "livingroom-1",
+          "width": 500,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "height": 400,
+          "id": 1,
+          "tag": "kitchen-1",
+          "type": "kitchen-1",
+          "width": 500,
+          "x": 0,
+          "y": 600
+        },
+        {
+          "height": 700,
+          "id": 2,
+          "tag": "livingroom-2",
+          "type": "livingroom-2",
+          "width": 500,
+          "x": 500,
+          "y": 0
+        },
+        {
+          "height": 300,
+          "id": 3,
+          "tag": "bedroom-1",
+          "type": "bedroom-1",
+          "width": 250,
+          "x": 500,
+          "y": 700
+        },
+        {
+          "height": 300,
+          "id": 4,
+          "tag": "bathroom-1",
+          "type": "bathroom-1",
+          "width": 250,
+          "x": 750,
+          "y": 700
+        }
+      ],
+      "walls": [],
+      "doors": [],
+      "plotDimensions": {
+        "height": 1000,
+        "width": 1000
+      },
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 500,
+          "y1": 700,
+          "y2": 700
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 0,
+          "y2": 275
+        },
+        {
+          "type": "Door",
+          "x1": 500,
+          "x2": 500,
+          "y1": 275,
+          "y2": 325
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 325,
+          "y2": 625
+        },
+        {
+          "type": "Door",
+          "x1": 500,
+          "x2": 500,
+          "y1": 625,
+          "y2": 675
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 675,
+          "y2": 825
+        },
+        {
+          "type": "Door",
+          "x1": 500,
+          "x2": 500,
+          "y1": 825,
+          "y2": 875
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 875,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 750,
+          "x2": 750,
+          "y1": 700,
+          "y2": 825
+        },
+        {
+          "type": "Door",
+          "x1": 750,
+          "x2": 750,
+          "y1": 825,
+          "y2": 875
+        },
+        {
+          "type": "Wall",
+          "x1": 750,
+          "x2": 750,
+          "y1": 875,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 225,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Door",
+          "x1": 225,
+          "x2": 275,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 275,
+          "x2": 500,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 250,
+          "x1": 0,
+          "x2": 500,
+          "x3": 0,
+          "x4": 500,
+          "y": 300,
+          "y1": 0,
+          "y2": 0,
+          "y3": 600,
+          "y4": 600
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 250,
+          "x1": 0,
+          "x2": 500,
+          "x3": 0,
+          "x4": 500,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "livingroom-2",
+          "type": "label",
+          "x": 750,
+          "x1": 500,
+          "x2": 1000,
+          "x3": 500,
+          "x4": 1000,
+          "y": 350,
+          "y1": 0,
+          "y2": 0,
+          "y3": 700,
+          "y4": 700
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 625,
+          "x1": 500,
+          "x2": 750,
+          "x3": 500,
+          "x4": 750,
+          "y": 850,
+          "y1": 700,
+          "y2": 700,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bathroom-1",
+          "type": "label",
+          "x": 875,
+          "x1": 750,
+          "x2": 1000,
+          "x3": 750,
+          "x4": 1000,
+          "y": 850,
+          "y1": 700,
+          "y2": 700,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "constraints": {}
+    },
+    "notes": "mmm",
+    "status": "Approved",
+    "request_date": "2025-12-16T17:59:09.178595",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-17T15:43:39.409390",
+    "created_at": "2025-12-16T17:59:09.178595",
+    "updated_at": "2025-12-17 15:43:42.141000"
+  },
+  {
+    "_id": "6942d2a2e3782c6d89a41424",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c3cfbc14caaeeb26814",
+    "design_type": "4 bedroom",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "want approval this month",
+    "status": "Approved",
+    "request_date": "2025-12-17T15:56:18.021999",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-17T15:56:53.435397",
+    "created_at": "2025-12-17T15:56:18.021999",
+    "updated_at": "2025-12-17 15:56:54.783000"
+  },
+  {
+    "_id": "6943888468fe6d7b391f1a4e",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "68a18aa8eb1602ba180dd604",
+    "plot_id": "6935d1dfade7827b09886f04",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "required appproval early as possible\r\n",
+    "status": "Pending",
+    "request_date": "2025-12-18T04:52:20.681527",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T04:52:20.682737",
+    "updated_at": "2025-12-18T04:52:20.682737"
+  },
+  {
+    "_id": "694388e268fe6d7b391f1a65",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "required earlier approval",
+    "status": "Approved",
+    "request_date": "2025-12-18T04:53:54.710856",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:13:36.854789",
+    "created_at": "2025-12-18T04:53:54.710856",
+    "updated_at": "2025-12-18 13:13:38.008000"
+  },
+  {
+    "_id": "694392e219f9e4ea7a7dda99",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "aaaaaaaaaaaaaaaaaaabbbb",
+    "status": "Rejected",
+    "request_date": "2025-12-18T05:36:34.927182",
+    "admin_comments": "not follow the com[pliance more no of rooms",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:05:08.770575",
+    "created_at": "2025-12-18T05:36:34.927182",
+    "updated_at": "2025-12-18 13:05:11.326000"
+  },
+  {
+    "_id": "6943f164138fb4028bc2d1f7",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c3cfbc14caaeeb26814",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "vvvvvv",
+    "status": "Approved",
+    "request_date": "2025-12-18T12:19:48.450101",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T12:38:12.776308",
+    "created_at": "2025-12-18T12:19:48.450101",
+    "updated_at": "2025-12-18 12:38:14.434000"
+  },
+  {
+    "_id": "6943fb1a606cdf3b2fc808cb",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "6935d1dfade7827b09886f04",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T13:01:14.121003",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:39:41.911000",
+    "created_at": "2025-12-18T13:01:14.121003",
+    "updated_at": "2025-12-18 13:39:45.524000"
+  },
+  {
+    "_id": "6943ff0915a97b00f22cd100",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T13:18:01.930062",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:21:40.144720",
+    "created_at": "2025-12-18T13:18:01.930062",
+    "updated_at": "2025-12-18 13:21:41.817000"
+  },
+  {
+    "_id": "6944060e15a97b00f22cd137",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T13:47:58.360425",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:51:15.028773",
+    "created_at": "2025-12-18T13:47:58.360425",
+    "updated_at": "2025-12-18 13:51:19.941000"
+  },
+  {
+    "_id": "6944077615a97b00f22cd164",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Rejected",
+    "request_date": "2025-12-18T13:53:58.301632",
+    "admin_comments": "not good design compliance are voilated",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:55:53.961224",
+    "created_at": "2025-12-18T13:53:58.301632",
+    "updated_at": "2025-12-18 13:55:57.981000"
+  },
+  {
+    "_id": "69440796e8f0176a6c5d3e18",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T13:54:30.316835",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T13:58:48.461751",
+    "created_at": "2025-12-18T13:54:30.316835",
+    "updated_at": "2025-12-18 13:58:51.721000"
+  },
+  {
+    "_id": "694408e7e8f0176a6c5d3e32",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Rejected",
+    "request_date": "2025-12-18T14:00:07.087695",
+    "admin_comments": "compliance voilated",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T14:02:46.082785",
+    "created_at": "2025-12-18T14:00:07.087695",
+    "updated_at": "2025-12-18 14:02:49.443000"
+  },
+  {
+    "_id": "694409b3e8f0176a6c5d3e54",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T14:03:31.689564",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T14:06:15.813798",
+    "created_at": "2025-12-18T14:03:31.689564",
+    "updated_at": "2025-12-18 14:06:19.167000"
+  },
+  {
+    "_id": "69440a44e8f0176a6c5d3e64",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-18T14:05:56.873176",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T14:05:56.873176",
+    "updated_at": "2025-12-18T14:05:56.873176"
+  },
+  {
+    "_id": "69440a86e8f0176a6c5d3e71",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-18T14:07:02.939903",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T14:07:02.939903",
+    "updated_at": "2025-12-18T14:07:02.939903"
+  },
+  {
+    "_id": "69440ac7e8f0176a6c5d3e79",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-18T14:08:07.466392",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T14:08:07.466392",
+    "updated_at": "2025-12-18T14:08:07.466392"
+  },
+  {
+    "_id": "69440b03e8f0176a6c5d3e89",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-18T14:09:07.025889",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T14:09:07.025889",
+    "updated_at": "2025-12-18T14:09:07.025889"
+  },
+  {
+    "_id": "69440b66e8f0176a6c5d3e91",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2025-12-18T14:10:46.142680",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2025-12-18T14:10:46.142680",
+    "updated_at": "2025-12-18T14:10:46.142680"
+  },
+  {
+    "_id": "69440bace8f0176a6c5d3e99",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Rejected",
+    "request_date": "2025-12-18T14:11:56.916585",
+    "admin_comments": "compliance voilated",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T14:17:11.182086",
+    "created_at": "2025-12-18T14:11:56.916585",
+    "updated_at": "2025-12-18 14:17:13.627000"
+  },
+  {
+    "_id": "69440be0e8f0176a6c5d3ea2",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "4 rooms",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": 1,
+      "fitness": 67.6133511311877,
+      "rooms": [
+        {
+          "id": 0,
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 500,
+          "type": "livingroom-1",
+          "tag": "livingroom-1"
+        },
+        {
+          "id": 1,
+          "x": 0,
+          "y": 500,
+          "width": 400,
+          "height": 500,
+          "type": "kitchen-1",
+          "tag": "kitchen-1"
+        },
+        {
+          "id": 2,
+          "x": 400,
+          "y": 0,
+          "width": 600,
+          "height": 1000,
+          "type": "bedroom-1",
+          "tag": "bedroom-1"
+        }
+      ],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 400,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 0,
+          "y2": 725
+        },
+        {
+          "type": "Door",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 775
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 775,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 175,
+          "x2": 175,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 225,
+          "y1": 500,
+          "y2": 500
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 250,
+          "y1": 0,
+          "y2": 0,
+          "y3": 500,
+          "y4": 500
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 200,
+          "x1": 0,
+          "x2": 400,
+          "x3": 0,
+          "x4": 400,
+          "y": 750,
+          "y1": 500,
+          "y2": 500,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 400,
+          "x2": 1000,
+          "x3": 400,
+          "x4": 1000,
+          "y": 500,
+          "y1": 0,
+          "y2": 0,
+          "y3": 1000,
+          "y4": 1000
+        }
+      ],
+      "_id": "6942abb860195a487c8089f0"
+    },
+    "notes": "",
+    "status": "Approved",
+    "request_date": "2025-12-18T14:12:48.738067",
+    "admin_comments": "",
+    "reviewed_by": "6927f787534aaf466815112b",
+    "reviewed_at": "2025-12-18T14:13:10.884389",
+    "created_at": "2025-12-18T14:12:48.738067",
+    "updated_at": "2025-12-18 14:13:14.647000"
+  },
+  {
+    "_id": "69b8f1544e3026ab92bbbd40",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6942d1d4e3782c6d89a413ec/floor_plans\\51e6f912-ced2-4eab-8cb5-f5dc241a2c68_approved-floorplan-177_1.pdf",
+    "floor_plan_data": null,
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2026-03-17T06:14:44.755509",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T06:14:44.755509",
+    "updated_at": "2026-03-17T06:14:44.755509"
+  },
+  {
+    "_id": "69b903484e3026ab92bbbd70",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69b44a8b1c783ffb366bc2c2",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6942d1d4e3782c6d89a413ec/floor_plans\\8e28fbe7-aea3-43d4-84be-fff600331932_approved-floorplan-177.pdf",
+    "floor_plan_data": null,
+    "notes": "aaaa",
+    "status": "Pending",
+    "request_date": "2026-03-17T07:31:20.222395",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T07:31:20.222395",
+    "updated_at": "2026-03-17T07:31:20.222395"
+  },
+  {
+    "_id": "69b9171e4e3026ab92bbbe08",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "modren 4 roomsvvv",
+    "floor_plan_file_url": "",
+    "floor_plan_data": null,
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2026-03-17T08:55:58.506253",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T08:55:58.506253",
+    "updated_at": "2026-03-17T08:55:58.506253"
+  },
+  {
+    "_id": "69b938a25a007a02b90ca33d",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69356c16fbc14caaeeb2680d",
+    "design_type": "modren",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "doors": [],
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 509,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 100,
+          "x2": 100,
+          "y1": 900,
+          "y2": 133.33333333333334
+        },
+        {
+          "type": "Wall",
+          "x1": 900,
+          "x2": 100,
+          "y1": 900,
+          "y2": 900
+        },
+        {
+          "type": "Wall",
+          "x1": 900,
+          "x2": 100,
+          "y1": 133.33333333333334,
+          "y2": 133.33333333333334
+        },
+        {
+          "type": "Wall",
+          "x1": 900,
+          "x2": 900,
+          "y1": 900,
+          "y2": 133.33333333333334
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 133.33333333333334,
+          "y2": 564.5
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 614.5,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 575,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663
+        },
+        {
+          "type": "Door",
+          "x1": 575,
+          "x2": 625,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663
+        },
+        {
+          "type": "Wall",
+          "x1": 700,
+          "x2": 700,
+          "y1": 286.66666666666663,
+          "y2": 338.3333333333333
+        },
+        {
+          "type": "Door",
+          "x1": 700,
+          "x2": 700,
+          "y1": 338.3333333333333,
+          "y2": 388.3333333333333
+        },
+        {
+          "type": "Wall",
+          "x1": 700,
+          "x2": 700,
+          "y1": 388.3333333333333,
+          "y2": 440
+        },
+        {
+          "type": "Door",
+          "x1": 775,
+          "x2": 825,
+          "y1": 440,
+          "y2": 440
+        },
+        {
+          "type": "Wall",
+          "x1": 825,
+          "x2": 900,
+          "y1": 440,
+          "y2": 440
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 133.33333333333334,
+          "y2": 449.5
+        },
+        {
+          "type": "Door",
+          "x1": 500,
+          "x2": 500,
+          "y1": 449.5,
+          "y2": 499.5
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 500,
+          "y1": 499.5,
+          "y2": 900
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 425,
+          "y1": 509,
+          "y2": 509
+        },
+        {
+          "type": "Door",
+          "x1": 425,
+          "x2": 475,
+          "y1": 509,
+          "y2": 509
+        },
+        {
+          "type": "Wall",
+          "x1": 475,
+          "x2": 500,
+          "y1": 509,
+          "y2": 509
+        },
+        {
+          "type": "Door",
+          "x1": 425,
+          "x2": 475,
+          "y1": 670,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 475,
+          "x2": 500,
+          "y1": 670,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 564.5,
+          "y2": 564.5
+        },
+        {
+          "type": "Door",
+          "x1": 300,
+          "x2": 300,
+          "y1": 564.5,
+          "y2": 614.5
+        },
+        {
+          "type": "Wall",
+          "x1": 300,
+          "x2": 300,
+          "y1": 614.5,
+          "y2": 614.5
+        },
+        {
+          "type": "Wall",
+          "x1": 100,
+          "x2": 175,
+          "y1": 670,
+          "y2": 670
+        },
+        {
+          "type": "Door",
+          "x1": 175,
+          "x2": 225,
+          "y1": 670,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 225,
+          "x2": 425,
+          "y1": 670,
+          "y2": 670
+        },
+        {
+          "type": "Wall",
+          "x1": 625,
+          "x2": 775,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663
+        },
+        {
+          "type": "Door",
+          "x1": 775,
+          "x2": 825,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663
+        },
+        {
+          "type": "Wall",
+          "x1": 825,
+          "x2": 900,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663
+        },
+        {
+          "type": "Wall",
+          "x1": 500,
+          "x2": 575,
+          "y1": 440,
+          "y2": 440
+        },
+        {
+          "type": "Door",
+          "x1": 575,
+          "x2": 625,
+          "y1": 440,
+          "y2": 440
+        },
+        {
+          "type": "Wall",
+          "x1": 625,
+          "x2": 775,
+          "y1": 440,
+          "y2": 440
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 200,
+          "x1": 100,
+          "x2": 300,
+          "x3": 100,
+          "x4": 300,
+          "y": 401.6666666666667,
+          "y1": 133.33333333333334,
+          "y2": 133.33333333333334,
+          "y3": 670,
+          "y4": 670
+        },
+        {
+          "label": "carporch-1",
+          "type": "label",
+          "x": 400,
+          "x1": 300,
+          "x2": 500,
+          "x3": 300,
+          "x4": 500,
+          "y": 321.1666666666667,
+          "y1": 133.33333333333334,
+          "y2": 133.33333333333334,
+          "y3": 509,
+          "y4": 509
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 350,
+          "x1": 300,
+          "x2": 400,
+          "x3": 300,
+          "x4": 400,
+          "y": 589.5,
+          "y1": 509,
+          "y2": 509,
+          "y3": 670,
+          "y4": 670
+        },
+        {
+          "label": "garden-1",
+          "type": "label",
+          "x": 450,
+          "x1": 400,
+          "x2": 500,
+          "x3": 400,
+          "x4": 500,
+          "y": 589.5,
+          "y1": 509,
+          "y2": 509,
+          "y3": 670,
+          "y4": 670
+        },
+        {
+          "label": "drawingroom-1",
+          "type": "label",
+          "x": 300,
+          "x1": 100,
+          "x2": 500,
+          "x3": 100,
+          "x4": 500,
+          "y": 785,
+          "y1": 670,
+          "y2": 670,
+          "y3": 900,
+          "y4": 900
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 700,
+          "x1": 500,
+          "x2": 900,
+          "x3": 500,
+          "x4": 900,
+          "y": 210,
+          "y1": 133.33333333333334,
+          "y2": 133.33333333333334,
+          "y3": 286.66666666666663,
+          "y4": 286.66666666666663
+        },
+        {
+          "label": "bedroom-2",
+          "type": "label",
+          "x": 600,
+          "x1": 500,
+          "x2": 700,
+          "x3": 500,
+          "x4": 700,
+          "y": 363.3333333333333,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663,
+          "y3": 440,
+          "y4": 440
+        },
+        {
+          "label": "bathroom-1",
+          "type": "label",
+          "x": 800,
+          "x1": 700,
+          "x2": 900,
+          "x3": 700,
+          "x4": 900,
+          "y": 363.3333333333333,
+          "y1": 286.66666666666663,
+          "y2": 286.66666666666663,
+          "y3": 440,
+          "y4": 440
+        },
+        {
+          "label": "bathroom-2",
+          "type": "label",
+          "x": 700,
+          "x1": 500,
+          "x2": 900,
+          "x3": 500,
+          "x4": 900,
+          "y": 670,
+          "y1": 440,
+          "y2": 440,
+          "y3": 900,
+          "y4": 900
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "direction": "up",
+          "height": 134.2504224704422,
+          "id": "new-stairs-1773157689267-s2xk8ze3p",
+          "type": "Stairs",
+          "width": 126.46308491248212,
+          "x": 371.75572519083966,
+          "y": 133.58778625954199
+        }
+      ],
+      "plotDimensions": {
+        "height": 1000,
+        "width": 1000
+      },
+      "rooms": [
+        {
+          "height": 536.6666666666666,
+          "id": 0,
+          "tag": "livingroom-1",
+          "type": "livingroom-1",
+          "width": 200,
+          "x": 100,
+          "y": 133.33333333333334
+        },
+        {
+          "height": 375.66666666666663,
+          "id": 1,
+          "tag": "carporch-1",
+          "type": "carporch-1",
+          "width": 200,
+          "x": 300,
+          "y": 133.33333333333334
+        },
+        {
+          "height": 161,
+          "id": 2,
+          "tag": "kitchen-1",
+          "type": "kitchen-1",
+          "width": 100,
+          "x": 300,
+          "y": 509
+        },
+        {
+          "height": 161,
+          "id": 3,
+          "tag": "garden-1",
+          "type": "garden-1",
+          "width": 100,
+          "x": 400,
+          "y": 509
+        },
+        {
+          "height": 230,
+          "id": 4,
+          "tag": "drawingroom-1",
+          "type": "drawingroom-1",
+          "width": 400,
+          "x": 100,
+          "y": 670
+        },
+        {
+          "height": 153.3333333333333,
+          "id": 5,
+          "tag": "bedroom-1",
+          "type": "bedroom-1",
+          "width": 400,
+          "x": 500,
+          "y": 133.33333333333334
+        },
+        {
+          "height": 153.33333333333337,
+          "id": 6,
+          "tag": "bedroom-2",
+          "type": "bedroom-2",
+          "width": 200,
+          "x": 500,
+          "y": 286.66666666666663
+        },
+        {
+          "height": 153.33333333333337,
+          "id": 7,
+          "tag": "bathroom-1",
+          "type": "bathroom-1",
+          "width": 200,
+          "x": 700,
+          "y": 286.66666666666663
+        },
+        {
+          "height": 460,
+          "id": 8,
+          "tag": "bathroom-2",
+          "type": "bathroom-2",
+          "width": 400,
+          "x": 500,
+          "y": 440
+        }
+      ],
+      "walls": []
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2026-03-17T11:18:58.626696",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T11:18:58.626696",
+    "updated_at": "2026-03-17T11:18:58.626696"
+  },
+  {
+    "_id": "69b9390d5a007a02b90ca34b",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69b43d6696cb96ab8cd95a3b",
+    "design_type": "modren 4 room p",
+    "floor_plan_file_url": "",
+    "floor_plan_data": {
+      "id": "69b1b0f45f24019801ea5dce",
+      "_id": "69b1b0f45f24019801ea5dce",
+      "project_name": "Floor Plan 3/11/2026",
+      "projectName": "Floor Plan 3/11/2026",
+      "rooms": [
+        {
+          "height": 221.41560798548093,
+          "id": 0,
+          "tag": "livingroom-1",
+          "type": "livingroom-1",
+          "width": 646.098003629764,
+          "x": 16.233080744526994,
+          "y": 378.12562862887785
+        },
+        {
+          "height": 226.86025408348456,
+          "id": 1,
+          "tag": "kitchen-1",
+          "type": "kitchen-1",
+          "width": 312.15970961887473,
+          "x": 665.9608484396267,
+          "y": 374.4958645635421
+        },
+        {
+          "height": 257.7132486388385,
+          "id": 2,
+          "tag": "bedroom-1",
+          "type": "bedroom-1",
+          "width": 479.1288566243194,
+          "x": 19.862844809862747,
+          "y": 118.59749795737153
+        },
+        {
+          "height": 107.07803992740472,
+          "id": 3,
+          "tag": "bathroom-2",
+          "type": "bathroom-2",
+          "width": 297.64065335753173,
+          "x": 680.4799047009698,
+          "y": 11.51945802996682
+        },
+        {
+          "height": 255.43960322052936,
+          "id": 4,
+          "tag": "bedroom-2",
+          "type": "bedroom-2",
+          "width": 475.49909255898365,
+          "x": 506.25122956485365,
+          "y": 119.05626134301274
+        },
+        {
+          "height": 384.7549909255898,
+          "id": 5,
+          "tag": "carporch-1",
+          "type": "carporch-1",
+          "width": 447.44905170641425,
+          "x": 528.0298139568681,
+          "y": 603.1710006796945
+        },
+        {
+          "height": 113.7074022241167,
+          "id": 6,
+          "tag": "garden-1",
+          "type": "garden-1",
+          "width": 505.5252767517863,
+          "x": 19.056261343012704,
+          "y": 880.2177858439201
+        },
+        {
+          "height": 275.8620689655172,
+          "id": 7,
+          "tag": "drawingroom-1",
+          "type": "drawingroom-1",
+          "width": 515.426497277677,
+          "x": 12.603316679191241,
+          "y": 599.5412366143588
+        },
+        {
+          "height": 109.8860642005657,
+          "id": 8,
+          "tag": "bathroom-1",
+          "type": "bathroom-1",
+          "width": 287.83017693327486,
+          "x": 22.41379310344811,
+          "y": 8.711433756805828
+        }
+      ],
+      "walls": [],
+      "doors": [],
+      "plotDimensions": {
+        "height": 1000,
+        "width": 1000
+      },
+      "mapData": [
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 200,
+          "x2": 400,
+          "y1": 840,
+          "y2": 840
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 700,
+          "y1": 800,
+          "y2": 800
+        },
+        {
+          "type": "Wall",
+          "x1": 850,
+          "x2": 1000,
+          "y1": 800,
+          "y2": 800
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 75,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 200,
+          "x2": 200,
+          "y1": 600,
+          "y2": 695
+        },
+        {
+          "type": "Wall",
+          "x1": 200,
+          "x2": 200,
+          "y1": 745,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 600,
+          "y2": 675
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 725,
+          "y2": 895
+        },
+        {
+          "type": "Wall",
+          "x1": 400,
+          "x2": 400,
+          "y1": 945,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 700,
+          "x2": 700,
+          "y1": 600,
+          "y2": 875
+        },
+        {
+          "type": "Wall",
+          "x1": 700,
+          "x2": 700,
+          "y1": 925,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 850,
+          "x2": 850,
+          "y1": 600,
+          "y2": 675
+        },
+        {
+          "type": "Wall",
+          "x1": 850,
+          "x2": 850,
+          "y1": 725,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 75,
+          "x2": 75,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 125,
+          "x2": 125,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 125,
+          "x2": 900,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "type": "Wall",
+          "x1": 950,
+          "x2": 1000,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "label": "livingroom-1",
+          "type": "label",
+          "x": 500,
+          "x1": 0,
+          "x2": 1000,
+          "x3": 0,
+          "x4": 1000,
+          "y": 300,
+          "y1": 0,
+          "y2": 0,
+          "y3": 600,
+          "y4": 600
+        },
+        {
+          "label": "kitchen-1",
+          "type": "label",
+          "x": 100,
+          "x1": 0,
+          "x2": 200,
+          "x3": 0,
+          "x4": 200,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-1",
+          "type": "label",
+          "x": 300,
+          "x1": 200,
+          "x2": 400,
+          "x3": 200,
+          "x4": 400,
+          "y": 720,
+          "y1": 600,
+          "y2": 600,
+          "y3": 840,
+          "y4": 840
+        },
+        {
+          "label": "bathroom-2",
+          "type": "label",
+          "x": 300,
+          "x1": 200,
+          "x2": 400,
+          "x3": 200,
+          "x4": 400,
+          "y": 920,
+          "y1": 840,
+          "y2": 840,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "bedroom-2",
+          "type": "label",
+          "x": 550,
+          "x1": 400,
+          "x2": 700,
+          "x3": 400,
+          "x4": 700,
+          "y": 700,
+          "y1": 600,
+          "y2": 600,
+          "y3": 800,
+          "y4": 800
+        },
+        {
+          "label": "carporch-1",
+          "type": "label",
+          "x": 550,
+          "x1": 400,
+          "x2": 700,
+          "x3": 400,
+          "x4": 700,
+          "y": 900,
+          "y1": 800,
+          "y2": 800,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "garden-1",
+          "type": "label",
+          "x": 775,
+          "x1": 700,
+          "x2": 850,
+          "x3": 700,
+          "x4": 850,
+          "y": 800,
+          "y1": 600,
+          "y2": 600,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "label": "drawingroom-1",
+          "type": "label",
+          "x": 925,
+          "x1": 850,
+          "x2": 1000,
+          "x3": 850,
+          "x4": 1000,
+          "y": 700,
+          "y1": 600,
+          "y2": 600,
+          "y3": 800,
+          "y4": 800
+        },
+        {
+          "label": "bathroom-1",
+          "type": "label",
+          "x": 925,
+          "x1": 850,
+          "x2": 1000,
+          "x3": 850,
+          "x4": 1000,
+          "y": 900,
+          "y1": 800,
+          "y2": 800,
+          "y3": 1000,
+          "y4": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 0
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 1000,
+          "y1": 0,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 1000,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 1000
+        },
+        {
+          "type": "Wall",
+          "x1": 0,
+          "x2": 0,
+          "y1": 1000,
+          "y2": 0
+        },
+        {
+          "id": "door-1",
+          "type": "Door",
+          "x1": 665.9608484396267,
+          "x2": 665.9608484396267,
+          "y1": 440.860960199124,
+          "y2": 483.6399472418924
+        },
+        {
+          "id": "door-4",
+          "type": "Door",
+          "x1": 564.0653357531759,
+          "x2": 638.6569872958255,
+          "y1": 600,
+          "y2": 600
+        },
+        {
+          "id": "door-5",
+          "type": "Door",
+          "x1": 231.07985480943702,
+          "x2": 281.07985480943734,
+          "y1": 118.59749795737153,
+          "y2": 118.59749795737153
+        },
+        {
+          "id": "door-6",
+          "type": "Door",
+          "x1": 729.2828255038861,
+          "x2": 786.7788804852252,
+          "y1": 118.59749795737153,
+          "y2": 118.59749795737153
+        },
+        {
+          "id": "new-door-1773252033838-21nsccle8",
+          "type": "Door",
+          "x1": 378.40290381125226,
+          "x2": 469.1470054446461,
+          "y1": 120.41237999003941,
+          "y2": 120.41237999003941
+        },
+        {
+          "id": "new-door-1773252088560-3qs2r8nn5",
+          "type": "Door",
+          "x1": 342.0813872640716,
+          "x2": 480.0601735344764,
+          "y1": 376.31074659621,
+          "y2": 376.31074659621
+        },
+        {
+          "id": "new-door-1773252098273-tl22n8b01",
+          "type": "Door",
+          "x1": 541.7422867513611,
+          "x2": 621.5970961887476,
+          "y1": 374.4958645635421,
+          "y2": 374.4958645635421
+        },
+        {
+          "id": "new-door-1773252424326-nwf76qclc",
+          "type": "Door",
+          "x1": 524.4000498915324,
+          "x2": 524.4000498915324,
+          "y1": 768.2087879142582,
+          "y2": 842.6805042817489
+        },
+        {
+          "id": "new-door-1773252635018-nprg7mf4h",
+          "type": "Door",
+          "x1": 528.0298139568681,
+          "x2": 528.0298139568681,
+          "y1": 900.1582129391372,
+          "y2": 969.1702807087755
+        },
+        {
+          "direction": "up",
+          "height": 217.78584392014517,
+          "id": "new-stairs-1773253068754-mk5w7s1kl",
+          "type": "Stairs",
+          "width": 145.1905626134301,
+          "x": 828.4936479128856,
+          "y": 607.9854809437386
+        }
+      ],
+      "constraints": {},
+      "user_id": "69a968ed2e890032712bd7c0",
+      "floor_plan_data": {
+        "actualLength": 25,
+        "actualWidth": 50,
+        "doors": [],
+        "mapData": [
+          {
+            "type": "Wall",
+            "x1": 0,
+            "x2": 1000,
+            "y1": 0,
+            "y2": 0
+          },
+          {
+            "type": "Wall",
+            "x1": 200,
+            "x2": 400,
+            "y1": 840,
+            "y2": 840
+          },
+          {
+            "type": "Wall",
+            "x1": 400,
+            "x2": 700,
+            "y1": 800,
+            "y2": 800
+          },
+          {
+            "type": "Wall",
+            "x1": 850,
+            "x2": 1000,
+            "y1": 800,
+            "y2": 800
+          },
+          {
+            "type": "Wall",
+            "x1": 0,
+            "x2": 0,
+            "y1": 1000,
+            "y2": 0
+          },
+          {
+            "type": "Wall",
+            "x1": 1000,
+            "x2": 1000,
+            "y1": 1000,
+            "y2": 0
+          },
+          {
+            "type": "Wall",
+            "x1": 1000,
+            "x2": 0,
+            "y1": 1000,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 0,
+            "x2": 75,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "type": "Wall",
+            "x1": 200,
+            "x2": 200,
+            "y1": 600,
+            "y2": 695
+          },
+          {
+            "type": "Wall",
+            "x1": 200,
+            "x2": 200,
+            "y1": 745,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 400,
+            "x2": 400,
+            "y1": 600,
+            "y2": 675
+          },
+          {
+            "type": "Wall",
+            "x1": 400,
+            "x2": 400,
+            "y1": 725,
+            "y2": 895
+          },
+          {
+            "type": "Wall",
+            "x1": 400,
+            "x2": 400,
+            "y1": 945,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 700,
+            "x2": 700,
+            "y1": 600,
+            "y2": 875
+          },
+          {
+            "type": "Wall",
+            "x1": 700,
+            "x2": 700,
+            "y1": 925,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 850,
+            "x2": 850,
+            "y1": 600,
+            "y2": 675
+          },
+          {
+            "type": "Wall",
+            "x1": 850,
+            "x2": 850,
+            "y1": 725,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 75,
+            "x2": 75,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "type": "Wall",
+            "x1": 125,
+            "x2": 125,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "type": "Wall",
+            "x1": 125,
+            "x2": 900,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "type": "Wall",
+            "x1": 950,
+            "x2": 1000,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "label": "livingroom-1",
+            "type": "label",
+            "x": 500,
+            "x1": 0,
+            "x2": 1000,
+            "x3": 0,
+            "x4": 1000,
+            "y": 300,
+            "y1": 0,
+            "y2": 0,
+            "y3": 600,
+            "y4": 600
+          },
+          {
+            "label": "kitchen-1",
+            "type": "label",
+            "x": 100,
+            "x1": 0,
+            "x2": 200,
+            "x3": 0,
+            "x4": 200,
+            "y": 800,
+            "y1": 600,
+            "y2": 600,
+            "y3": 1000,
+            "y4": 1000
+          },
+          {
+            "label": "bedroom-1",
+            "type": "label",
+            "x": 300,
+            "x1": 200,
+            "x2": 400,
+            "x3": 200,
+            "x4": 400,
+            "y": 720,
+            "y1": 600,
+            "y2": 600,
+            "y3": 840,
+            "y4": 840
+          },
+          {
+            "label": "bathroom-2",
+            "type": "label",
+            "x": 300,
+            "x1": 200,
+            "x2": 400,
+            "x3": 200,
+            "x4": 400,
+            "y": 920,
+            "y1": 840,
+            "y2": 840,
+            "y3": 1000,
+            "y4": 1000
+          },
+          {
+            "label": "bedroom-2",
+            "type": "label",
+            "x": 550,
+            "x1": 400,
+            "x2": 700,
+            "x3": 400,
+            "x4": 700,
+            "y": 700,
+            "y1": 600,
+            "y2": 600,
+            "y3": 800,
+            "y4": 800
+          },
+          {
+            "label": "carporch-1",
+            "type": "label",
+            "x": 550,
+            "x1": 400,
+            "x2": 700,
+            "x3": 400,
+            "x4": 700,
+            "y": 900,
+            "y1": 800,
+            "y2": 800,
+            "y3": 1000,
+            "y4": 1000
+          },
+          {
+            "label": "garden-1",
+            "type": "label",
+            "x": 775,
+            "x1": 700,
+            "x2": 850,
+            "x3": 700,
+            "x4": 850,
+            "y": 800,
+            "y1": 600,
+            "y2": 600,
+            "y3": 1000,
+            "y4": 1000
+          },
+          {
+            "label": "drawingroom-1",
+            "type": "label",
+            "x": 925,
+            "x1": 850,
+            "x2": 1000,
+            "x3": 850,
+            "x4": 1000,
+            "y": 700,
+            "y1": 600,
+            "y2": 600,
+            "y3": 800,
+            "y4": 800
+          },
+          {
+            "label": "bathroom-1",
+            "type": "label",
+            "x": 925,
+            "x1": 850,
+            "x2": 1000,
+            "x3": 850,
+            "x4": 1000,
+            "y": 900,
+            "y1": 800,
+            "y2": 800,
+            "y3": 1000,
+            "y4": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 0,
+            "x2": 1000,
+            "y1": 0,
+            "y2": 0
+          },
+          {
+            "type": "Wall",
+            "x1": 1000,
+            "x2": 1000,
+            "y1": 0,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 1000,
+            "x2": 0,
+            "y1": 1000,
+            "y2": 1000
+          },
+          {
+            "type": "Wall",
+            "x1": 0,
+            "x2": 0,
+            "y1": 1000,
+            "y2": 0
+          },
+          {
+            "id": "door-1",
+            "type": "Door",
+            "x1": 665.9608484396267,
+            "x2": 665.9608484396267,
+            "y1": 440.860960199124,
+            "y2": 483.6399472418924
+          },
+          {
+            "id": "door-4",
+            "type": "Door",
+            "x1": 564.0653357531759,
+            "x2": 638.6569872958255,
+            "y1": 600,
+            "y2": 600
+          },
+          {
+            "id": "door-5",
+            "type": "Door",
+            "x1": 231.07985480943702,
+            "x2": 281.07985480943734,
+            "y1": 118.59749795737153,
+            "y2": 118.59749795737153
+          },
+          {
+            "id": "door-6",
+            "type": "Door",
+            "x1": 729.2828255038861,
+            "x2": 786.7788804852252,
+            "y1": 118.59749795737153,
+            "y2": 118.59749795737153
+          },
+          {
+            "id": "new-door-1773252033838-21nsccle8",
+            "type": "Door",
+            "x1": 378.40290381125226,
+            "x2": 469.1470054446461,
+            "y1": 120.41237999003941,
+            "y2": 120.41237999003941
+          },
+          {
+            "id": "new-door-1773252088560-3qs2r8nn5",
+            "type": "Door",
+            "x1": 342.0813872640716,
+            "x2": 480.0601735344764,
+            "y1": 376.31074659621,
+            "y2": 376.31074659621
+          },
+          {
+            "id": "new-door-1773252098273-tl22n8b01",
+            "type": "Door",
+            "x1": 541.7422867513611,
+            "x2": 621.5970961887476,
+            "y1": 374.4958645635421,
+            "y2": 374.4958645635421
+          },
+          {
+            "id": "new-door-1773252424326-nwf76qclc",
+            "type": "Door",
+            "x1": 524.4000498915324,
+            "x2": 524.4000498915324,
+            "y1": 768.2087879142582,
+            "y2": 842.6805042817489
+          },
+          {
+            "id": "new-door-1773252635018-nprg7mf4h",
+            "type": "Door",
+            "x1": 528.0298139568681,
+            "x2": 528.0298139568681,
+            "y1": 900.1582129391372,
+            "y2": 969.1702807087755
+          },
+          {
+            "direction": "up",
+            "height": 217.78584392014517,
+            "id": "new-stairs-1773253068754-mk5w7s1kl",
+            "type": "Stairs",
+            "width": 145.1905626134301,
+            "x": 828.4936479128856,
+            "y": 607.9854809437386
+          }
+        ],
+        "plotDimensions": {
+          "height": 1000,
+          "width": 1000
+        },
+        "plotHeight": 1000,
+        "plotWidth": 1000,
+        "rooms": [
+          {
+            "height": 221.41560798548093,
+            "id": 0,
+            "tag": "livingroom-1",
+            "type": "livingroom-1",
+            "width": 646.098003629764,
+            "x": 16.233080744526994,
+            "y": 378.12562862887785
+          },
+          {
+            "height": 226.86025408348456,
+            "id": 1,
+            "tag": "kitchen-1",
+            "type": "kitchen-1",
+            "width": 312.15970961887473,
+            "x": 665.9608484396267,
+            "y": 374.4958645635421
+          },
+          {
+            "height": 257.7132486388385,
+            "id": 2,
+            "tag": "bedroom-1",
+            "type": "bedroom-1",
+            "width": 479.1288566243194,
+            "x": 19.862844809862747,
+            "y": 118.59749795737153
+          },
+          {
+            "height": 107.07803992740472,
+            "id": 3,
+            "tag": "bathroom-2",
+            "type": "bathroom-2",
+            "width": 297.64065335753173,
+            "x": 680.4799047009698,
+            "y": 11.51945802996682
+          },
+          {
+            "height": 255.43960322052936,
+            "id": 4,
+            "tag": "bedroom-2",
+            "type": "bedroom-2",
+            "width": 475.49909255898365,
+            "x": 506.25122956485365,
+            "y": 119.05626134301274
+          },
+          {
+            "height": 384.7549909255898,
+            "id": 5,
+            "tag": "carporch-1",
+            "type": "carporch-1",
+            "width": 447.44905170641425,
+            "x": 528.0298139568681,
+            "y": 603.1710006796945
+          },
+          {
+            "height": 113.7074022241167,
+            "id": 6,
+            "tag": "garden-1",
+            "type": "garden-1",
+            "width": 505.5252767517863,
+            "x": 19.056261343012704,
+            "y": 880.2177858439201
+          },
+          {
+            "height": 275.8620689655172,
+            "id": 7,
+            "tag": "drawingroom-1",
+            "type": "drawingroom-1",
+            "width": 515.426497277677,
+            "x": 12.603316679191241,
+            "y": 599.5412366143588
+          },
+          {
+            "height": 109.8860642005657,
+            "id": 8,
+            "tag": "bathroom-1",
+            "type": "bathroom-1",
+            "width": 287.83017693327486,
+            "x": 22.41379310344811,
+            "y": 8.711433756805828
+          }
+        ],
+        "walls": [],
+        "windows": []
+      },
+      "room_data": [
+        {
+          "height": 221.41560798548093,
+          "id": 0,
+          "tag": "livingroom-1",
+          "type": "livingroom-1",
+          "width": 646.098003629764,
+          "x": 16.233080744526994,
+          "y": 378.12562862887785
+        },
+        {
+          "height": 226.86025408348456,
+          "id": 1,
+          "tag": "kitchen-1",
+          "type": "kitchen-1",
+          "width": 312.15970961887473,
+          "x": 665.9608484396267,
+          "y": 374.4958645635421
+        },
+        {
+          "height": 257.7132486388385,
+          "id": 2,
+          "tag": "bedroom-1",
+          "type": "bedroom-1",
+          "width": 479.1288566243194,
+          "x": 19.862844809862747,
+          "y": 118.59749795737153
+        },
+        {
+          "height": 107.07803992740472,
+          "id": 3,
+          "tag": "bathroom-2",
+          "type": "bathroom-2",
+          "width": 297.64065335753173,
+          "x": 680.4799047009698,
+          "y": 11.51945802996682
+        },
+        {
+          "height": 255.43960322052936,
+          "id": 4,
+          "tag": "bedroom-2",
+          "type": "bedroom-2",
+          "width": 475.49909255898365,
+          "x": 506.25122956485365,
+          "y": 119.05626134301274
+        },
+        {
+          "height": 384.7549909255898,
+          "id": 5,
+          "tag": "carporch-1",
+          "type": "carporch-1",
+          "width": 447.44905170641425,
+          "x": 528.0298139568681,
+          "y": 603.1710006796945
+        },
+        {
+          "height": 113.7074022241167,
+          "id": 6,
+          "tag": "garden-1",
+          "type": "garden-1",
+          "width": 505.5252767517863,
+          "x": 19.056261343012704,
+          "y": 880.2177858439201
+        },
+        {
+          "height": 275.8620689655172,
+          "id": 7,
+          "tag": "drawingroom-1",
+          "type": "drawingroom-1",
+          "width": 515.426497277677,
+          "x": 12.603316679191241,
+          "y": 599.5412366143588
+        },
+        {
+          "height": 109.8860642005657,
+          "id": 8,
+          "tag": "bathroom-1",
+          "type": "bathroom-1",
+          "width": 287.83017693327486,
+          "x": 22.41379310344811,
+          "y": 8.711433756805828
+        }
+      ],
+      "plotWidth": 1000,
+      "plotHeight": 1000,
+      "actualLength": 25,
+      "actualWidth": 50,
+      "windows": []
+    },
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2026-03-17T11:20:45.040638",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T11:20:45.040638",
+    "updated_at": "2026-03-17T11:20:45.040638"
+  },
+  {
+    "_id": "69b93a2e5a007a02b90ca35b",
+    "user_id": "6942d1d4e3782c6d89a413ec",
+    "society_id": "692ae4febe9ed326e2928e7c",
+    "plot_id": "69b44a8b1c783ffb366bc2c2",
+    "design_type": "modren 4 rooms",
+    "floor_plan_file_url": "uploads/user_profiles\\user_6942d1d4e3782c6d89a413ec/floor_plans\\f8539465-57eb-4c9f-a8dd-bada187b7975_approved-floorplan-177.pdf",
+    "floor_plan_data": null,
+    "notes": "",
+    "status": "Pending",
+    "request_date": "2026-03-17T11:25:34.069352",
+    "admin_comments": "",
+    "reviewed_by": null,
+    "reviewed_at": null,
+    "created_at": "2026-03-17T11:25:34.069352",
+    "updated_at": "2026-03-17T11:25:34.069352"
+  }
+]

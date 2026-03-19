@@ -1,4 +1,6 @@
 // Base API service with common configuration and utilities
+import cachedFetch, { clearCache } from './cachedFetch.js';
+
 export const API_URL = "http://localhost:5000/api";
 
 /**
@@ -90,9 +92,10 @@ export function createAuthHeaders(includeContentType = true) {
  */
 export async function apiRequest(endpoint, options = {}, context = 'apiRequest') {
   const url = `${API_URL}${endpoint}`;
+  const method = options.method || 'GET';
   const isFormData = options.body instanceof FormData;
   
-  console.log(`[${context}] Making request to:`, url, options.method || 'GET');
+  console.log(`[${context}] Making request to:`, url, method);
   
   try {
     const mergedHeaders = {
@@ -104,10 +107,29 @@ export async function apiRequest(endpoint, options = {}, context = 'apiRequest')
       mergedHeaders["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers: mergedHeaders
-    });
+    // Use cachedFetch for GET requests, regular fetch for others
+    let response;
+    if (method === 'GET') {
+      response = await cachedFetch(url, {
+        ...options,
+        headers: mergedHeaders
+      }, context);
+    } else {
+      // For non-GET requests, invalidate related cache
+      response = await fetch(url, {
+        ...options,
+        headers: mergedHeaders
+      });
+      
+      // Invalidate cache on successful mutation
+      if (response.ok) {
+        // Extract the resource type from endpoint and clear cache
+        const resourceType = endpoint.split('/')[1]; // e.g., 'plots', 'reviews'
+        if (resourceType) {
+          clearCache(`/${resourceType}`);
+        }
+      }
+    }
     
     const result = await response.json();
     console.log(`[${context}] Response:`, { status: response.status, result });

@@ -1,4 +1,6 @@
 // API service for Review CRUD operations
+import cachedFetch, { clearCache } from './cachedFetch.js';
+
 const API_BASE_URL = 'http://localhost:5000/api';
 
 class ReviewAPI {
@@ -19,10 +21,10 @@ class ReviewAPI {
   // GET /api/reviews - Get all reviews (admin only)
   async getAllReviews() {
     try {
-      const response = await fetch(`${API_BASE_URL}/reviews`, {
+      const response = await cachedFetch(`${API_BASE_URL}/reviews`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getAllReviews');
 
       const data = await response.json();
       
@@ -50,10 +52,10 @@ class ReviewAPI {
   // GET /api/reviews/:id - Get specific review
   async getReviewById(reviewId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}`, {
+      const response = await cachedFetch(`${API_BASE_URL}/reviews/${reviewId}`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getReviewById');
 
       const data = await response.json();
       
@@ -81,10 +83,10 @@ class ReviewAPI {
   // GET /api/plots/:plot_id/reviews - Get reviews by plot
   async getReviewsByPlot(plotId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/plots/${plotId}/reviews`, {
+      const response = await cachedFetch(`${API_BASE_URL}/plots/${plotId}/reviews`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getReviewsByPlot');
 
       const data = await response.json();
       
@@ -128,6 +130,8 @@ class ReviewAPI {
       const data = await response.json();
       
       if (response.ok) {
+        // Invalidate cache on create
+        clearCache('/reviews');
         return {
           success: true,
           data: data.data,
@@ -167,6 +171,8 @@ class ReviewAPI {
       const data = await response.json();
       
       if (response.ok) {
+        // Invalidate cache on update
+        clearCache('/reviews');
         return {
           success: true,
           data: data.data,
@@ -198,6 +204,8 @@ class ReviewAPI {
       const data = await response.json();
       
       if (response.ok) {
+        // Invalidate cache on delete
+        clearCache('/reviews');
         return {
           success: true,
           message: data.message
@@ -217,13 +225,14 @@ class ReviewAPI {
     }
   }
 
+
   // GET /api/users/:user_email/reviews - Get reviews by user
   async getReviewsByUser(userEmail) {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${userEmail}/reviews`, {
+      const response = await cachedFetch(`${API_BASE_URL}/users/${userEmail}/reviews`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getReviewsByUser');
 
       const data = await response.json();
       
@@ -251,10 +260,10 @@ class ReviewAPI {
   // GET platform statistics - average rating and total reviews
   async getPlatformStats() {
     try {
-      const response = await fetch(`${API_BASE_URL}/reviews`, {
+      const response = await cachedFetch(`${API_BASE_URL}/reviews`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getPlatformStats');
 
       const data = await response.json();
       

@@ -1,4 +1,6 @@
 // Advertisement API Service - Simplified Plan-Based System
+import cachedFetch, { clearCache, getCacheStatus } from './cachedFetch.js';
+
 const API_BASE_URL = 'http://localhost:5000/api';
 
 class AdvertisementAPI {
@@ -26,6 +28,8 @@ class AdvertisementAPI {
       });
 
       const data = await response.json();
+      // Invalidate cache on create
+      clearCache('/advertisements');
       return data;
     } catch (error) {
       console.error('Error creating advertisement:', error);
@@ -42,10 +46,10 @@ class AdvertisementAPI {
         ...filters
       });
 
-      const response = await fetch(`${API_BASE_URL}/advertisements?${params}`, {
+      const response = await cachedFetch(`${API_BASE_URL}/advertisements?${params}`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getAllAdvertisements');
 
       const data = await response.json();
       return data;
@@ -58,10 +62,10 @@ class AdvertisementAPI {
   // Get advertisement by ID
   async getAdvertisementById(adId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/advertisements/${adId}`, {
+      const response = await cachedFetch(`${API_BASE_URL}/advertisements/${adId}`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getAdvertisementById');
 
       const data = await response.json();
       return data;
@@ -79,10 +83,10 @@ class AdvertisementAPI {
         per_page: perPage.toString()
       });
 
-      const response = await fetch(`${API_BASE_URL}/advertisements/pending?${params}`, {
+      const response = await cachedFetch(`${API_BASE_URL}/advertisements/pending?${params}`, {
         method: 'GET',
         headers: this.getAuthHeaders()
-      });
+      }, 'getPendingAdvertisements');
 
       const data = await response.json();
       return data;
@@ -101,6 +105,8 @@ class AdvertisementAPI {
       });
 
       const data = await response.json();
+      // Invalidate cache on approve
+      clearCache('/advertisements');
       return data;
     } catch (error) {
       console.error('Error approving advertisement:', error);
@@ -118,6 +124,8 @@ class AdvertisementAPI {
       });
 
       const data = await response.json();
+      // Invalidate cache on reject
+      clearCache('/advertisements');
       return data;
     } catch (error) {
       console.error('Error rejecting advertisement:', error);
@@ -129,10 +137,10 @@ class AdvertisementAPI {
   async getActiveAdvertisements(limit = 20) {
     try {
       const params = limit ? `?limit=${limit}` : '';
-      const response = await fetch(`${API_BASE_URL}/advertisements/active${params}`, {
+      const response = await cachedFetch(`${API_BASE_URL}/advertisements/active${params}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
-      });
+      }, 'getActiveAdvertisements');
 
       const data = await response.json();
       return data;
@@ -164,6 +172,8 @@ class AdvertisementAPI {
       });
 
       const data = await response.json();
+      // Invalidate cache on update
+      clearCache('/advertisements');
       return data;
     } catch (error) {
       console.error('Error updating advertisement:', error);
@@ -180,6 +190,8 @@ class AdvertisementAPI {
       });
 
       const data = await response.json();
+      // Invalidate cache on delete
+      clearCache('/advertisements');
       return data;
     } catch (error) {
       console.error('Error deleting advertisement:', error);
@@ -189,4 +201,3 @@ class AdvertisementAPI {
 }
 
 export default new AdvertisementAPI();
-

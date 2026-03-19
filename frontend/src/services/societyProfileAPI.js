@@ -1,4 +1,5 @@
 // API service for Society Profiles CRUD operations
+import cachedFetch, { clearCache } from './cachedFetch.js';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -24,7 +25,9 @@ export const societyProfileAPI = {
   // GET all society profiles (alias for backward compatibility)
   getAllSocieties: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/society-profiles`);
+      const response = await cachedFetch(`${API_BASE_URL}/society-profiles`, {
+        method: 'GET'
+      }, 'getAllSocieties');
       const result = await handleResponse(response);
       return {
         success: true,
@@ -43,7 +46,9 @@ export const societyProfileAPI = {
   // GET all society profiles
   getAll: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/society-profiles`);
+      const response = await cachedFetch(`${API_BASE_URL}/society-profiles`, {
+        method: 'GET'
+      }, 'getAll');
       return await handleResponse(response);
     } catch (error) {
       console.error('Error fetching society profiles:', error);
@@ -54,7 +59,9 @@ export const societyProfileAPI = {
   // GET society statistics
   getSocietyStats: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/society-profiles/stats`);
+      const response = await cachedFetch(`${API_BASE_URL}/society-profiles/stats`, {
+        method: 'GET'
+      }, 'getSocietyStats');
       const result = await handleResponse(response);
       return {
         success: true,
@@ -78,7 +85,9 @@ export const societyProfileAPI = {
   // GET single society profile by ID
   getById: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/society-profiles/${id}`);
+      const response = await cachedFetch(`${API_BASE_URL}/society-profiles/${id}`, {
+        method: 'GET'
+      }, 'getById');
       return await handleResponse(response);
     } catch (error) {
       console.error(`Error fetching society profile ${id}:`, error);
@@ -94,6 +103,7 @@ export const societyProfileAPI = {
         headers: getAuthHeaders(),
         body: JSON.stringify(societyData)
       });
+      clearCache('/society-profiles');
       return await handleResponse(response);
     } catch (error) {
       console.error('Error creating society profile:', error);
@@ -109,6 +119,7 @@ export const societyProfileAPI = {
         headers: getAuthHeaders(),
         body: JSON.stringify(societyData)
       });
+      clearCache('/society-profiles');
       return await handleResponse(response);
     } catch (error) {
       console.error(`Error updating society profile ${id}:`, error);
@@ -123,6 +134,7 @@ export const societyProfileAPI = {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
+      clearCache('/society-profiles');
       return await handleResponse(response);
     } catch (error) {
       console.error(`Error deleting society profile ${id}:`, error);

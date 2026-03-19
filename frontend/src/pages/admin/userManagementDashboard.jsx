@@ -925,7 +925,7 @@ export default function UserManagementDashboard() {
   };
 
   const { data: usersData, error, isLoading: loading, mutate: refreshUsers } = useSWR(
-      const response = await fetch(`${API_URL}/users?page=1&limit=1000&search=${debouncedSearch}&role=${filterRole}`,
+    `${API_URL}/users?page=1&limit=1000&search=${debouncedSearch}&role=${filterRole}`,
     async (url) => {
       const res = await fetch(url, {
         headers: {

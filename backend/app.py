@@ -23,7 +23,7 @@ Compress(app)
 
 # Configure CORS - Allow production and development origins
 CORS(app, 
-     origins=["https://nexgendeployment.onrender.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"], 
+     origins=["https://nexgendeployment.onrender.com", "https://nex-gen-deployment.vercel.app", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"], 
      supports_credentials=True,
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization"],

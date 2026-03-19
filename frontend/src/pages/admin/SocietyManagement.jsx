@@ -5,7 +5,7 @@ import { Search, Filter, Edit2, Trash2, CheckCircle, RefreshCw, X, Save, MapPin,
 import { getSocietyRegistrations, getPendingSocietyRegistrations } from "../../services/authService";
 import { societyProfileAPI } from "../../services/societyProfileAPI";
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
 
 // API Functions for Society Registration Management
 const societyRegistrationAPI = {

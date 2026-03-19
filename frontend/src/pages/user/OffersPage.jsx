@@ -276,7 +276,7 @@ const OffersPage = () => {
                   <img
                     src={selectedOffer.image_url.startsWith('http') 
                       ? selectedOffer.image_url 
-                      : `http://localhost:5000${selectedOffer.image_url}`}
+                      : `${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/file/${selectedOffer.image_url.replace(/^\//, '')}`}
                     alt={selectedOffer.title}
                     className="w-full h-64 object-cover"
                     onError={(e) => {

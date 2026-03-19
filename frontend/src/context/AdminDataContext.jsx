@@ -9,7 +9,7 @@ const societyRegistrationAPI = {
   getAll: async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/society-registrations', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/society-registrations`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -318,7 +318,7 @@ const PersonalInfoForm = () => {
                       />
                     ) : existingProfile?.profile_image_url ? (
                       <img
-                        src={`http://localhost:5000/api/file/${existingProfile.profile_image_url.replace(/^\//, '')}`}
+                        src={`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/file/${existingProfile.profile_image_url.replace(/^\//, '')}`}
                         alt="Profile"
                         className="w-full h-full object-cover"
                         onError={(e) => {

@@ -26,7 +26,7 @@ const QuickVerify = ({ email, onVerified, showAlways = false }) => {
     setMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/manual-verify-email', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/manual-verify-email`, {
         email: email
       });
 

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
 
 const FloorPlanGenerator = () => {
   const navigate = useNavigate();
@@ -1039,7 +1039,7 @@ const FloorPlanGenerator = () => {
 
       console.log('Sending updates to backend:', updateData);
 
-      const response = await fetch('http://localhost:5000/api/floorplan/update', {
+      const response = await fetch(`${API_URL}/floorplan/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
@@ -1617,7 +1617,7 @@ const FloorPlanGenerator = () => {
       console.log('Connections:', connects);
       console.log('Sending data to backend:', backendData);
 
-      const response = await fetch('http://localhost:5000/api/floorplan/generate', {
+      const response = await fetch(`${API_URL}/floorplan/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(backendData)

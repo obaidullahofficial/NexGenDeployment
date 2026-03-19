@@ -163,7 +163,7 @@ const SocietyProfile = () => {
 
       // Save to backend (update society profile)
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/society-profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/society-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ import plotImage from '../../assets/plot.png';
 import Navbar from '../../components/user/Navbar';
 import Footer from '../../components/user/Footer';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
 
 // Helper to get auth headers
 const getAuthHeaders = () => {

@@ -8,7 +8,7 @@ import { useConfirm } from '../../hooks/useConfirm';
 import jsPDF from 'jspdf';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
 
 // Remove the SaveFloorPlanModal component as it's not needed anymore
 
@@ -133,7 +133,7 @@ const FloorPlanManager = () => {
       console.log('👤 User object:', user);
       
       // Use society endpoint for subadmins to get all floor plans in their society
-      const response = await fetch(`http://localhost:5000/api/floorplan/society/${userId}`, {
+      const response = await fetch(`${API_URL}/floorplan/society/${userId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

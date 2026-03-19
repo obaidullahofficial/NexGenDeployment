@@ -22,7 +22,7 @@ const EmailVerification = () => {
     setMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/verify-email', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/verify-email`, {
         code: codeToVerify || code
       });
 
@@ -81,7 +81,7 @@ const EmailVerification = () => {
     setMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/resend-verification-email', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api'}/resend-verification-email`, {
         email: email
       });
 

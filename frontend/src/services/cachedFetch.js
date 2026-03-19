@@ -25,7 +25,8 @@ export async function cachedFetch(url, options = {}, context = 'cachedFetch') {
   }
 
   // Check if this endpoint should be cached
-  const endpoint = url.replace('http://localhost:5000', '').split('?')[0];
+  // Remove base URL (supports both localhost and production)
+  let endpoint = url.replace('http://localhost:5000', '').replace('https://nexgendeployment.onrender.com', '').split('?')[0];
   if (!cacheService.shouldCache(endpoint)) {
     return fetch(url, options);
   }

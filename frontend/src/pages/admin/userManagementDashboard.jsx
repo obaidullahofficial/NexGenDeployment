@@ -26,6 +26,8 @@ import {
   Settings
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://nexgendeployment.onrender.com/api';
+
 //
 // 🔹 Add User Modal Component
 //
@@ -87,7 +89,7 @@ function AddUserModal({ isOpen, onClose, onUserAdded }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -418,7 +420,7 @@ function EditUserModal({ isOpen, onClose, user, onUserUpdated }) {
         updateData.password = formData.password;
       }
 
-      const response = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+      const response = await fetch(`${API_URL}/users/${user._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -595,7 +597,7 @@ function DeleteConfirmModal({ isOpen, onClose, user, onUserDeleted }) {
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+      const response = await fetch(`${API_URL}/users/${user._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -923,7 +925,7 @@ export default function UserManagementDashboard() {
   };
 
   const { data: usersData, error, isLoading: loading, mutate: refreshUsers } = useSWR(
-    `http://localhost:5000/api/users?page=1&limit=1000&search=${debouncedSearch}&role=${filterRole}`,
+      const response = await fetch(`${API_URL}/users?page=1&limit=1000&search=${debouncedSearch}&role=${filterRole}`,
     async (url) => {
       const res = await fetch(url, {
         headers: {
@@ -995,7 +997,7 @@ export default function UserManagementDashboard() {
     
     if (window.confirm(`Are you sure you want to delete ${selectedUsers.length} users?`)) {
       try {
-        const response = await fetch('http://localhost:5000/api/users/bulk-delete', {
+        const response = await fetch(`${API_URL}/users/bulk-delete`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

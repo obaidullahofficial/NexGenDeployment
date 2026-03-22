@@ -47,32 +47,46 @@ export async function cachedFetch(url, options = {}, context = 'cachedFetch') {
   const inFlight = cacheService.getInFlight(cacheKey);
   if (inFlight) {
     console.log(`[CachedFetch] WAIT: ${cacheKey} (request in-flight)`);
-    return inFlight;
+    try {
+      const data = await inFlight;
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'X-Cache': 'WAIT' }
+      });
+    } catch (error) {
+      if (error instanceof Response) {
+        return error.clone();
+      }
+      throw error;
+    }
   }
 
   // Make the actual request
   console.log(`[CachedFetch] MISS: ${url}`);
-  const fetchPromise = fetch(url, options);
   
+  const fetchPromise = fetch(url, options).then(async (response) => {
+    if (response.ok) {
+      const data = await response.json();
+      cacheService.set(cacheKey, data);
+      return data;
+    }
+    throw response;
+  });
+
   // Track this request
   cacheService.setInFlight(cacheKey, fetchPromise);
 
   try {
-    const response = await fetchPromise;
-    
-    // Only cache successful responses
-    if (response.ok) {
-      const data = await response.clone().json();
-      cacheService.set(cacheKey, data);
-      
-      // Return new response with cached data
-      return new Response(JSON.stringify(data), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', 'X-Cache': 'MISS' }
-      });
+    const data = await fetchPromise;
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'X-Cache': 'MISS' }
+    });
+  } catch (errorOrResponse) {
+    if (errorOrResponse instanceof Response) {
+      return errorOrResponse;
     }
-    
-    return response;
+    throw errorOrResponse;
   } finally {
     cacheService.clearInFlight(cacheKey);
   }

@@ -208,7 +208,7 @@ class PlotController:
         
         # If admin, return all plots
         if user_role == 'admin':
-            plots = list(plot_col.find({}))
+            plots = list(plot_col.find({}, {'pdf_template': 0, 'json_template': 0, 'image': 0}))
         else:
             # For non-admin users, check for society profile
             profiles = society_profile_collection(db)
@@ -218,7 +218,7 @@ class PlotController:
             
             # Use ObjectId to match the foreign key format stored in plots
             society_id = profile['_id'] if isinstance(profile['_id'], ObjectId) else ObjectId(profile['_id'])
-            plots = list(plot_col.find({'societyId': society_id}))
+            plots = list(plot_col.find({'societyId': society_id}, {'pdf_template': 0, 'json_template': 0, 'image': 0}))
         
         for plot in plots:
             plot['_id'] = str(plot['_id'])
@@ -272,8 +272,8 @@ class PlotController:
         
         print(f"[get_plots_by_society_id] Searching for societyId: {society_id_obj}")
         
-        # Find all plots belonging to the specified society ID
-        plots = list(plot_col.find({'societyId': society_id_obj}))
+        # Find all plots belonging to the specified society ID (excluding large templates)
+        plots = list(plot_col.find({'societyId': society_id_obj}, {'pdf_template': 0, 'json_template': 0, 'image': 0}))
         
         print(f"[get_plots_by_society_id] Found {len(plots)} plots")
         

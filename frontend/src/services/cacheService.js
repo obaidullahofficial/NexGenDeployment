@@ -23,6 +23,7 @@ class CacheService {
       '/api/reviews',
       '/api/society-profiles',
       '/api/plots/society/',
+      '/api/plots',
       '/api/advertisements',
       '/api/users',
       '/api/profile'

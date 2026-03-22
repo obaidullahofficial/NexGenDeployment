@@ -43,6 +43,7 @@ def get_db():
             serverSelectionTimeoutMS=30000,  # Increased to 30 seconds
             connectTimeoutMS=30000,          # Added explicit connect timeout
             socketTimeoutMS=30000,           # Socket timeout
+            maxIdleTimeMS=45000,             # Prevent stale connection drops
             # Connection pooling options
             maxPoolSize=50,          # Maximum connections in pool
             minPoolSize=10,          # Minimum connections to maintain

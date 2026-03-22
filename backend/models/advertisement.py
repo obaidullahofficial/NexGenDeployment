@@ -68,17 +68,9 @@ class Advertisement:
             skip = (page - 1) * per_page
             total_count = self.collection.count_documents(query)
             
-            ads = []
-            for ad in self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page):
-                ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
-                    ad['plan_id'] = str(ad['plan_id'])
-                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
-                    society_id = ad['society_id']
-                    ad['society_id'] = str(society_id)
-                    # Fetch and add society name
-                    ad['society_name'] = self._get_society_name(society_id)
-                ads.append(ad)
+            cursor = self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page)
+            ads = list(cursor)
+            ads = self._populate_society_names(ads)
             
             return {
                 'advertisements': ads,
@@ -106,12 +98,12 @@ class Advertisement:
         from models.society_profile import SocietyProfile
         society_model = SocietyProfile()
         societies = society_model.collection.find(
-            {'_id': {'': society_ids}},
-            {'society_name': 1}
+            {'_id': {'$in': society_ids}},
+            {'name': 1}
         )
         
         # Create a mapping dictionary
-        society_map = {str(soc['_id']): soc.get('society_name', 'Unknown Society') for soc in societies}
+        society_map = {str(soc['_id']): soc.get('name', 'Unknown Society') for soc in societies}
         
         # Populate names
         for ad in ads:
@@ -200,17 +192,9 @@ class Advertisement:
             skip = (page - 1) * per_page
             total_count = self.collection.count_documents(query)
             
-            ads = []
-            for ad in self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page):
-                ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
-                    ad['plan_id'] = str(ad['plan_id'])
-                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
-                    society_id = ad['society_id']
-                    ad['society_id'] = str(society_id)
-                    # Fetch and add society name
-                    ad['society_name'] = self._get_society_name(society_id)
-                ads.append(ad)
+            cursor = self.collection.find(query).sort("created_at", -1).skip(skip).limit(per_page)
+            ads = list(cursor)
+            ads = self._populate_society_names(ads)
             
             return {
                 'advertisements': ads,

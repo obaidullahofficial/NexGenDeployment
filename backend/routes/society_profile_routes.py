@@ -627,47 +627,37 @@ def get_all_society_profiles():
         db = get_db()
         profiles = society_profile_collection(db)
         
-        # Get all society profiles
-        all_profiles = list(profiles.find())
-        
+        # Exclude heavy documents/proofs we don't need for listing
+        projection = {'payment_proof': 0, 'cnic_front': 0, 'cnic_back': 0, 'registration_certificate': 0, 'documents': 0}
+        all_profiles = list(profiles.find({}, projection))
+
         # Import plot collection to count plots
         from models.plot import plot_collection
         from bson import ObjectId
         plots = plot_collection(db)
+
+        # Use aggregation to avoid N+1 query problem on plot counts
+        pipeline = [
+            {"$group": {
+                "_id": {"$toString": "$societyId"},
+                "total_plots": {"$sum": 1},
+                "available_plots": {
+                    "$sum": {"$cond": [{"$eq": ["$status", "Available"]}, 1, 0]}
+                }
+            }}
+        ]
         
+        plot_stats = list(plots.aggregate(pipeline))
+        stats_map = {str(stat['_id']): stat for stat in plot_stats if stat['_id']}
+
         # Add plot counts to each profile
         for profile in all_profiles:
-            # Store original ObjectId before converting to string for querying
-            original_id = profile['_id']
             profile['_id'] = str(profile['_id'])
-            
-            # Query plots using ObjectId (since plots store societyId as ObjectId)
-            # Also check string version for backward compatibility
-            total_plots = plots.count_documents({
-                '$or': [
-                    {'societyId': original_id},
-                    {'societyId': profile['_id']}
-                ]
-            })
-            
-            # Count available plots (status = 'Available')
-            available_plots = plots.count_documents({
-                '$or': [
-                    {'societyId': original_id},
-                    {'societyId': profile['_id']}
-                ],
-                'status': 'Available'
-            })
-            
-            # Add plot counts to profile
-            profile['totalPlots'] = total_plots
-            profile['availablePlots'] = available_plots
-            
-            # Format dates
-            if profile.get('created_at'):
-                profile['created_at'] = profile['created_at'].isoformat() if hasattr(profile['created_at'], 'isoformat') else str(profile['created_at'])
-            if profile.get('updated_at'):
-                profile['updated_at'] = profile['updated_at'].isoformat() if hasattr(profile['updated_at'], 'isoformat') else str(profile['updated_at'])
+            s_id_str = profile['_id']
+
+            stats = stats_map.get(s_id_str, {"total_plots": 0, "available_plots": 0})
+            profile['totalPlots'] = stats["total_plots"]
+            profile['availablePlots'] = stats["available_plots"]
             
         return jsonify({
             "success": True,

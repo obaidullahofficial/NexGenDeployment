@@ -193,22 +193,14 @@ class Advertisement:
                 "start_date": {"$lte": now},
                 "end_date": {"$gte": now}
             }
-            
+
             cursor = self.collection.find(query).sort("created_at", -1)
             if limit:
                 cursor = cursor.limit(limit)
+
+            ads = list(cursor)
+            ads = self._populate_society_names(ads)
             
-            ads = []
-            for ad in cursor:
-                ad['_id'] = str(ad['_id'])
-                if 'plan_id' in ad and isinstance(ad['plan_id'], ObjectId):
-                    ad['plan_id'] = str(ad['plan_id'])
-                if 'society_id' in ad and isinstance(ad['society_id'], ObjectId):
-                    society_id = ad['society_id']
-                    ad['society_id'] = str(society_id)
-                    # Fetch and add society name
-                    ad['society_name'] = self._get_society_name(society_id)
-                ads.append(ad)
             return ads
         except Exception as e:
             raise Exception(f"Error fetching active advertisements: {str(e)}")

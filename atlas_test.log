@@ -1,0 +1,16 @@
+[DB] Attempting to connect to MongoDB Atlas...
+[DB] ✅ Connected to MongoDB Atlas (with connection pooling)
+[DB] Admin query indexes verified.
+Fetching ads...
+Fetched 2 active ads in 60.13s
+
+Fetching society profiles...
+Error fetching profiles: type object 'SocietyProfileController' has no attribute 'get_all_society_profiles'
+
+Fetching plots...
+Error fetching plots: Working outside of request context.
+
+This typically means that you attempted to use functionality that needed
+an active HTTP request. Consult the documentation on testing for
+information about how to avoid this problem.
+[DB] MongoDB connection closed gracefully

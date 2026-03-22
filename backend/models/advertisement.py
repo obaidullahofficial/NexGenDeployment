@@ -90,6 +90,44 @@ class Advertisement:
         except Exception as e:
             raise Exception(f"Error fetching advertisements: {str(e)}")
 
+
+    def _populate_society_names(self, ads):
+        if not ads:
+            return []
+        
+        from bson import ObjectId
+        # Get unique society IDs
+        society_ids = list({ObjectId(ad['society_id']) for ad in ads if 'society_id' in ad and ad['society_id']})
+        
+        if not society_ids:
+            return ads
+            
+        # Fetch all society names in one query
+        from models.society_profile import SocietyProfile
+        society_model = SocietyProfile()
+        societies = society_model.collection.find(
+            {'_id': {'': society_ids}},
+            {'society_name': 1}
+        )
+        
+        # Create a mapping dictionary
+        society_map = {str(soc['_id']): soc.get('society_name', 'Unknown Society') for soc in societies}
+        
+        # Populate names
+        for ad in ads:
+            if 'society_id' in ad:
+                ad['society_name'] = society_map.get(str(ad['society_id']), 'Unknown Society')
+                ad['society_id'] = str(ad['society_id'])
+            
+            # Additional ID string conversions
+            if '_id' in ad:
+                ad['_id'] = str(ad['_id'])
+            if 'user_id' in ad:
+                ad['user_id'] = str(ad['user_id'])
+            if 'plan_id' in ad:
+                ad['plan_id'] = str(ad['plan_id'])
+        
+        return ads
     def update_advertisement(self, ad_id, update_data):
         """Update advertisement"""
         try:

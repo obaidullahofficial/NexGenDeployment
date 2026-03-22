@@ -51,12 +51,12 @@ def get_db():
         )
         # Test the connection
         _client.admin.command('ping')
-        print("[DB] ✅ Connected to MongoDB Atlas (with connection pooling)")
+        print("[DB] SUCCESS Connected to MongoDB Atlas (with connection pooling)")
         _db = _client['NextGenArchitect']
         setup_admin_indexes(_db)
         return _db
     except Exception as atlas_error:
-        print(f"[DB] ❌ Atlas connection failed: {atlas_error}")
+        print(f"[DB] FAIL Atlas connection failed: {atlas_error}")
         
         # Fallback to local MongoDB (development)
         try:
@@ -70,13 +70,13 @@ def get_db():
             )
             # Test the connection
             _client.admin.command('ping')
-            print("[DB] ✅ Connected to local MongoDB (with connection pooling)")
+            print("[DB] SUCCESS Connected to local MongoDB (with connection pooling)")
             _db = _client['NextGenArchitect']
             setup_admin_indexes(_db)
             return _db
         except Exception as local_error:
-            print(f"[DB] ❌ Local MongoDB connection failed: {local_error}")
-            print("[DB] ❌ Both Atlas and local connections failed!")
+            print(f"[DB] FAIL Local MongoDB connection failed: {local_error}")
+            print("[DB] FAIL Both Atlas and local connections failed!")
             raise Exception("Database connection failed. Please ensure MongoDB Atlas is accessible or MongoDB is running locally.")
 
 def test_connection():
